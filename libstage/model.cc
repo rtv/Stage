@@ -345,7 +345,9 @@ Model::Model( World* world,
     }        
 
   // now we can add the basic square shape
-  AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
+  if(GetModelType() != "wifi"){
+    AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 ); // this caused a problem with wifi model...
+  }
 
   AddVisualizer( &rastervis, false );
 

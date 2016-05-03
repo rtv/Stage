@@ -9,5 +9,8 @@
 
 #cmakedefine BUILD_GUI
 
+#cmakedefine HAVE_BOOST_RANDOM
+
+
 #endif
 

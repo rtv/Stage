@@ -15,7 +15,7 @@ OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
 
 # todo - this doesn't work yet. Run Stage headless with -g.
-# OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
+# OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON )
 
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
@@ -56,7 +56,7 @@ SET (CMAKE_CXX_FLAGS_PROFILE " -ggdb -pg  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL
 #####################################
 # Set the default build type
 IF (NOT CMAKE_BUILD_TYPE)
-  SET (CMAKE_BUILD_TYPE "release" CACHE STRING 
+  SET (CMAKE_BUILD_TYPE "release" CACHE STRING
     "Choose the type of build, options are: release (default) debug profile" FORCE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
 STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
@@ -67,16 +67,12 @@ ENABLE_TESTING()
 
 SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 
-# Create the config.h file
-# config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
-					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
 find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 
-include_directories( 
+include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
 )
@@ -93,7 +89,7 @@ find_package( PNG REQUIRED )
 # SET( PNG_LIBRARIES /opt/X11/lib/libpng.dylib )
 # SET( PNG_INCLUDE_DIR /opt/X11/include )
 
-set (FLTK_SKIP_FLUID TRUE) 
+set (FLTK_SKIP_FLUID TRUE)
 find_package( FLTK REQUIRED )
 find_package( OpenGL REQUIRED )
 
@@ -103,22 +99,74 @@ ENDIF( NOT OPENGL_GLU_FOUND )
 
 SET( INDENT "  * " )
 # MESSAGE( STATUS ${INDENT} "JPEG_INCLUDE_DIR = ${JPEG_INCLUDE_DIR}" )
-# MESSAGE( STATUS ${INDENT} "JPEG_LIBRARIES = ${JPEG_LIBRARIES}" ) 
+# MESSAGE( STATUS ${INDENT} "JPEG_LIBRARIES = ${JPEG_LIBRARIES}" )
 # MESSAGE( STATUS ${INDENT} "PNG_INCLUDE_DIR = ${PNG_INCLUDE_DIR}" )
-# MESSAGE( STATUS ${INDENT} "PNG_LIBRARIES = ${PNG_LIBRARIES}" ) 
+# MESSAGE( STATUS ${INDENT} "PNG_LIBRARIES = ${PNG_LIBRARIES}" )
 # MESSAGE( STATUS ${INDENT} "FLTK_LIBRARIES=${FLTK_LIBRARIES}" )
 # MESSAGE( STATUS ${INDENT} "FLTK_INCLUDE_DIR=${FLTK_INCLUDE_DIR}" )
 # MESSAGE( STATUS ${INDENT} "OpenGL GLU found at ${OPENGL_INCLUDE_DIR}" )
 # MESSAGE( STATUS "    OPENGL_INCLUDE_DIR = ${OPENGL_INCLUDE_DIR}")
 # MESSAGE( STATUS "    OPENGL_glu_LIBRARY = ${OPENGL_glu_LIBRARY}")
 
+
+# Try to find BOOST
+message( STATUS "Checking for Boost" )
+
+OPTION (Boost_USE_STATIC_LIBS "Use the static versions of the Boost libraries" ON)
+MARK_AS_ADVANCED (Boost_USE_STATIC_LIBS)
+OPTION (USE_BOOST_RANDOM "Use the Boost random number generator library" ON)
+MARK_AS_ADVANCED (USE_BOOST_RANDOM)
+
+#If Boost is to be used, then check fo rit
+IF (USE_BOOST_RANDOM)
+  SET (BOOST_COMPONENTS random)
+  # FIND_PACKAGE (Boost COMPONENTS ${BOOST_COMPONENTS})
+  FIND_PACKAGE (Boost)
+  IF (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    SET (HAVE_BOOST_RANDOM TRUE CACHE INTERNAL "Is the Boost::Random library present")
+
+    #  Note: I'm going to leave the stuff below in; it is used to compile against the boost
+    # libs; it seems just using the includes is fine enough though.
+    #IF (Boost_RANDOM_FOUND)
+    #  SET (HAVE_BOOST_RANDOM TRUE CACHE INTERNAL "Is the Boost::Random library present")
+    #  GET_FILENAME_COMPONENT (boostRandomLib ${Boost_RANDOM_LIBRARY} NAME_WE CACHE INTERNAL)
+    #  # Chop off the lib at the front, too, if present
+    #  STRING (REGEX REPLACE "^lib" "" boostRandomLib ${boostRandomLib})
+
+      MESSAGE( STATUS ${INDENT} "Boost Random found!")
+    #ELSE(Boost_RANDOM_FOUND)
+    #  SET (HAVE_BOOST_RANDOM FALSE)
+    #  MESSAGE( STATUS ${INDENT} "Boost Random NOT found!")
+    #ENDIF(Boost_RANDOM_FOUND)
+  ELSE(Boost_FOUND)
+    MESSAGE( STATUS ${INDENT} "Boost NOT found!")
+    SET (HAVE_BOOST_RANDOM FALSE )
+  ENDIF(Boost_FOUND)
+
+ELSE (USE_BOOST_RANDOM)
+  MESSAGE( STATUS ${INDENT} "Boost diabled" )
+  SET (HAVE_BOOST_RANDOM FALSE)
+  SET (boostRandomLib )
+ENDIF (USE_BOOST_RANDOM)
+
+
+
+
+# Create the config.h file
+# config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+                   ${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
+
+
+
 MESSAGE( STATUS "Checking for optional libraries..." )
 
 # Player does not have a CMake package, but does provide pkgconfig info
 
 include(FindPkgConfig)
-   
-pkg_search_module( PLAYER playercore>=2.1.0 ) 
+
+pkg_search_module( PLAYER playercore>=2.1.0 )
 IF( PLAYER_FOUND )
   MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
   MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
@@ -153,15 +201,15 @@ CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage-config-version.cmake.in ${CMAK
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake DESTINATION ${PROJECT_LIB_DIR}/cmake/${PROJECT_NAME})
 
 MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
-
 # all targets need these include directories
-include_directories( . 
-		     libstage 
-		     replace 
+include_directories( .
+		     libstage
+		     replace
 		     ${FLTK_INCLUDE_DIR}
                      ${PNG_INCLUDE_DIR}
                      ${JPEG_INCLUDE_DIR}
 		     ${CMAKE_INCLUDE_PATH}
+		     ${Boost_INCLUDE_DIRS}
 )
 
 
@@ -170,11 +218,11 @@ ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
-#ADD_SUBDIRECTORY(avonstage)		 
+#ADD_SUBDIRECTORY(avonstage)
 
 IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
   ADD_SUBDIRECTORY(libstageplugin)
-ENDIF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )	 
+ENDIF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
 
 
 # generate a cpack config file used to create packaged tarballs
