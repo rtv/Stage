@@ -439,14 +439,18 @@ std::string ModelWifi::GetUniqueMac( World* world )
     mac_str = macSs.str();
 
     //Now, we need to check if any other WIFI model in the world uses this mac.
-    FOR_EACH( other_model, *(world->GetModelsWithWifi()) )
+    for(int i=0; i<world->num_models_with_wifi; ++i)
+    //FOR_EACH( other_model, *(world->GetModelsWithWifi()) )
 		{
-      ModelWifi *other_model_wifi = dynamic_cast<ModelWifi*>(*other_model);
+      //ModelWifi *other_model_wifi = dynamic_cast<ModelWifi*>(*other_model);
+      ModelWifi *other_model_wifi = dynamic_cast<ModelWifi*>(world->models_with_wifi.at(i));
 
       if ( other_model_wifi == this )
+      //if ( world->models_with_wifi.at(i) == this )
         continue;
 
       if (other_model_wifi->GetConfig()->GetMac().compare( mac_str ) == 0 )
+      //if (world->models_with_wifi.at(i)->GetConfig()->GetMac().compare( mac_str ) == 0 )
         duplicate = true;
 		}
 
@@ -676,14 +680,10 @@ void ModelWifi::Update( )
   link_data.neighbors.clear();
 
   //For all models out there with WIFI, compare to this model.
-  std::vector<Model*>* models_with_wifi = world->GetModelsWithWifi();
-
-  for (std::vector<Model*>::iterator ix=models_with_wifi->begin(); ix < models_with_wifi->end(); ix ++)
-  {
-    CompareModels(*ix, this);
+  for(int i=0; i<world->num_models_with_wifi; ++i){
+      CompareModels(world->models_with_wifi.at(i), this);
   }
-  /*
-  FOR_EACH( other_model, *(world->GetModelsWithWifi()) )
+  /*FOR_EACH( other_model, *(world->GetModelsWithWifi()) )
   {
     CompareModels(*other_model, this);
   }*/
