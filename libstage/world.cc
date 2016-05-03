@@ -131,6 +131,7 @@ World::World( const std::string& name,
   models_with_fiducials(),
   models_with_fiducials_byx(),
   models_with_fiducials_byy(),
+  num_models_with_wifi(0),
   ppm( ppm ), // raytrace resolution
   quit( false ),
   show_clock( false ),

@@ -844,6 +844,7 @@ namespace Stg
     friend class ModelFiducial;
     friend class Canvas;
     friend class WorkerThread;
+    friend class ModelWifi;
 
   public:
     /** contains the command line arguments passed to Stg::Init(), so
@@ -908,6 +909,7 @@ namespace Stg
     /** Keep a list of all models with WIFI.  This avoids searching the whole
         world for models with WIFI */
     std::vector<Model*> models_with_wifi;
+    int num_models_with_wifi; // quick fix because of iterator problems
 
   public:
     /** Add a model to the set of models with Wifi, if not already there. */
@@ -919,23 +921,21 @@ namespace Stg
         std::vector<Model*>::iterator location_iterator = std::find( models_with_wifi.begin(), models_with_wifi.end(), mod );
 
         //Add it to the vec if it's not already there
-        if ( location_iterator == models_with_wifi.end() )
+        if ( location_iterator == models_with_wifi.end() ){
           models_with_wifi.push_back(mod);
+          ++num_models_with_wifi;
+        }
       }
     }//WifiInsert
 
     /** Remove a model from the list of models with wifi, if it exists. */
     void WifiErase( Model* mod )
     {
-      if ( mod )
+      if ( mod ) {
         EraseAll( mod, models_with_wifi);
+        --num_models_with_wifi;
+      }
     }//WifiErase
-
-    /** Get a pointer to the vector of all models with wifi */
-    std::vector<Model*>* GetModelsWithWifi()
-    {
-      return &models_with_wifi;
-    }
 
   private:
 
