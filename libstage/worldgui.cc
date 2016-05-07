@@ -253,7 +253,7 @@ void WorldGui::Show()
   show(); // fltk
 }
 
-void WorldGui::Load( const std::string& filename )
+bool WorldGui::Load( const std::string& filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	
@@ -263,8 +263,11 @@ void WorldGui::Load( const std::string& filename )
   fileMan->newWorld( filename );
   
   const usec_t load_start_time = RealTimeNow();
-  
-  World::Load( filename );
+
+  if(!World::Load( filename ))
+  {
+	  return false;
+  }
   
   // worldgui exclusive properties live in the top-level section
   const int world_section = 0; 
@@ -309,6 +312,7 @@ void WorldGui::Load( const std::string& filename )
 	    (load_end_time - load_start_time) / 1e6 );
   
   Show();
+  return true;
 }
 
 void WorldGui::UnLoad() 
