@@ -7,8 +7,8 @@ namespace Stg {
 	 Fl_Window( x,y, w,h, "Visualize" ),
 	 changedItem( NULL ),
 	 showAll( NULL ),
-	 status( NO_EVENT ),
-	 hm( w/6 ) 
+	 status( NO_EVENT )
+	 //hm( w/6 ) 
   {
 	 set_non_modal(); // keep on top but do not grab all events
 

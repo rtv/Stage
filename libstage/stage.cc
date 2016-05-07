@@ -52,23 +52,23 @@ const Color Color::cyan( 0,1,1 );
 
 
 // set all the pixels in a rectangle 
-static inline void pb_set_rect( Fl_Shared_Image* pb, 
-				const unsigned int x, const unsigned int y, 
-				const unsigned int rwidth, const unsigned int rheight, 
-				const uint8_t val )
-{
-  const unsigned int bytes_per_sample = 1;
-  const unsigned int depth = pb->d();
-  const unsigned int width = pb->w();
+// static inline void pb_set_rect( Fl_Shared_Image* pb, 
+// 				const unsigned int x, const unsigned int y, 
+// 				const unsigned int rwidth, const unsigned int rheight, 
+// 				const uint8_t val )
+// {
+//   const unsigned int bytes_per_sample = 1;
+//   const unsigned int depth = pb->d();
+//   const unsigned int width = pb->w();
   
-  for( unsigned int a = y; a < y+rheight; a++ )
-    {	
-      // zeroing
-      //uint8_t* pix = pb_get_pixel( pb, x, a );
-      uint8_t* pix = (uint8_t*)(pb->data()[0] + (a*width*depth) + x*depth);
-      memset( pix, val, rwidth * depth * bytes_per_sample );
-    }
-}  
+//   for( unsigned int a = y; a < y+rheight; a++ )
+//     {	
+//       // zeroing
+//       //uint8_t* pix = pb_get_pixel( pb, x, a );
+//       uint8_t* pix = (uint8_t*)(pb->data()[0] + (a*width*depth) + x*depth);
+//       memset( pix, val, rwidth * depth * bytes_per_sample );
+//     }
+// }  
 
 
 static inline bool pixel_is_set( uint8_t* pixels,

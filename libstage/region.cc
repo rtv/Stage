@@ -82,80 +82,71 @@ void SuperRegion::DrawOccupancy(void) const
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   
   // outline regions
-  if( regions )
-    {
-      const Region* r = &regions[0];
-      std::vector<GLfloat> rects(1000);
- 			  
-      for( int y=0; y<SUPERREGIONWIDTH; ++y )
-	for( int x=0; x<SUPERREGIONWIDTH; ++x )
-	  {
-	    if( r->count ) // region contains some occupied cells
-	      {					 
-      
-		// outline the region
-		glColor3f(0,1,0);
-		glRecti( x<<RBITS, y<<RBITS, 
-			 (x+1)<<RBITS, (y+1)<<RBITS );
-		
-		// show how many cells are occupied
-		//snprintf( buf, 15, "%lu", r->count );
-		//Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-		
-		// draw a rectangle around each occupied cell					 
-		for( int p=0; p<REGIONWIDTH; ++p )
-		  for( int q=0; q<REGIONWIDTH; ++q )
-		    {
-		      const Cell& c = r->cells[p+(q*REGIONWIDTH)];
-
-		      if( c.blocks[0].size() ) // layer 0
-			{					 
-			  const GLfloat xx = p+(x<<RBITS);
-			  const GLfloat yy = q+(y<<RBITS);					
-
-			  rects.push_back( xx );
-			  rects.push_back( yy );
-			  rects.push_back( xx+1 );
-			  rects.push_back( yy );
-			  rects.push_back( xx+1 );
-			  rects.push_back( yy+1 );
-			  rects.push_back( xx );
-			  rects.push_back( yy+1 );
-			}
+  const Region* r = &regions[0];
+  std::vector<GLfloat> rects(1000);
+  
+  for( int y=0; y<SUPERREGIONWIDTH; ++y )
+    for( int x=0; x<SUPERREGIONWIDTH; ++x )
+      {
+	if( r->count ) // region contains some occupied cells
+	  {					 
+	    
+	    // outline the region
+	    glColor3f(0,1,0);
+	    glRecti( x<<RBITS, y<<RBITS, 
+		     (x+1)<<RBITS, (y+1)<<RBITS );
+	    
+	    // show how many cells are occupied
+	    //snprintf( buf, 15, "%lu", r->count );
+	    //Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+	    
+	    // draw a rectangle around each occupied cell					 
+	    for( int p=0; p<REGIONWIDTH; ++p )
+	      for( int q=0; q<REGIONWIDTH; ++q )
+		{
+		  const Cell& c = r->cells[p+(q*REGIONWIDTH)];
+		  
+		  if( c.blocks[0].size() ) // layer 0
+		    {					 
+		      const GLfloat xx = p+(x<<RBITS);
+		      const GLfloat yy = q+(y<<RBITS);					
 		      
-		      if( c.blocks[1].size() ) // layer 1
-		       	{					 
-		       	  const GLfloat xx = p+(x<<RBITS);
-		       	  const GLfloat yy = q+(y<<RBITS);					
-		       	  const double dx = 0.1;
-
-		       	  rects.push_back( xx+dx );
-		       	  rects.push_back( yy+dx );
-		       	  rects.push_back( xx+1-dx );
-		       	  rects.push_back( yy+dx );
-			  rects.push_back( xx+1-dx );
-			  rects.push_back( yy+1-dx );
-			  rects.push_back( xx+dx );
-			  rects.push_back( yy+1-dx );
-			}
+		      rects.push_back( xx );
+		      rects.push_back( yy );
+		      rects.push_back( xx+1 );
+		      rects.push_back( yy );
+		      rects.push_back( xx+1 );
+		      rects.push_back( yy+1 );
+		      rects.push_back( xx );
+		      rects.push_back( yy+1 );
 		    }
-
-	      }  
-	    ++r; // next region quickly
-	  }  	
-      
-      if( rects.size() )
-	{
-	  assert( rects.size() % 8 == 0 ); // should be full of squares	  
-	  glVertexPointer( 2, GL_FLOAT, 0, &rects[0] );       
-	  glDrawArrays( GL_QUADS, 0, rects.size()/2 );
-	}
-    }
-  else
-    {  // outline region-collected superregion
-      glColor3f( 1,1,0 );   
-      glRecti( 0,0, (1<<SRBITS)-1, (1<<SRBITS)-1 );
-      glColor3f( 0,0,1 );   
+		  
+		  if( c.blocks[1].size() ) // layer 1
+		    {					 
+		      const GLfloat xx = p+(x<<RBITS);
+		      const GLfloat yy = q+(y<<RBITS);					
+		      const double dx = 0.1;
+		      
+		      rects.push_back( xx+dx );
+		      rects.push_back( yy+dx );
+		      rects.push_back( xx+1-dx );
+		      rects.push_back( yy+dx );
+		      rects.push_back( xx+1-dx );
+		      rects.push_back( yy+1-dx );
+		      rects.push_back( xx+dx );
+		      rects.push_back( yy+1-dx );
+		    }
+		}
+	    
+	  }  
+	++r; // next region quickly
+      }  	
+  
+  if( rects.size() )
+    {
+      assert( rects.size() % 8 == 0 ); // should be full of squares	  
+      glVertexPointer( 2, GL_FLOAT, 0, &rects[0] );       
+      glDrawArrays( GL_QUADS, 0, rects.size()/2 );
     }
   
   // char buf[32];

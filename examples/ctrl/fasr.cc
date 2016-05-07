@@ -50,7 +50,7 @@ private:
   //ModelBlobfinder* blobfinder;
   //ModelGripper* gripper;
   Model *source, *sink;
-  int avoidcount, randcount;
+  int avoidcount;// randcount;
   int work_get, work_put;
   bool charger_ahoy;
   double charger_bearing;
@@ -59,7 +59,7 @@ private:
   nav_mode_t mode;
   bool at_dest;
 
-  unsigned int charger_detection_accum;
+  //unsigned int charger_detection_accum;
 
 public:
   Robot( ModelPosition* pos, 
@@ -74,7 +74,7 @@ public:
 		source(source), 
 		sink(sink), 
 		avoidcount(0), 
-		randcount(0), 
+	   //randcount(0), 
 		work_get(0), 
 		work_put(0),
 		charger_ahoy(false),
@@ -82,8 +82,8 @@ public:
 		charger_range(0),
 		charger_heading(0),
 		mode(MODE_WORK),
-		at_dest( false ),
-		charger_detection_accum(0)
+		at_dest( false )
+	   //charger_detection_accum(0)
   {
 	 // need at least these models to get any work done
 	 // (pos must be good, as we used it in the initialization list)

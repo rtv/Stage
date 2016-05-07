@@ -202,9 +202,9 @@ private:
   unsigned int task;
 
   Model* fuel_zone;
-  Model* pool_zone;
+  //Model* pool_zone;
   int avoidcount, randcount;
-  int work_get, work_put;
+  // int work_get, work_put;
   bool charger_ahoy;
   double charger_bearing;
   double charger_range;
@@ -226,8 +226,8 @@ private:
 
   Graph* graphp;
   GraphVis graphvis;
-  unsigned int node_interval;
-  unsigned int node_interval_countdown;
+  //unsigned int node_interval;
+  //unsigned int node_interval_countdown;
   
   static const unsigned int map_width;
   static const unsigned int map_height;
@@ -243,37 +243,37 @@ private:
 public:  
 
   Robot( ModelPosition* pos, 
-				 Model* fuel,
-				 Model* pool ) 
-		: 
-		wait_started_at(-1),
-		pos(pos), 
-		laser( (ModelRanger*)pos->GetChild( "ranger:1" )),
-		sonar( (ModelRanger*)pos->GetChild( "ranger:0" )),
-		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
-		task(random() % tasks.size() ), // choose a task at random
-		fuel_zone(fuel),
-		pool_zone(pool),
-		avoidcount(0), 
-		randcount(0), 
-		work_get(0), 
-		work_put(0),
-		charger_ahoy(false),
-		charger_bearing(0),
-		charger_range(0),
-		charger_heading(0),
-		mode(MODE_WORK),
-		docked_angle(0),
-		goal(tasks[task].source),
-		cached_goal_pose(),
-		graphp(NULL),
-		graphvis( &graphp ),
-		node_interval( 20 ),
-		node_interval_countdown( node_interval ),
-		fiducial_sub(false),		
-		laser_sub(false),
-		sonar_sub(false),
-		force_recharge( false )
+	 Model* fuel )
+    //Model* pool ) 
+    : 
+    wait_started_at(-1),
+    pos(pos), 
+    laser( (ModelRanger*)pos->GetChild( "ranger:1" )),
+    sonar( (ModelRanger*)pos->GetChild( "ranger:0" )),
+    fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
+    task(random() % tasks.size() ), // choose a task at random
+    fuel_zone(fuel),
+    //pool_zone(pool),
+    avoidcount(0), 
+    //randcount(0), 
+    //work_get(0), 
+    //work_put(0),
+    charger_ahoy(false),
+    charger_bearing(0),
+    charger_range(0),
+    charger_heading(0),
+    mode(MODE_WORK),
+    docked_angle(0),
+    goal(tasks[task].source),
+    cached_goal_pose(),
+    graphp(NULL),
+    graphvis( &graphp ),
+  //node_interval( 20 ),
+  //node_interval_countdown( node_interval ),
+    fiducial_sub(false),		
+    laser_sub(false),
+    sonar_sub(false),
+    force_recharge( false )
   {
 		// need at least these models to get any work done
 		// (pos must be good, as we used it in the initialization list)
@@ -904,7 +904,7 @@ public:
 			}
 		else
 			{
-				assert( goal == fuel_zone || goal == pool_zone );
+			  assert( goal == fuel_zone );//|| goal == pool_zone );
 			}
 		  
 		switch( mode )
@@ -1015,9 +1015,7 @@ extern "C" int Init( ModelPosition* mod, CtrlArgs* args )
 																						 w->GetModel( words[s] + "_sink") ) );			 
 		}
 	
-  new Robot( mod,
-						 mod->GetWorld()->GetModel( "fuel_zone" ),
-						 mod->GetWorld()->GetModel( "pool_zone" ) );
+  new Robot( mod, mod->GetWorld()->GetModel( "fuel_zone" ) );//   mod->GetWorld()->GetModel( "pool_zone" ) );
 	
   return 0; //ok
 }

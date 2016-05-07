@@ -35,7 +35,7 @@ extern "C" int Init( Model* mod )
 	putchar( data[x + ((dh-y-1)*dw)] ? 'O' : '.' );
       putchar( '\n' );
     }  
-  delete data;
+  delete[] data;
   puts( "[Rasterize] Done" );
 
   return 0; //ok

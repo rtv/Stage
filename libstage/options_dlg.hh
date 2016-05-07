@@ -34,7 +34,7 @@ namespace Stg {
 
 		// constants
 		static const int vm = 4;
-		const int hm;
+	  //const int hm;
 		static const int boxH = 30;
 
 	public:
