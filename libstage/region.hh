@@ -11,9 +11,9 @@ namespace Stg
 {
 
   // a bit of experimenting suggests that these values are fast. YMMV.
-  const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
-  const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
-  const int32_t SRBITS( RBITS+SBITS );
+  const uint32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
+  const uint32_t SBITS( 5 ); // superregions contain (2^SBITS)^2 regions
+  const uint32_t SRBITS( RBITS+SBITS );
 		
   const int32_t REGIONWIDTH( 1<<RBITS );
   const int32_t REGIONSIZE( REGIONWIDTH*REGIONWIDTH );
@@ -21,8 +21,8 @@ namespace Stg
   const int32_t SUPERREGIONWIDTH( 1<<SBITS );
   const int32_t SUPERREGIONSIZE( SUPERREGIONWIDTH*SUPERREGIONWIDTH );
 		
-  const int32_t CELLMASK( ~((~0x00)<< RBITS ));
-  const int32_t REGIONMASK( ~((~0x00)<< SRBITS ));
+  const int32_t CELLMASK( ~((~0x00u)<< RBITS ));
+  const int32_t REGIONMASK( ~((~0x00u)<< SRBITS ));
 		
   inline int32_t GETCELL( const int32_t x ) { return( x & CELLMASK); }
   inline int32_t GETREG(  const int32_t x ) { return( ( x & REGIONMASK ) >> RBITS); }

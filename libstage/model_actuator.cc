@@ -56,7 +56,7 @@ actuator
   if a linear actuator the axis that the actuator will move along
  */
   
-static const double WATTS_KGMS = 5.0; // cost per kg per meter per second
+//static const double WATTS_KGMS = 5.0; // cost per kg per meter per second
 static const double WATTS_BASE = 2.0; // base cost of position device
 
 ModelActuator::ModelActuator( World* world,

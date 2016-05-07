@@ -39,15 +39,19 @@ IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     SET (WALL "-Wall " )
 ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 
+if( PROJECT_OS_OSX )
+
+  # uncomment this to force 32bit on OS X, for example if you can't build FLTK 64bit
+  #SET( FORCE_ARCH "-arch i386" )
+
+  # suppress warnings about deprecated stuff. Forgive an old project!
+  SET( WALL "-Wall -Wno-deprecated-declarations" )
+
+endif( PROJECT_OS_OSX)
+
 #####################################
 # Build type cflags
 SET (OPTIMIZE "-O2")
-
-# uncomment this to force 32bit on OS X, for example if you can't build FLTK 64bit
-# e.g. using MacPorts on 10.6 Snow Leopard
-#if( PROJECT_OS_OSX )
-#  SET( FORCE_ARCH "-arch i386" )
-#endif( PROJECT_OS_OSX)
 
 SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
 SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)

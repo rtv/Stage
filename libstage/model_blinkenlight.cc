@@ -73,15 +73,14 @@ ModelBlinkenlight::ModelBlinkenlight( World* world,
 
 	this->SetColor( Color( "green" ) );
 
-
-	Geom geom;
-	memset( &geom, 0, sizeof(geom)); // no size
-	geom.size.x = 0.02;
-	geom.size.y = 0.02;
-	geom.size.z = 0.02;
-	this->SetGeom( geom );
-
-
+	// Geom geom;
+	// memset( &geom, 0, sizeof(geom)); // no size
+	// geom.size.x = 0.02;
+	// geom.size.y = 0.02;
+	// geom.size.z = 0.02;
+	this->SetGeom( Geom( Pose(), 
+			     Size( 0.02, 0.02, 0.02 ) ));
+	
 	this->Startup();
 	
 	RegisterOption( &showBlinkenData );

@@ -1599,11 +1599,11 @@ namespace Stg
   {
   private:
 	 
-    Model* mod;
+    //Model* mod;
     float* data;
     size_t len;
     size_t count;
-    unsigned int index;
+    //unsigned int index;
     float x,y,w,h,min,max;
     Color fgcolor, bgcolor;
 	 

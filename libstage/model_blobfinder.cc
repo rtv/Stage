@@ -24,11 +24,12 @@ static const watts_t DEFAULT_BLOBFINDERWATTS = 2.0;
 static const meters_t DEFAULT_BLOBFINDERRANGE = 12.0;
 static const radians_t DEFAULT_BLOBFINDERFOV = M_PI/3.0;
 static const radians_t DEFAULT_BLOBFINDERPAN = 0.0;
-static const unsigned int DEFAULT_BLOBFINDERINTERVAL_MS = 100;
-static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 static const unsigned int DEFAULT_BLOBFINDERSCANWIDTH = 80;
 static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 
+// todo?
+// static const unsigned int DEFAULT_BLOBFINDERINTERVAL_MS = 100;
+// static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 
 /**
    @ingroup model

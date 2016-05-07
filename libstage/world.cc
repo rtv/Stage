@@ -821,8 +821,8 @@ RaytraceResult World::Raytrace( const Ray& r )
   // Graphics Gems IV  
   const int32_t sx(sgn(dx));  
   const int32_t sy(sgn(dy));  
-  const int32_t ax(abs(dx)); 
-  const int32_t ay(abs(dy));  
+  const int32_t ax(std::abs(dx)); 
+  const int32_t ay(std::abs(dy));  
   const int32_t bx(2*ax);	
   const int32_t by(2*ay);	
   int32_t exy(ay-ax); // difference between x and y distances
@@ -1050,8 +1050,8 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
       const int32_t dy( end.y - start.y );
       const int32_t sx(sgn(dx));  
       const int32_t sy(sgn(dy));  
-      const int32_t ax(abs(dx));  
-      const int32_t ay(abs(dy));  
+      const int32_t ax(std::abs(dx));  
+      const int32_t ay(std::abs(dy));  
       const int32_t bx(2*ax);	
       const int32_t by(2*ay);	 
 

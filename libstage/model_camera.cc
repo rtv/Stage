@@ -85,8 +85,8 @@ void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
 
 
 ModelCamera::ModelCamera( World* world, 
-								  Model* parent,
-								  const std::string& type ) : 
+			  Model* parent,
+			  const std::string& type ) : 
   Model( world, parent, type ), 
   _canvas( NULL ),
   _frame_data( NULL ),
@@ -115,13 +115,8 @@ ModelCamera::ModelCamera( World* world,
 	
 	_camera.setPitch( 90.0 );
 	
-	Geom geom;
-	memset( &geom, 0, sizeof(geom));
-	geom.size = DEFAULT_SIZE;
-	SetGeom( geom );
-	
-	// set default color
-	SetColor( Color( DEFAULT_GEOM_COLOR) );
+	this->SetGeom( Geom( Pose(), DEFAULT_SIZE ) );	
+	this->SetColor( Color( DEFAULT_GEOM_COLOR) );
 	
 	RegisterOption( &showCameraData );
 
