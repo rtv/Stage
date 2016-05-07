@@ -32,6 +32,7 @@
    size [  x y z ]
    fov a
    range [min max]
+   noise [range_const range_prop angular]
    )
 
    # generic model properties with non-default values
@@ -57,6 +58,8 @@
    - sview [float float float]
    - [range_min range_max fov] 
    - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
+   - noise [range_const range_prop angular]
+   - noise for range readings: constant noise in meters, proportional noise, angular noise in degrees
    - sview[\<transducer index\>] [float float float]
    - per-transducer version of the sview property. Overrides the common setting.
 
@@ -67,6 +70,7 @@
 #include "stage.hh"
 #include "worldfile.hh"
 #include "option.hh"
+
 using namespace Stg;
 
 static const watts_t RANGER_WATTSPERSENSOR = 0.2;
@@ -143,7 +147,9 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
   size.Load( wf, entity, "size" );
   range.Load( wf, entity, "range" );
   fov = wf->ReadAngle( entity, "fov", fov );
-  sample_count = wf->ReadInt( entity, "samples", sample_count );	
+  sample_count = wf->ReadInt( entity, "samples", sample_count );
+
+  wf->ReadTuple( entity, "noise", 0, 3, "lfa", &range_noise_const, &range_noise, &angle_noise);
   color.Load( wf, entity );
 }
 
@@ -162,6 +168,37 @@ static bool ranger_match( Model* hit,
   
   return( (!hit->IsRelated( finder )) && (sgn(hit->vis.ranger_return) != -1 ) );
 }	
+
+// Returns random numbers in range [-1.0, 1.0)
+double simpleNoise()
+{
+	return 2*(rand()%1000 * 0.001 - 0.5);
+}
+
+#define TWO_PI (M_PI+M_PI)
+// Returns gaussian noise
+// taken from http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+template<class Scalar_t> Scalar_t generateGaussianNoise(Scalar_t variance)
+{
+	static bool haveSpare = false;
+	static Scalar_t rand1, rand2;
+
+	if(haveSpare)
+	{
+		haveSpare = false;
+		return sqrt(variance * rand1) * sin(rand2);
+	}
+
+	haveSpare = true;
+
+	rand1 = rand() / ((Scalar_t) RAND_MAX);
+	if(rand1 < 1e-100) rand1 = 1e-100;
+	rand1 = -2 * log(rand1);
+	rand2 = (rand() / ((Scalar_t) RAND_MAX)) * TWO_PI;
+
+	return sqrt(variance * rand1) * cos(rand2);
+}
+
 
 void ModelRanger::Update( void )
 {     
@@ -198,8 +235,18 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   // trace the ray, incrementing its heading for each sample
   for( size_t t(0); t<sample_count; t++ )
     {
-      const RaytraceResult res = mod->world->Raytrace( ray); 
-      ranges[t] = res.range;
+	  float savedAngle = ray.origin.a;
+	  float distortedAngle = ray.origin.a + sample_incr*angle_noise*simpleNoise()*0.5;
+	  ray.origin.a = distortedAngle;
+      const RaytraceResult res = mod->world->Raytrace( ray);
+      ray.origin.a = savedAngle;
+
+      /// Apply noise only if it is in valid range
+      if(res.range < this->range.max)
+    	  ranges[t] = res.range + res.range*range_noise*simpleNoise() + generateGaussianNoise(range_noise_const);
+      else
+    	  ranges[t] = res.range;
+
       intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;
 		
