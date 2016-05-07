@@ -1,21 +1,20 @@
 #include "stage.hh"
 using namespace Stg;
 
-
 const double FLAGSZ = 0.25;
 
 typedef struct 
 {
   unsigned int capacity;
-  unsigned int interval;
 } info_t;
 
 int Update( Model* mod, info_t* info )
 {
-  if((  mod->GetWorld()->GetUpdateCount() % info->interval  == 0 )
-	  && ( mod->GetFlagCount() < info->capacity) )
-		mod->PushFlag( new Model::Flag( Color( 1,1,0 ), FLAGSZ ) );
-
+  if( mod->GetFlagCount() < info->capacity ) 
+    {
+      //printf( "Source adding flag to model %s\n", mod->Token() );
+      mod->PushFlag( new Model::Flag( Color( 1,1,0 ), FLAGSZ ) );
+    }
   return 0; // run again
 }
 
@@ -38,18 +37,21 @@ void split( const std::string& text,
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
-{  
+{ 
+  puts( "Starting source controller" );
+
   // tokenize the argument string into words
   std::vector<std::string> words;
   split( args->worldfile, std::string(" \t"), words );
   
-  // expect an interval as the 1th argument
-  assert( words.size() == 3 );
+  // expect a capacity as the 1th argument
+  assert( words.size() == 2 );
   assert( words[1].size() > 0 );
   
   info_t* info = new info_t;
-  info->interval = atoi( words[1].c_str() );
-  info->capacity = atoi( words[2].c_str() );
+  info->capacity = atoi( words[1].c_str() );
+
+  printf( "Source Capacity: %d\n", info->capacity );
 
   mod->AddCallback( Model::CB_UPDATE, (model_callback_t)Update, info );  
   mod->Subscribe();

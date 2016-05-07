@@ -29,6 +29,8 @@ int Delivery( Model* mod, void* dummy )
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
+  puts( "Starting sink controller" );
+
   // attach callback to be called whenever a flag is added to the sink model 
   mod->AddCallback( Model::CB_FLAGINCR, (model_callback_t)Delivery, NULL );
   mod->Subscribe();
