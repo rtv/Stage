@@ -52,7 +52,7 @@ int PositionUpdate( Model* mod, robot_t* robot );
 int WifiUpdate( Model* mod, robot_t* robot );
 
 // Function to process incoming wifi messages.
-void ProcessMessage( WifiMessageBase * mesg );
+void ProcessMessage( WifiMessageBase * mesg , void* user );
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
@@ -76,7 +76,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   robot->wifi->AddCallback( Model::CB_UPDATE, (model_callback_t)WifiUpdate, robot);
   //robot->wifi->comm.SetArg( (void*)robot );    // set up the Rx function and argument
   //robot->wifi->comm.SetReceiveFn( ProcessData );
-  robot->wifi->comm.SetReceiveMsgFn( ProcessMessage);
+  robot->wifi->comm.SetReceiveMsgFn( ProcessMessage, robot );
   robot->id = robot->wifi->GetId();
   robot->wifi->Subscribe(); // start the wifi updates
   robot->laser->Subscribe(); // starts the laser updates
@@ -204,7 +204,7 @@ int WifiUpdate( Model* mod, robot_t* robot )
 }
 
 
-void ProcessMessage( WifiMessageBase * incoming)
+void ProcessMessage( WifiMessageBase * incoming, void * user )
 {
   MyWifiMessage * my_mesg = dynamic_cast<MyWifiMessage*>(incoming);
   if ( my_mesg )

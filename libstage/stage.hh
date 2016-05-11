@@ -3221,7 +3221,7 @@ namespace Stg
  /**
   * Interface for inter-robot communication
   */
-  typedef void (*stg_comm_rx_msg_fn_t)(WifiMessageBase * msg );
+  typedef void (*stg_comm_rx_msg_fn_t)(WifiMessageBase * msg , void * arg);
 
   /**
    * Communication class implements call-back based message passing for the Wifi model.
@@ -3246,8 +3246,8 @@ namespace Stg
     void SendBroadcastMessage(WifiMessageBase * to_send); ///< Send wifi message to all robots in range.
 
     bool IsReceiveMsgFnSet() { return this->ReceiveMsgFn; }; ///< Determine if receive message is set for robot.
-    void CallReceiveMsgFn(WifiMessageBase * msg) { this->ReceiveMsgFn( msg ); } ///< Call message receive Fn.
-    void SetReceiveMsgFn( stg_comm_rx_msg_fn_t rxfn) { this->ReceiveMsgFn = rxfn; } ///< Set the receive message fn.
+    void CallReceiveMsgFn(WifiMessageBase * msg) { this->ReceiveMsgFn( msg, this->arg ); } ///< Call message receive Fn.
+    void SetReceiveMsgFn( stg_comm_rx_msg_fn_t rxfn, void * arg) { this->ReceiveMsgFn = rxfn; this->arg = arg; } ///< Set the receive message fn.
 
   };//end class Communication
 
