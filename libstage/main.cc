@@ -45,11 +45,11 @@ const char* USAGE =
 
 /* options descriptor */
 static struct option longopts[] = {
-	{ "gui",  optional_argument,   NULL,  'g' },
-	{ "clock",  optional_argument,   NULL,  'c' },
-	{ "help",  optional_argument,   NULL,  'h' },
-	{ "args",  required_argument,   NULL,  'a' },
-	{ NULL, 0, NULL, 0 }
+  { "gui",  optional_argument,   NULL,  'g' },
+  { "clock",  optional_argument,   NULL,  'c' },
+  { "help",  optional_argument,   NULL,  'h' },
+  { "args",  required_argument,   NULL,  'a' },
+  { NULL, 0, NULL, 0 }
 };
 
 int main( int argc, char* argv[] )
@@ -64,34 +64,34 @@ int main( int argc, char* argv[] )
   bool showclock = false;
   
   while ((ch = getopt_long(argc, argv, "cgh?", longopts, &optindex)) != -1)
-	 {
-		switch( ch )
-		  {
-		  case 0: // long option given
-			 printf( "option %s given\n", longopts[optindex].name );
-			 break;
-		  case 'a':
-			 World::ctrlargs = std::string(optarg);
-			 break;
-		  case 'c': 
-			 showclock = true;
-			 printf( "[Clock enabled]" );
-			 break;
-		  case 'g': 
-			 usegui = false;
-			 printf( "[GUI disabled]" );
-			 break;
-		  case 'h':  
-		  case '?':  
-			 puts( USAGE );
-			 //			 exit(0);
-			 break;
-		  default:
-			 printf("unhandled option %c\n", ch );
-			 puts( USAGE );
-			 //exit(0);
-		  }
-	 }
+    {
+      switch( ch )
+	{
+	case 0: // long option given
+	  printf( "option %s given\n", longopts[optindex].name );
+	  break;
+	case 'a':
+	  World::ctrlargs = std::string(optarg);
+	  break;
+	case 'c': 
+	  showclock = true;
+	  printf( "[Clock enabled]" );
+	  break;
+	case 'g': 
+	  usegui = false;
+	  printf( "[GUI disabled]" );
+	  break;
+	case 'h':  
+	case '?':  
+	  puts( USAGE );
+	  //			 exit(0);
+	  break;
+	default:
+	  printf("unhandled option %c\n", ch );
+	  puts( USAGE );
+	  //exit(0);
+	}
+    }
   
   puts("");// end the first start-up line
 
@@ -100,25 +100,25 @@ int main( int argc, char* argv[] )
   
   optindex = optind; //points to first non-option
   while( optindex < argc )
-	 {
-		if( optindex > 0 )
-		  {      
-			 const char* worldfilename = argv[optindex];
-			 World* world = ( usegui ? 
-										new WorldGui( 400, 300, worldfilename ) : 
-									new World( worldfilename ) );
-			 world->Load( worldfilename );
-			 world->ShowClock( showclock );
+    {
+      if( optindex > 0 )
+	{      
+	  const char* worldfilename = argv[optindex];
+	  World* world = ( usegui ? 
+			   new WorldGui( 400, 300, worldfilename ) : 
+			   new World( worldfilename ) );
+	  world->Load( worldfilename );
+	  world->ShowClock( showclock );
 
-			 if( ! world->paused ) 
-				world->Start();
-		  }
-		optindex++;
-	 }
+	  if( ! world->paused ) 
+	    world->Start();
+	}
+      optindex++;
+    }
 
   World::Run();  
   
   puts( "\n[Stage: done]" );
 
-	return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
