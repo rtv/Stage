@@ -204,7 +204,7 @@ void ModelBumper::Update( void )
     }   
 }
 
-void ModelBumper::Print( char* prefix )
+void ModelBumper::Print( char* prefix ) const
 {
   Model::Print( prefix );
 

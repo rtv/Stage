@@ -2680,7 +2680,7 @@ namespace Stg
     virtual void Startup();
     virtual void Shutdown();
     virtual void Update();
-    virtual void Print (char *prefix);
+    virtual void Print (char *prefix) const;
     
     class BumperVis : public Visualizer
     {
