@@ -42,7 +42,7 @@ namespace Stg {
 
     /// Name of property
 	 std::string name;
-    
+
     /// A list of token indexes
 	 std::vector<int> values;
 
@@ -51,9 +51,9 @@ namespace Stg {
 
     /// Flag set if property has been used
     bool used;
-		
+
 	 CProperty( int entity, const char* name, int line ) :
-		entity(entity), 
+		entity(entity),
 		name(name),
 		values(),
 		line(line),
@@ -81,23 +81,23 @@ namespace Stg {
 
     // Save world into named file
   public: bool Save(const std::string& filename);
-    
+
 	 // Check for unused properties and print warnings
   public: bool WarnUnused();
-	 
+
 	 // Read a string
   public: const std::string ReadString(int entity, const char* name, const std::string& value);
 
 	 // Write a string
   public: void WriteString(int entity, const char *name, const std::string& value );
 
-	 // Read an integer 
+	 // Read an integer
   public: int ReadInt(int entity, const char *name, int value);
 
 	 // Write an integer
   public: void WriteInt(int entity, const char *name, int value);
 
-	 // Read a float 
+	 // Read a float
   public: double ReadFloat(int entity, const char *name, double value);
 
 	 // Write a float
@@ -111,7 +111,7 @@ namespace Stg {
 
 	 // Write a length (includes units conversion)
   public: void WriteLength(int entity, const char *name, double value);
-  
+
 	 // Read an angle (includes unit conversion)
   public: double ReadAngle(int entity, const char *name, double value)
     {
@@ -128,19 +128,19 @@ namespace Stg {
 	 // filename is entered as a relative path, we prepend the world
 	 // files path to it.
   public: const char *ReadFilename(int entity, const char *name, const char *value);
-      
+
     // Read a series of values from a tuplee
-  public: int ReadTuple( const int entity, const char* name, 
+  public: int ReadTuple( const int entity, const char* name,
 			 const unsigned int first, const unsigned int num, const char* format, ... );
-    
+
     // Write a series of values to a tuple
   public: void WriteTuple( const int entity, const char *name,
 			   const unsigned int first, const unsigned int count, const char* format, ... );
-              
+
 
 	 ////////////////////////////////////////////////////////////////////////////
 	 // Private methods used to load stuff from the world file
-  
+
 	 // Load tokens from a file.
   private: bool LoadTokens(FILE *file, int include);
 
@@ -232,7 +232,7 @@ namespace Stg {
 	 // Lookup a entity number by type name
 	 // Returns -1 if there is entity with this type
   public: int LookupEntity(const char *type);
-  
+
 	 // Get a entity's parent entity.
 	 // Returns -1 if there is no parent.
   public: int GetEntityParent(int entity);
@@ -247,7 +247,7 @@ namespace Stg {
   private: CProperty* AddProperty(int entity, const char *name, int line);
 	 // Add an property value.
   private: void AddPropertyValue( CProperty* property, int index, int value_token);
-  
+
 	 // Get an property
   public: CProperty* GetProperty(int entity, const char *name);
 
@@ -273,47 +273,47 @@ namespace Stg {
 		TokenOpenTuple, TokenCloseTuple,
 		TokenSpace, TokenEOL
 	 };
-	
+
 	 // Token structure.
-  private: 
+  private:
 	 class CToken
 	 {
 	 public:
 		// Non-zero if token is from an include file.
 		int include;
-		
+
 		// Token type (enumerated value).
 		int type;
-		
+
 		// Token value
 		std::string value;
-		
+
 		CToken( int include, int type, const char* value ) :
 		  include(include), type(type), value(value) {}
 	 };
-	 
+
 	 // A list of tokens loaded from the file.
 	 // Modified values are written back into the token list.
 	 //private: int token_size, token_count;
   private:  std::vector<CToken> tokens;
 
 	 // Private macro class
-  private: 
+  private:
 	 class CMacro
 	 {
 	 public:
 		// Name of macro
 		std::string macroname;
-		
+
 		// Name of entity
 		std::string entityname;
-		
+
 		// Line the macro definition starts on.
 		int line;
-		
+
 		// Range of tokens in the body of the macro definition.
 				 int starttoken, endtoken;
-		
+
 		CMacro(const char *macroname, const char *entityname,
 				 int line, int starttoken, int endtoken) :
 		  macroname(macroname),
@@ -322,39 +322,39 @@ namespace Stg {
 		  starttoken(starttoken),
 		  endtoken(endtoken) {}
 	 };
-	 
+
 	 // Macro table
   private: std::map<std::string,CMacro> macros;
-	 
+
 	 // Private entity class
-  private: 
+  private:
 	 class CEntity
 	 {
 	 public:
 		// Parent entity
 		int parent;
-		
+
 		// Type of entity (i.e. position, laser, etc).
 		std::string type;
-		
-		CEntity( int parent, const char* type ) : parent(parent), type(type) {} 
+
+		CEntity( int parent, const char* type ) : parent(parent), type(type) {}
 	 };
-	 
+
 	 // Entity list
   private: std::vector<CEntity> entities;
-	 
+
 	 // Property list
-  private: std::map<std::string,CProperty*> properties;	
-	 
+  private: std::map<std::string,CProperty*> properties;
+
 	 // Name of the file we loaded
   public: std::string filename;
-	 
+
 	 // Conversion units
   public: double unit_length;
   public: double unit_angle;
-	 
+
   };
-	
+
 }
 
 #endif

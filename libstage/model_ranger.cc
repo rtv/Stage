@@ -13,7 +13,7 @@
 
 /**
    @ingroup model
-   @defgroup model_ranger Ranger model 
+   @defgroup model_ranger Ranger model
    The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 
    API: Stg::ModelRanger
@@ -47,16 +47,16 @@
    The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
 
    @par Details
- 
+
    - pose[\<transducer index\>] [ x:<float> y:<float> theta:<float> ]\n
    pose of the transducer relative to its parent.
    - ssize [float float]
-   - [x y] 
+   - [x y]
    - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.
    - size[\<transducer index\>] [float float]
    -  per-transducer version of the ssize property. Overrides the common setting.
    - sview [float float float]
-   - [range_min range_max fov] 
+   - [range_min range_max fov]
    - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
    - noise [range_const range_prop angular]
    - noise for range readings: constant noise in meters, proportional noise, angular noise in degrees
@@ -88,26 +88,26 @@ Option ModelRanger::Vis::showFov( "Ranger FOV", "show_ranger_fov", "", false, NU
 //Option ModelRanger::Vis::showBeams( "Ranger beams", "show_ranger_beams", "", false, NULL );
 
 
-ModelRanger::ModelRanger( World* world, 
+ModelRanger::ModelRanger( World* world,
 			  Model* parent,
-			  const std::string& type ) 
+			  const std::string& type )
   : Model( world, parent, type ),
     ranger_vis( world )
 {
   PRINT_DEBUG2( "Constructing ModelRanger %u (%s)\n", id, type.c_str() );
-  
+
   // Set up sensible defaults
-  
+
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
-  
+
   this->SetColor( RANGER_CONFIG_COLOR );
-  
+
   // remove the polygon: ranger has no body
   this->ClearBlocks();
-  
-  this->SetGeom( Geom( Pose(), RANGER_SIZE ));  
-	
+
+  this->SetGeom( Geom( Pose(), RANGER_SIZE ));
+
   AddVisualizer( &ranger_vis, true );
 }
 
@@ -136,7 +136,7 @@ void ModelRanger::LoadSensor( Worldfile* wf, int entity )
 {
   Sensor s;
   s.Load( wf, entity );
-  sensors.push_back(s); 
+  sensors.push_back(s);
 }
 
 
@@ -153,20 +153,20 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
 }
 
 
-static bool ranger_match( Model* hit, 
+static bool ranger_match( Model* hit,
         const Model* finder,
 			  const void* dummy )
 {
   (void)dummy; // avoid warning about unused var
-  
+
   // Ignore the model that's looking and things that are invisible to
-  // rangers 
-  
+  // rangers
+
   // small optimization to avoid recursive Model::IsRelated call in common cases
   if( (hit == finder->Parent()) || (hit == finder) ) return false;
-  
+
   return( (!hit->IsRelated( finder )) && (sgn(hit->vis.ranger_return) != -1 ) );
-}	
+}
 
 // Returns random numbers in range [-1.0, 1.0)
 double simpleNoise()
@@ -200,11 +200,11 @@ template<class Scalar_t> Scalar_t generateGaussianNoise(Scalar_t variance)
 
 
 void ModelRanger::Update( void )
-{     
+{
   // raytrace new range data for all sensors
   FOR_EACH( it, sensors )
     it->Update( this );
-  
+
   Model::Update();
 }
 
@@ -218,7 +218,7 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   //printf( "update sensor, has ranges size %u\n", (unsigned int)ranges.size() );
   // make the first and last rays exactly at the extremes of the FOV
   const double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
-  
+
   // find the global origin of our first emmitted ray
   const double start_angle = (sample_count > 1 ? -fov/2.0 : 0.0);
 
@@ -227,7 +227,7 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   rayorg.a += start_angle;
   rayorg.z += size.z/2.0;
   rayorg = mod->LocalToGlobal(rayorg);
-  
+
   // set up a ray to trace
   Ray ray( mod, rayorg, range.max, ranger_match, NULL, true );
 
@@ -248,16 +248,16 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
 
       intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;
-		
+
       // point the ray to the next angle:
-      ray.origin.a += sample_incr;			
+      ray.origin.a += sample_incr;
     }
 }
 
 std::string ModelRanger::Sensor::String() const
 {
   char buf[256];
-  snprintf( buf, 256, "[ samples %u, range [%.2f %.2f] fov %.2f color [%.2f %.2f %.2f %.2f]", 
+  snprintf( buf, 256, "[ samples %u, range [%.2f %.2f] fov %.2f color [%.2f %.2f %.2f %.2f]",
 	    sample_count, range.min, range.max, fov, color.r, color.g, color.b, color.a );
   return( std::string( buf ) );
 }
@@ -265,20 +265,20 @@ std::string ModelRanger::Sensor::String() const
 void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) const
 {
   size_t sample_count( this->sample_count );
-	
+
   //glTranslatef( 0,0, ranger->GetGeom().size.z/2.0 ); // shoot the ranger beam out at the right height
-			
+
   // pack the ranger hit points into a vertex array for fast rendering
   //GLfloat pts[2*(sample_count+1)];
   GLfloat *pts = new GLfloat[2*(sample_count+1)];
   glVertexPointer( 2, GL_FLOAT, 0, pts );
-	
+
   pts[0] = 0.0;
   pts[1] = 0.0;
-  
+
   glDepthMask( GL_FALSE );
   glPointSize( 2 );
-	
+
   glPushMatrix();
 
   Gl::pose_shift( pose );
@@ -292,7 +292,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
       // col.b /= 3.0;
       rgr->PushColor( color );
 
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );			
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
       glRectf( -size.x/2.0, -size.y/2.0, size.x/2.0, size.y/2.0 );
       rgr->PopColor();
     }
@@ -303,37 +303,37 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	{
 	  double ray_angle((s * (fov / (sample_count-1))) - fov/2.0);
 	  pts[2*s+2] = (float)(range.max * cos(ray_angle) );
-	  pts[2*s+3] = (float)(range.max * sin(ray_angle) );			 
+	  pts[2*s+3] = (float)(range.max * sin(ray_angle) );
 	}
-			
+
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
       Color c = color;
       c.a = 0.5;
-      rgr->PushColor( c );		
+      rgr->PushColor( c );
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
       rgr->PopColor();
-    }			 	
+    }
 
   if( ranges.size()  ) // if we have some data
     {
       rgr->PushColor( color );
-      glPolygonMode( GL_FRONT, GL_FILL );			
-      
+      glPolygonMode( GL_FRONT, GL_FILL );
+
       if( sample_count == 1 )
 	{
 	  // only one sample, so we fake up some beam width for beauty
 	  const double sidelen = ranges[0];
 	  const double da = fov/2.0;
-	  
+
 	  sample_count = 3;
-	  
+
 	  pts[2] = sidelen*cos(-da );
 	  pts[3] = sidelen*sin(-da );
-	  
+
 	  pts[4] = sidelen*cos(+da );
 	  pts[5] = sidelen*sin(+da );
-	}	
+	}
       else
 	{
 	  for( size_t s(0); s<sample_count+1; s++ )
@@ -343,16 +343,16 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	      pts[2*s+3] = (float)(ranges[s] * sin(ray_angle) );
 	    }
 	}
-      
+
       if( vis->showArea )
 	{
 	  if( sample_count > 1 )
 	    // draw the filled polygon in transparent blue
 	    glDrawArrays( GL_POLYGON, 0, sample_count );
 	}
-      
+
       glDepthMask( GL_TRUE );
-      
+
       if( vis->showStrikes )
 	{
 	  // TODO - paint the stike point in a color based on intensity
@@ -363,69 +363,69 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	  // 					glBegin( GL_POINTS );
 	  // 					glVertex2f( pts[2*s+2], pts[2*s+3] );
 	  // 					glEnd();
-	  // 				}			 
-	  
+	  // 				}
+
 	  // draw the beam strike points
 	  //c.a = 0.8;
 	  rgr->PushColor( Color::blue );
 	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
 	  rgr->PopColor();
 	}
-      
+
       // if( vis->showBeams )
       // 	{
       // 	  Color c = color;
-	  
+
       // 	  // darker version of the same color
       // 	  c.r /= 2.0;
       // 	  c.g /= 2.0;
       // 	  c.b /= 2.0;
       // 	  c.a = 1.0;
-	  
-      // 	  rgr->PushColor( c );		
+
+      // 	  rgr->PushColor( c );
       // 	  glBegin( GL_LINES );
-	  
+
       // 	  for( size_t s(0); s<sample_count; s++ )
-      // 	    {    
+      // 	    {
       // 	      glVertex2f( 0,0 );
       // 	      double ray_angle( sample_count == 1 ? 0 : (s * (fov / (sample_count-1))) - fov/2.0 );
-      // 	      glVertex2f( ranges[s] * cos(ray_angle), 
+      // 	      glVertex2f( ranges[s] * cos(ray_angle),
       // 			  ranges[s] * sin(ray_angle) );
-	      
+
       // 	    }
       // 	  glEnd();
-	
+
       // 	  rgr->PopColor();
-      // 	}	
+      // 	}
 
       rgr->PopColor();
     }
-  
+
   glPopMatrix();
   delete [] pts;
 }
-	
+
 void ModelRanger::Print( char* prefix ) const
 {
   Model::Print( prefix );
-	
+
   printf( "\tRanges " );
   for( size_t i(0); i<sensors.size(); i++ )
     {
       printf( "[ " );
       for( size_t j(0); j<sensors[i].ranges.size(); j++ )
 	printf( "%.2f ", sensors[i].ranges[j] );
-			
+
       printf( " ]" );
     }
-	
+
   printf( "\n\tIntensities " );
   for( size_t i(0); i<sensors.size(); i++ )
     {
       printf( "[ " );
       for( size_t j(0); j<sensors[i].intensities.size(); j++ )
 	printf( "%.2f ", sensors[i].intensities[j] );
-			
+
       printf( " ]" );
     }
   puts("");
@@ -435,47 +435,47 @@ void ModelRanger::Print( char* prefix ) const
 
 // VIS -------------------------------------------------------------------
 
-ModelRanger::Vis::Vis( World* world ) 
+ModelRanger::Vis::Vis( World* world )
   : Visualizer( "Ranger", "ranger_vis" )
 {
   world->RegisterOption( &showArea );
   world->RegisterOption( &showStrikes );
   world->RegisterOption( &showFov );
-  //world->RegisterOption( &showBeams );		  
+  //world->RegisterOption( &showBeams );
   world->RegisterOption( &showTransducers );
 }
 
-void ModelRanger::Vis::Visualize( Model* mod, Camera* cam ) 
+void ModelRanger::Vis::Visualize( Model* mod, Camera* cam )
 {
   (void)cam; // avoid warning about unused var
 
   ModelRanger* ranger( dynamic_cast<ModelRanger*>(mod) );
 
-  const std::vector<Sensor>& sensors( ranger->GetSensors() );    
-	
+  const std::vector<Sensor>& sensors( ranger->GetSensors() );
+
   FOR_EACH( it, sensors )
     it->Visualize( this, ranger );
-	
+
   const size_t sensor_count = sensors.size();
 
   if( showTransducers )
     {
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       ranger->PushColor( 0,0,0,1 );
-			
-      for( size_t s(0); s<sensor_count; s++ ) 
-	{ 
+
+      for( size_t s(0); s<sensor_count; s++ )
+	{
 	  const Sensor& rngr(sensors[s]);
-					
+
 	  glPointSize( 4 );
 	  glBegin( GL_POINTS );
 	  glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
 	  glEnd();
-					
+
 	  char buf[8];
 	  snprintf( buf, 8, "%d", (int)s );
 	  Gl::draw_string( rngr.pose.x, rngr.pose.y, rngr.pose.z, buf );
-					
+
 	}
       ranger->PopColor();
     }

@@ -57,10 +57,10 @@ extern "C" int Init( Model* mod )
 }
 
 int RangerUpdate( ModelRanger* rgr, robot_t* robot )
-{  	
-  // compute the vector sum of the sonar ranges	      
+{
+  // compute the vector sum of the sonar ranges
   double dx=0, dy=0;
-	
+
 	const std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensors();
 
   FOR_EACH( it, sensors )
@@ -68,35 +68,35 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
 		const ModelRanger::Sensor& s = *it;
 		dx += s.ranges[0] * cos( s.pose.a );
 		dy += s.ranges[0] * sin( s.pose.a );
-		
-		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
+
+		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );
 	 }
-  
+
   if( (dx == 0) || (dy == 0) )
 	 return 0;
-    
+
   double resultant_angle = atan2( dy, dx );
   double forward_speed = 0.0;
-  double side_speed = 0.0;	   
+  double side_speed = 0.0;
   double turn_speed = WGAIN * resultant_angle;
-  
+
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
 
   // if the front is clear, drive forwards
   if( (sensors[0].ranges[0] > SAFE_DIST) &&
 
 		(sensors[1].ranges[0] > SAFE_DIST/1.5) &&
-		(sensors[2].ranges[0] > SAFE_DIST/3.0) && 
-		(sensors[3].ranges[0] > SAFE_DIST/5.0) && 
+		(sensors[2].ranges[0] > SAFE_DIST/3.0) &&
+		(sensors[3].ranges[0] > SAFE_DIST/5.0) &&
 
-		(sensors[9].ranges[0] > SAFE_DIST/5.0) && 
-		(sensors[10].ranges[0] > SAFE_DIST/3.0) && 
-		(sensors[11].ranges[0] > SAFE_DIST/1.5) && 
+		(sensors[9].ranges[0] > SAFE_DIST/5.0) &&
+		(sensors[10].ranges[0] > SAFE_DIST/3.0) &&
+		(sensors[11].ranges[0] > SAFE_DIST/1.5) &&
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;
 	 }
-  
+
   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
 
   return 0;

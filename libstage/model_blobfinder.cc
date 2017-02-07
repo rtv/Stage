@@ -11,7 +11,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG 
+//#define DEBUG
 
 #include <sys/time.h>
 
@@ -66,7 +66,7 @@ static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
    @endverbatim
 
    @par Details
- 
+
    - colors_count <int>\n
    number of colors being tracked
    - colors [ col1:<string> col2:<string> ... ]\n
@@ -79,10 +79,10 @@ static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 
 */
 
-  
-ModelBlobfinder::ModelBlobfinder( World* world, 
+
+ModelBlobfinder::ModelBlobfinder( World* world,
 				  Model* parent,
-				  const std::string& type ) : 
+				  const std::string& type ) :
   Model( world, parent, type ),
   blob_vis( world ),
   blobs(),
@@ -96,7 +96,7 @@ ModelBlobfinder::ModelBlobfinder( World* world,
   PRINT_DEBUG2( "Constructing ModelBlobfinder %u (%s)\n",
     id, type.c_str() );
   ClearBlocks();
-  
+
   AddVisualizer( &this->blob_vis, true );
 }
 
@@ -105,14 +105,14 @@ ModelBlobfinder::~ModelBlobfinder( void )
 {
 }
 
-static bool blob_match( Model* candidate, 
+static bool blob_match( Model* candidate,
       const Model* finder,
 			const void* dummy )
-{ 
+{
   (void)dummy; // avoid warning about unused var
 
   return( ! finder->IsRelated( candidate ));
-}	
+}
 
 
 static bool ColorMatchIgnoreAlpha( Color a, Color b )
@@ -146,17 +146,17 @@ void ModelBlobfinder::RemoveAllColors()
 }
 
 void ModelBlobfinder::Load( void )
-{  
+{
   Model::Load();
-  
+
   Worldfile* wf = world->GetWorldFile();
-  
+
   wf->ReadTuple( wf_entity, "image", 0, 2, "uu", &scan_width, &scan_height );
 
   range = wf->ReadFloat( wf_entity, "range", range );
   fov = wf->ReadAngle( wf_entity, "fov", fov );
   pan = wf->ReadAngle( wf_entity, "pan", pan );
-  
+
   if( wf->PropertyExists( wf_entity, "colors" ) )
     {
       RemoveAllColors(); // empty the color list to start from scratch
@@ -167,21 +167,21 @@ void ModelBlobfinder::Load( void )
 	{
 	  char* colorstr = NULL;
 	  wf->ReadTuple( wf_entity, "colors", c, 1, "s", &colorstr );
-		    
+
 	  if( ! colorstr )
 	    break;
 	  else
 	    AddColor( Color( colorstr ));
 	}
-    }    
+    }
 }
 
 
 void ModelBlobfinder::Update( void )
-{     
+{
   // generate a scan for post-processing into a blob image
   std::vector<RaytraceResult> samples(scan_width);
-  
+
   Raytrace( Pose(0,0,0,pan), range, fov, blob_match, NULL, false, samples );
 
   // now the colors and ranges are filled in - time to do blob detection
@@ -194,22 +194,22 @@ void ModelBlobfinder::Update( void )
     {
       if( samples[s].mod == NULL  )
 	continue; // we saw nothing
-		 
+
       unsigned int right = s;
       Color blobcol = samples[s].color;
-		 
+
       //printf( "blob start %d color %X\n", blobleft, blobcol );
-		 
+
       // loop until we hit the end of the blob
       // there has to be a gap of >1 pixel to end a blob
       // this avoids getting lots of crappy little blobs
-      while( s < scan_width && samples[s].mod && 
+      while( s < scan_width && samples[s].mod &&
 	     ColorMatchIgnoreAlpha( samples[s].color, blobcol) )
 	{
 	  //printf( "%u blobcol %X block %p %s color %X\n", s, blobcol, samples[s].block, samples[s].block->Model()->Token(), samples[s].block->Color() );
 	  s++;
 	}
-		 
+
       unsigned int left = s - 1;
 
       //if we have color filters in place, check to see if we're looking for this color
@@ -267,7 +267,7 @@ void ModelBlobfinder::Update( void )
 
 
 void ModelBlobfinder::Startup(  void )
-{ 
+{
   Model::Startup();
 
   PRINT_DEBUG( "blobfinder startup" );
@@ -277,7 +277,7 @@ void ModelBlobfinder::Startup(  void )
 }
 
 void ModelBlobfinder::Shutdown( void )
-{ 
+{
 
   PRINT_DEBUG( "blobfinder shutdown" );
 
@@ -299,49 +299,49 @@ void ModelBlobfinder::Shutdown( void )
 ModelBlobfinder::Vis::Vis( World* )
   : Visualizer( "Blobfinder", "blobfinder_vis" )
 {
-  
+
   //world->RegisterOption( &showArea );
   //world->RegisterOption( &showStrikes );
   //world->RegisterOption( &showFov );
-  //world->RegisterOption( &showBeams );		  
+  //world->RegisterOption( &showBeams );
 }
 
 void ModelBlobfinder::Vis::Visualize( Model* mod, Camera* cam )
 {
   ModelBlobfinder* bf( dynamic_cast<ModelBlobfinder*>(mod) );
-  
+
   if( bf->debug )
     {
       // draw the FOV
       GLUquadric* quadric = gluNewQuadric();
-	  
+
       bf->PushColor( 0,0,0,0.2  );
-	  
+
       gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
       gluPartialDisk( quadric,
-		      0, 
+		      0,
 		      bf->range,
-		      20, // slices	
+		      20, // slices
 		      1, // loops
 		      rtod( M_PI/2.0 + bf->fov/2.0 - bf->pan), // start angle
 		      rtod(-bf->fov) ); // sweep angle
-	  
+
       gluDeleteQuadric( quadric );
       bf->PopColor();
     }
-  
+
   if( bf->subs < 1 )
     return;
-  
+
   glPushMatrix();
 
   // return to global rotation frame
   Pose gpose( bf->GetGlobalPose() );
   glRotatef( rtod(-gpose.a),0,0,1 );
-  
+
   // place the "screen" a little away from the robot
   glTranslatef( -2.5, -1.5, 0.5 );
-  
+
   // rotate to face screen
   float yaw, pitch;
   pitch = - cam->pitch();
@@ -349,37 +349,37 @@ void ModelBlobfinder::Vis::Visualize( Model* mod, Camera* cam )
   float robotAngle = -rtod(bf->pose.a);
   glRotatef( robotAngle - yaw, 0,0,1 );
   glRotatef( -pitch, 1,0,0 );
-  
+
   // convert blob pixels to meters scale - arbitrary
   glScalef( 0.025, 0.025, 1 );
-  
+
   // draw a white screen with a black border
   bf->PushColor( 1,1,1,1 );
   glRectf( 0,0, bf->scan_width, bf->scan_height );
   bf->PopColor();
-  
+
   glTranslatef(0,0,0.01 );
-  
+
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   bf->PushColor( 1,0,0,1 );
   glRectf( 0,0, bf->scan_width, bf->scan_height );
   bf->PopColor();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  
+
   // draw the blobs on the screen
   for( unsigned int s=0; s<bf->blobs.size(); s++ )
     {
       Blob* b = &bf->blobs[s];
-      //blobfinder_blob_t* b = 
+      //blobfinder_blob_t* b =
       //&g_array_index( blobs, blobfinder_blob_t, s);
-		
+
       bf->PushColor( b->color );
       glRectf( b->left, b->top, b->right, b->bottom );
 
       //printf( "%u l %u t%u r %u b %u\n", s, b->left, b->top, b->right, b->bottom );
       bf->PopColor();
     }
-  
+
   glPopMatrix();
 }
 

@@ -2,13 +2,13 @@
 #include <FL/Fl.H>
 
 namespace Stg {
-  
+
   OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
 	 Fl_Window( x,y, w,h, "Visualize" ),
 	 changedItem( NULL ),
 	 showAll( NULL ),
 	 status( NO_EVENT )
-	 //hm( w/6 ) 
+	 //hm( w/6 )
   {
 	 set_non_modal(); // keep on top but do not grab all events
 
@@ -20,28 +20,28 @@ namespace Stg {
 	 resizable( scroll );
  	 scroll->type( Fl_Scroll::VERTICAL );
 	 scroll->end();
-	 
+
 	 this->end();
   }
-  
+
 	OptionsDlg::~OptionsDlg() {
 	  delete scroll; // deletes members
 	  delete showAllCheck;
 	}
-  
-  
+
+
   void OptionsDlg::checkChanged( Fl_Widget* w, void* p ) {
 	 Fl_Check_Button* check = static_cast<Fl_Check_Button*>( w );
 	 OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
-	 
-	 if ( check == oDlg->showAllCheck && oDlg->showAll ) 
+
+	 if ( check == oDlg->showAllCheck && oDlg->showAll )
 		{
 		  oDlg->status = CHANGE_ALL;
 		  oDlg->showAll->set( check->value() );
 		  oDlg->do_callback();
 		  oDlg->status = NO_EVENT;
 		}
-	 else 
+	 else
 		{
 		  int item = oDlg->scroll->find( check );
 		  oDlg->options[ item ]->set( check->value() );
@@ -52,7 +52,7 @@ namespace Stg {
 		  oDlg->status = NO_EVENT;
 		}
   }
-  
+
 	void OptionsDlg::updateChecks() {
 		if (scroll->children())
 			scroll->clear();
@@ -72,12 +72,12 @@ namespace Stg {
 		options.assign( opts.begin(), opts.end() );
 		updateChecks();
 	}
-	
-	
+
+
 	void OptionsDlg::showAllOpt( Option* opt ) {
 		showAll = opt;
 		showAllCheck->label( opt->name().c_str() );
 		showAllCheck->value( opt->val() );
 	}
 
-} // namespace Stg 
+} // namespace Stg

@@ -14,14 +14,14 @@ namespace lspTest {
 		CPPUNIT_TEST( testData );
 		CPPUNIT_TEST( testMove );
 		CPPUNIT_TEST_SUITE_END();
-		
+
 	protected:
 		playerc_position2d_t* posProxy;
-		
+
 		void testGeom();
 		void testData();
 		void testMove();
-		
+
 	public:
 		void setUp();
 		void tearDown();

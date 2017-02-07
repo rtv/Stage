@@ -2,23 +2,23 @@
 A* Algorithm Implementation using STL is
 Copyright (C)2001-2005 Justin Heyes-Jones
 
-Permission is given by the author to freely redistribute and 
-include this code in any program as long as this credit is 
+Permission is given by the author to freely redistribute and
+include this code in any program as long as this credit is
 given where due.
- 
-  COVERED CODE IS PROVIDED UNDER THIS LICENSE ON AN "AS IS" BASIS, 
-  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, 
-  INCLUDING, WITHOUT LIMITATION, WARRANTIES THAT THE COVERED CODE 
+
+  COVERED CODE IS PROVIDED UNDER THIS LICENSE ON AN "AS IS" BASIS,
+  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED,
+  INCLUDING, WITHOUT LIMITATION, WARRANTIES THAT THE COVERED CODE
   IS FREE OF DEFECTS, MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE
-  OR NON-INFRINGING. THE ENTIRE RISK AS TO THE QUALITY AND 
-  PERFORMANCE OF THE COVERED CODE IS WITH YOU. SHOULD ANY COVERED 
-  CODE PROVE DEFECTIVE IN ANY RESPECT, YOU (NOT THE INITIAL 
-  DEVELOPER OR ANY OTHER CONTRIBUTOR) ASSUME THE COST OF ANY 
-  NECESSARY SERVICING, REPAIR OR CORRECTION. THIS DISCLAIMER OF 
-  WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE. NO USE 
+  OR NON-INFRINGING. THE ENTIRE RISK AS TO THE QUALITY AND
+  PERFORMANCE OF THE COVERED CODE IS WITH YOU. SHOULD ANY COVERED
+  CODE PROVE DEFECTIVE IN ANY RESPECT, YOU (NOT THE INITIAL
+  DEVELOPER OR ANY OTHER CONTRIBUTOR) ASSUME THE COST OF ANY
+  NECESSARY SERVICING, REPAIR OR CORRECTION. THIS DISCLAIMER OF
+  WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE. NO USE
   OF ANY COVERED CODE IS AUTHORIZED HEREUNDER EXCEPT UNDER
   THIS DISCLAIMER.
- 
+
   Use at your own risk!
 
 */
@@ -29,7 +29,7 @@ given where due.
 //#include <conio.h>
 #include <assert.h>
 
-// some systems need this for uint8_t 
+// some systems need this for uint8_t
 #include <stdint.h>
 
 // stl includes
@@ -78,7 +78,7 @@ public: // data
 
 			Node *parent; // used during the search to record the parent of successor nodes
 			Node *child; // used after the search for the application to view the search in reverse
-			
+
 			float g; // cost of this node + it's predecessors
 			float h; // heuristic estimate of distance to goal
 			float f; // sum of cumulative cost of predecessors and self and heuristic
@@ -89,7 +89,7 @@ public: // data
 				g( 0.0f ),
 				h( 0.0f ),
 				f( 0.0f )
-			{			
+			{
 			}
 
 			UserState m_UserState;
@@ -99,7 +99,7 @@ public: // data
 	// For sorting the heap the STL needs compare function that lets us compare
 	// the f value of two nodes
 
-	class HeapCompare_f 
+	class HeapCompare_f
 	{
 		public:
 
@@ -125,7 +125,7 @@ public: // methods
 		m_CancelRequest( false )
 			{
 			}
-	
+
 	// call at any time to cancel the search and free up all the memory
 	void CancelSearch()
 	{
@@ -141,16 +141,16 @@ public: // methods
 		m_Goal = AllocateNode();
 
 		assert((m_Start != NULL && m_Goal != NULL));
-		
+
 		m_Start->m_UserState = Start;
 		m_Goal->m_UserState = Goal;
 
 		m_State = SEARCH_STATE_SEARCHING;
-		
+
 		// Initialise the AStar specific parts of the Start Node
 		// The user only needs fill out the state information
 
-		m_Start->g = 0; 
+		m_Start->g = 0;
 		m_Start->h = m_Start->m_UserState.GoalDistanceEstimate( m_Goal->m_UserState );
 		m_Start->f = m_Start->g + m_Start->h;
 		m_Start->parent = 0;
@@ -166,7 +166,7 @@ public: // methods
 		m_Steps = 0;
 	}
 
-	// Advances search one step 
+	// Advances search one step
 	unsigned int SearchStep()
 	{
 		// Firstly break if the user has not initialised the search
@@ -175,13 +175,13 @@ public: // methods
 
 		// Next I want it to be safe to do a searchstep once the search has succeeded...
 		if( (m_State == SEARCH_STATE_SUCCEEDED) ||
-			(m_State == SEARCH_STATE_FAILED) 
+			(m_State == SEARCH_STATE_FAILED)
 		  )
 		{
-			return m_State; 
+			return m_State;
 		}
 
-		// Failure is defined as emptying the open list as there is nothing left to 
+		// Failure is defined as emptying the open list as there is nothing left to
 		// search...
 		// New: Allow user abort
 		if( m_OpenList.empty() || m_CancelRequest )
@@ -190,11 +190,11 @@ public: // methods
 			m_State = SEARCH_STATE_FAILED;
 			return m_State;
 		}
-		
+
 		// Incremement step count
 		m_Steps ++;
 
-		// Pop the best node (the one with the lowest f) 
+		// Pop the best node (the one with the lowest f)
 		Node *n = m_OpenList.front(); // get pointer to the node
 		pop_heap( m_OpenList.begin(), m_OpenList.end(), HeapCompare_f() );
 		m_OpenList.pop_back();
@@ -202,8 +202,8 @@ public: // methods
 		// Check for the goal, once we pop that we're done
 		if( n->m_UserState.IsGoal( m_Goal->m_UserState ) )
 		{
-			// The user is going to use the Goal Node he passed in 
-			// so copy the parent pointer of n 
+			// The user is going to use the Goal Node he passed in
+			// so copy the parent pointer of n
 			m_Goal->parent = n->parent;
 
 			// A special case is that the goal was passed in as the start state
@@ -216,14 +216,14 @@ public: // methods
 				Node *nodeChild = m_Goal;
 				Node *nodeParent = m_Goal->parent;
 
-				do 
+				do
 				{
 					nodeParent->child = nodeChild;
 
 					nodeChild = nodeParent;
 					nodeParent = nodeParent->parent;
-				
-				} 
+
+				}
 				while( nodeChild != m_Start ); // Start is always the first node by definition
 
 			}
@@ -246,14 +246,14 @@ public: // methods
 
 			// User provides this functions and uses AddSuccessor to add each successor of
 			// node 'n' to m_Successors
-			bool ret = n->m_UserState.GetSuccessors( this, n->parent ? &n->parent->m_UserState : NULL ); 
+			bool ret = n->m_UserState.GetSuccessors( this, n->parent ? &n->parent->m_UserState : NULL );
 
 			if( !ret )
 			{
 
 			    typename vector< Node * >::iterator successor;
 
-				// free the nodes that may previously have been added 
+				// free the nodes that may previously have been added
         for( successor = m_Successors.begin(); successor != m_Successors.end(); ++successor )
 				{
 					FreeNode( (*successor) );
@@ -267,7 +267,7 @@ public: // methods
 				m_State = SEARCH_STATE_OUT_OF_MEMORY;
 				return m_State;
 			}
-			
+
 			// Now handle each successor to the current node ...
       for( typename vector< Node * >::iterator successor = m_Successors.begin(); successor != m_Successors.end(); ++successor )
 			{
@@ -287,7 +287,7 @@ public: // methods
 				{
 					if( (*openlist_result)->m_UserState.IsSameState( (*successor)->m_UserState ) )
 					{
-						break;					
+						break;
 					}
 				}
 
@@ -311,7 +311,7 @@ public: // methods
 				{
 					if( (*closedlist_result)->m_UserState.IsSameState( (*successor)->m_UserState ) )
 					{
-						break;					
+						break;
 					}
 				}
 
@@ -342,7 +342,7 @@ public: // methods
 				if( closedlist_result != m_ClosedList.end() )
 				{
 					// remove it from Closed
-					FreeNode(  (*closedlist_result) ); 
+					FreeNode(  (*closedlist_result) );
 					m_ClosedList.erase( closedlist_result );
 
 					// Fix thanks to ...
@@ -350,22 +350,22 @@ public: // methods
 					// who noticed that this code path was incorrect
 					// Here we have found a new state which is already CLOSED
 					// anus
-					
+
 				}
 
 				// Update old version of this node
 				if( openlist_result != m_OpenList.end() )
-				{	   
+				{
 
-					FreeNode( (*openlist_result) ); 
+					FreeNode( (*openlist_result) );
 			   		m_OpenList.erase( openlist_result );
 
-					// re-make the heap 
+					// re-make the heap
 					// make_heap rather than sort_heap is an essential bug fix
 					// thanks to Mike Ryynanen for pointing this out and then explaining
 					// it in detail. sort_heap called on an invalid heap does not work
 					make_heap( m_OpenList.begin(), m_OpenList.end(), HeapCompare_f() );
-			
+
 				}
 
 				// heap now unsorted
@@ -382,7 +382,7 @@ public: // methods
 
 		} // end else (not goal so expand)
 
- 		return m_State; // Succeeded bool is false at this point. 
+ 		return m_State; // Succeeded bool is false at this point.
 
 	}
 
@@ -451,7 +451,7 @@ public: // methods
 			return NULL;
 		}
 	}
-	
+
 	// Get next node
 	UserState *GetSolutionNext()
 	{
@@ -470,7 +470,7 @@ public: // methods
 
 		return NULL;
 	}
-	
+
 	// Get end node
 	UserState *GetSolutionEnd()
 	{
@@ -484,7 +484,7 @@ public: // methods
 			return NULL;
 		}
 	}
-	
+
 	// Step solution iterator backwards
 	UserState *GetSolutionPrev()
 	{
@@ -604,7 +604,7 @@ public: // methods
 private: // methods
 
 	// This is called when a search fails or is cancelled to free all used
-	// memory 
+	// memory
 	void FreeAllNodes()
 	{
 		// iterate open list and delete all nodes
@@ -638,7 +638,7 @@ private: // methods
 
 
 	// This call is made by the search class when the search ends. A lot of nodes may be
-	// created that are still present when the search ends. They will be deleted by this 
+	// created that are still present when the search ends. They will be deleted by this
 	// routine once the search ends
 	void FreeUnusedNodes()
 	{
@@ -718,7 +718,7 @@ private: // data
 	vector< Node *> m_OpenList;
 
 	// Closed list is a vector.
-	vector< Node * > m_ClosedList; 
+	vector< Node * > m_ClosedList;
 
 	// Successors is a vector filled out by the user each type successors to a node
 	// are generated
@@ -740,7 +740,7 @@ private: // data
 	// Memory
  	FixedSizeAllocator<Node> m_FixedSizeAllocator;
 #endif
-	
+
 	//Debug : need to keep these two iterators around
 	// for the user Dbg functions
 	typename vector< Node * >::iterator iterDbgOpen;
@@ -748,11 +748,11 @@ private: // data
 
 	// debugging : count memory allocation and free's
 	int m_AllocateNodeCount;
-	
+
 	bool m_CancelRequest;
 
 };
 
 
 
-   
+

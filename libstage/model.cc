@@ -1,5 +1,5 @@
-/** 
-    $Rev$ 
+/**
+    $Rev$
 **/
 
 /** @defgroup model
@@ -10,7 +10,7 @@
     basic model is used as the base class for all other model types. You
     can use the basic model to simulate environmental objects.
 
-    API: Stg::Model 
+    API: Stg::Model
 
     <h2>Worldfile properties</h2>
 
@@ -56,7 +56,7 @@
     @endverbatim
 
     @par Details
- 
+
     - pose [ x:<float> y:<float> z:<float> heading:<float> ] \n
     specify the pose of the model in its parent's coordinate system
 
@@ -65,7 +65,7 @@
 
     - origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
     specify the position of the object's center, relative to its pose
- 
+
     - update_interval int (defaults to 100) The amount of simulated
     time in milliseconds between calls to Model::Update(). Controls
     the frequency with which this model's data is generated.
@@ -84,7 +84,7 @@
     the entire string as an argument (including the library name). It
     is up to the controller to parse the string if it needs
     arguments."
- 
+
     - fiducial_return fiducial_id:<int>\n if non-zero, this model is
     detected by fiducialfinder sensors. The value is used as the
     fiducial ID.
@@ -111,7 +111,7 @@
     - gripper_return <int>\n iff 1, this model can be gripped by a
     gripper and can be pushed around by collisions with anything that
     has a non-zero obstacle_return.
- 
+
     - gui_nose <int>\n if 1, draw a nose on the model showing its
     heading (positive X axis)
 
@@ -189,7 +189,7 @@ void Pose::Save( Worldfile* wf, const int section, const char* keyword )
   wf->WriteTuple( section, keyword, 0, 4, "llla", x, y, z, a );
 }
 
-Model::Visibility::Visibility() : 
+Model::Visibility::Visibility() :
   blob_return( true ),
   fiducial_key( 0 ),
   fiducial_return( 0 ),
@@ -201,50 +201,50 @@ Model::Visibility::Visibility() :
 
 Model::Visibility& Model::Visibility::Load( Worldfile* wf, int wf_entity )
 {
-  blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);    
+  blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);
   fiducial_key = wf->ReadInt( wf_entity, "fiducial_key", fiducial_key);
   fiducial_return = wf->ReadInt( wf_entity, "fiducial_return", fiducial_return);
-  gripper_return = wf->ReadInt( wf_entity, "gripper_return", gripper_return);    
-  obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
-  ranger_return = wf->ReadFloat( wf_entity, "ranger_return", ranger_return);    
+  gripper_return = wf->ReadInt( wf_entity, "gripper_return", gripper_return);
+  obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);
+  ranger_return = wf->ReadFloat( wf_entity, "ranger_return", ranger_return);
 
   return *this;
-}    
+}
 
 void Model::Visibility::Save( Worldfile* wf, int wf_entity )
 {
-  wf->WriteInt( wf_entity, "blob_return", blob_return);    
+  wf->WriteInt( wf_entity, "blob_return", blob_return);
   wf->WriteInt( wf_entity, "fiducial_key", fiducial_key);
   wf->WriteInt( wf_entity, "fiducial_return", fiducial_return);
-  wf->WriteInt( wf_entity, "gripper_return", gripper_return);    
-  wf->WriteInt( wf_entity, "obstacle_return", obstacle_return);    
-  wf->WriteFloat( wf_entity, "ranger_return", ranger_return);    
-}    
+  wf->WriteInt( wf_entity, "gripper_return", gripper_return);
+  wf->WriteInt( wf_entity, "obstacle_return", obstacle_return);
+  wf->WriteFloat( wf_entity, "ranger_return", ranger_return);
+}
 
 
 Model::GuiState::GuiState() :
   grid( false ),
-  move( false ),  
+  move( false ),
   nose( false ),
   outline( false )
 { /* nothing to do */}
 
 Model::GuiState& Model::GuiState::Load( Worldfile* wf, int wf_entity )
 {
-  nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
-  grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
-  outline = wf->ReadInt( wf_entity, "gui_outline", outline);    
-  move = wf->ReadInt( wf_entity, "gui_move", move );    
- 
+  nose = wf->ReadInt( wf_entity, "gui_nose", nose);
+  grid = wf->ReadInt( wf_entity, "gui_grid", grid);
+  outline = wf->ReadInt( wf_entity, "gui_outline", outline);
+  move = wf->ReadInt( wf_entity, "gui_move", move );
+
   return *this;
-}    
+}
 
 // constructor
 Model::Model( World* world,
 	      Model* parent,
 	      const std::string& type,
 	      const std::string& name ) :
-  Ancestor(), 	 
+  Ancestor(),
   mapped(false),
   drawOptions(),
   alwayson(false),
@@ -274,42 +274,42 @@ Model::Model( World* world,
   rebuild_displaylist(true),
   say_string(),
   stack_children(true),
-  stall(false),	 
+  stall(false),
   subs(0),
   thread_safe(false),
   trail(trail_length),
   trail_index(0),
-  type(type),	
+  type(type),
   event_queue_num(0),
   used(false),
   watts(0.0),
   watts_give(0.0),
-  watts_take(0.0),	 
+  watts_take(0.0),
   wf(NULL),
   wf_entity(0),
   world(world),
   world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   assert( world );
-  
+
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %s \n",
-		world->Token(), 
+		world->Token(),
 		parent ? parent->Token() : "(null)",
 		type.c_str() );
-  
+
   modelsbyid[id] = this;
-  
+
   if( name.size() ) // use a name if specified
     {
       //printf( "name set %s\n", name.c_str() );
       SetToken( name );
     }
   else   // if a name was not specified make up a name based on the parent's
-    // name,  model type and the number of instances so far    
+    // name,  model type and the number of instances so far
     {
       char buf[2048];
       //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
-      
+
       // prefix with parent name if any, followed by the type name
       // with a suffix of a colon and the parent's number of children
       // of this type
@@ -318,31 +318,31 @@ Model::Model( World* world,
 	  snprintf( buf, 2048, "%s.%s:%u",
 		    parent->Token(),
 		    type.c_str(),
-		    parent->child_type_counts[type] ); 
-	} 
+		    parent->child_type_counts[type] );
+	}
       else // no parent, so use the count of this type in the world
 	{
 	  snprintf( buf, 2048, "%s:%u",
 		    type.c_str() ,
-		    world->child_type_counts[type] ); 
+		    world->child_type_counts[type] );
 	}
-      
+
       //printf( "generated name %s\n", buf );
       SetToken( buf );
     }
-  
+
   //  printf( "%s generated a name for my child %s\n", Token(),  name.str().c_str() );
-  
+
   world->AddModel( this );
 
-  if ( parent ) 
+  if ( parent )
     parent->AddChild( this );
   else
     {
       world->AddChild( this );
       // top level models are draggable in the GUI by default
       gui.move = true;
-    }        
+    }
 
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
@@ -355,17 +355,17 @@ Model::Model( World* world,
 Model::~Model( void )
 {
   // children are removed in ancestor class
-  
+
   if( world ) // if I'm not a worldless dummy model
     {
       UnMap(); // remove from all layers
-      
+
       // remove myself from my parent's child list, or the world's child
-      // list if I have no parent		
-      EraseAll( this, parent ? parent->children : world->children );			      
+      // list if I have no parent
+      EraseAll( this, parent ? parent->children : world->children );
       // erase from the static map of all models
-      modelsbyid.erase(id);			
-      
+      modelsbyid.erase(id);
+
       world->RemoveModel( this );
     }
 }
@@ -381,7 +381,7 @@ void Model::AddFlag( Flag* flag )
 {
   if( flag )
     {
-      flag_list.push_back( flag );		
+      flag_list.push_back( flag );
       CallCallbacks( CB_FLAGINCR );
     }
 }
@@ -408,10 +408,10 @@ Model::Flag* Model::PopFlag()
 {
   if( flag_list.size() == 0 )
     return NULL;
-  
+
   Flag* flag = flag_list.front();
   flag_list.pop_front();
-  
+
   CallCallbacks( CB_FLAGDECR );
 
   return flag;
@@ -429,22 +429,22 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 {
   if( has_default_block )
     {
-      blockgroup.Clear(); 
+      blockgroup.Clear();
       has_default_block = false;
     }
-  
-  blockgroup.LoadBlock( wf, entity );  
+
+  blockgroup.LoadBlock( wf, entity );
 }
 
 
-void Model::AddBlockRect( meters_t x, 
-			  meters_t y, 
-			  meters_t dx, 
+void Model::AddBlockRect( meters_t x,
+			  meters_t y,
+			  meters_t dx,
 			  meters_t dy,
 			  meters_t dz )
-{  
+{
   UnMap();
-  
+
   std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -454,12 +454,12 @@ void Model::AddBlockRect( meters_t x,
   pts[2].y = y + dy;
   pts[3].x = x;
   pts[3].y = y + dy;
-  
+
   blockgroup.AppendBlock( Block( &blockgroup,
 				 pts,
 				 Bounds(0,dz) ));
 
-  Map(); 
+  Map();
 }
 
 
@@ -471,7 +471,7 @@ Pose Model::GlobalToLocal( const Pose& pose ) const
   const Pose org( GetGlobalPose() );
   const double cosa(cos(org.a));
   const double sina(sin(org.a));
-  
+
   // compute global pose in local coords
   return Pose( (pose.x - org.x) * cosa + (pose.y - org.y) * sina,
 	       -(pose.x - org.x) * sina + (pose.y - org.y) * cosa,
@@ -489,10 +489,10 @@ bool Model::IsAntecedent( const Model* testmod ) const
 {
   if( parent == NULL )
     return false;
-  
+
   if( parent == testmod )
     return true;
-  
+
   return parent->IsAntecedent( testmod );
 }
 
@@ -501,11 +501,11 @@ bool Model::IsDescendent( const Model* testmod ) const
 {
   if( this == testmod )
     return true;
-  
+
   FOR_EACH( it, children )
     if( (*it)->IsDescendent( testmod ) )
       return true;
-  
+
   // neither mod nor a child of this matches testmod
   return false;
 }
@@ -515,7 +515,7 @@ bool Model::IsRelated( const Model* that ) const
   // is it me?
   if( this == that )
     return true;
-  
+
   // wind up to top-level object
   const Model* candidate = this;
   while( candidate->parent )
@@ -523,18 +523,18 @@ bool Model::IsRelated( const Model* that ) const
       // shortcut out if we found it on the way up the tree
       if( candidate->parent == that )
       	return true;
-      
-      candidate = candidate->parent;      
+
+      candidate = candidate->parent;
     }
-  
-  // we got to our root, so recurse down the tree    
+
+  // we got to our root, so recurse down the tree
   return candidate->IsDescendent( that );
   // TODO: recursive solution is costing us 3% of all compute time! try an
   // iterative solution?
 }
 
 point_t Model::LocalToGlobal( const point_t& pt) const
-{  
+{
   const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
   return point_t( gpose.x, gpose.y );
 }
@@ -543,16 +543,16 @@ point_t Model::LocalToGlobal( const point_t& pt) const
 std::vector<point_int_t> Model::LocalToPixels( const std::vector<point_t>& local ) const
 {
   const size_t sz = local.size();
-  
+
   std::vector<point_int_t> global( sz );
-  
+
   const Pose gpose( GetGlobalPose() + geom.pose );
   Pose ptpose;
-  
+
   for( size_t i=0; i<sz; i++ )
     {
       ptpose = gpose + Pose( local[i].x, local[i].y, 0, 0 );
-      
+
       global[i].x = (int32_t)floor( ptpose.x * world->ppm);
       global[i].y = (int32_t)floor( ptpose.y * world->ppm);
     }
@@ -593,9 +593,9 @@ void Model::Subscribe( void )
   subs++;
   world->total_subs++;
   world->dirty = true; // need redraw
-  
+
   //printf( "subscribe to %s %d\n", Token(), subs );
-  
+
   // if this is the first sub, call startup
   if( subs == 1 )
     Startup();
@@ -620,11 +620,11 @@ void Model::Print( char* prefix ) const
     printf( "%s model ", prefix );
   else
     printf( "Model ");
-  
-  printf( "%s:%s\n", 
-	  world->Token(), 
+
+  printf( "%s:%s\n",
+	  world->Token(),
 	  Token() );
-  
+
   FOR_EACH( it, children )
     (*it)->Print( prefix );
 }
@@ -632,10 +632,10 @@ void Model::Print( char* prefix ) const
 const char* Model::PrintWithPose() const
 {
   const Pose gpose = GetGlobalPose();
-	
+
   static char txt[256];
-  snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-	   Token(), 
+  snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",
+	   Token(),
 	   gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
@@ -643,17 +643,17 @@ const char* Model::PrintWithPose() const
 
 void Model::Startup( void )
 {
-  //printf( "Startup model %s\n", this->token );  
+  //printf( "Startup model %s\n", this->token );
   //printf( "model %s using queue %d\n", token, event_queue_num );
-  
+
   // iff we're thread safe, we can use an event queue >0, else 0
   event_queue_num =  thread_safe ? world->GetEventQueue( this ) : 0;
-  
+
   world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
-    
+
   if( FindPowerPack() )
     world->EnableEnergy( this );
-  
+
   CallCallbacks( CB_STARTUP );
 }
 
@@ -661,7 +661,7 @@ void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
   CallCallbacks( CB_SHUTDOWN );
-  
+
   world->DisableEnergy( this );
 
   // allows data visualizations to be cleared.
@@ -670,14 +670,14 @@ void Model::Shutdown( void )
 
 
 void Model::Update( void )
-{ 
+{
   //printf( "Q%d model %p %s update\n", event_queue_num, this, Token() );
-	
-  last_update = world->sim_time;  
-	
+
+  last_update = world->sim_time;
+
   if( subs > 0 ) // no subscriptions means we don't need to be updated
     world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
-	
+
   // if we updated the model then it needs to have its update
   // callback called in series back in the main thread. It's
   // not safe to run user callbacks in a worker thread, as
@@ -685,7 +685,7 @@ void Model::Update( void )
   // etc. We queue up the callback into a queue specific to
 
   if( ! callbacks[Model::CB_UPDATE].empty() )
-    world->pending_update_callbacks[event_queue_num].push(this);					
+    world->pending_update_callbacks[event_queue_num].push(this);
 }
 
 void Model::CallUpdateCallbacks( void )
@@ -694,11 +694,11 @@ void Model::CallUpdateCallbacks( void )
 }
 
 meters_t Model::ModelHeight() const
-{	
+{
   meters_t m_child = 0; //max size of any child
   FOR_EACH( it, children )
     m_child = std::max( m_child, (*it)->ModelHeight() );
-	
+
   //height of model + max( child height )
   return geom.size.z + m_child;
 }
@@ -710,7 +710,7 @@ void Model::AddToPose( double dx, double dy, double dz, double da )
   p.y += dy;
   p.z += dz;
   p.a += da;
-  
+
   SetPose( p );
 }
 
@@ -734,65 +734,65 @@ void Model::AppendTouchingModels( std::set<Model*>& touchers )
 
 
 Model* Model::TestCollision()
-{  
+{
   Model* hitmod( blockgroup.TestCollision() );
-  
-  if( hitmod == NULL ) 	 
+
+  if( hitmod == NULL )
     FOR_EACH( it, children )
-      { 
+      {
 	hitmod = (*it)->TestCollision();
 	if( hitmod )
 	  break;
       }
-  
+
   //printf( "mod %s test collision done.\n", token );
-  return hitmod;  
-}  
+  return hitmod;
+}
 
 void Model::UpdateCharge()
-{  
+{
   PowerPack* mypp = FindPowerPack();
   assert( mypp );
-  
+
   if( watts > 0 ) // dissipation rate
     {
       // consume  energy stored in the power pack
-      mypp->Dissipate( watts * (interval_energy * 1e-6), GetGlobalPose() );      
-    }  
-  
+      mypp->Dissipate( watts * (interval_energy * 1e-6), GetGlobalPose() );
+    }
+
   if( watts_give > 0 ) // transmission to other powerpacks max rate
-    {  
+    {
       // detach charger from all the packs charged last time
       FOR_EACH( it, pps_charging )
 	(*it)->ChargeStop();
       pps_charging.clear();
-		
+
       // run through and update all appropriate touchers
       std::set<Model*> touchers;
       AppendTouchingModels( touchers );
-		
+
       FOR_EACH( it, touchers )
 	{
 	  Model* toucher = (*it);
-	  PowerPack* hispp =toucher->FindPowerPack();		
-			 
-	  if( hispp && toucher->watts_take > 0.0) 
-	    {		
-	      //printf( "   toucher %s can take up to %.2f wats\n", 
+	  PowerPack* hispp =toucher->FindPowerPack();
+
+	  if( hispp && toucher->watts_take > 0.0)
+	    {
+	      //printf( "   toucher %s can take up to %.2f wats\n",
 	      //		toucher->Token(), toucher->watts_take );
-				  
+
 	      const watts_t rate = std::min( watts_give, toucher->watts_take );
 	      const joules_t amount =  rate * interval_energy * 1e-6;
-				  
+
 	      //printf ( "moving %.2f joules from %s to %s\n",
 	      //		 amount, token, toucher->token );
-				  
+
 	      // set his charging flag
 	      hispp->ChargeStart();
-				  
+
 	      // move some joules from me to him
 	      mypp->TransferTo( hispp, amount );
-				  
+
 	      // remember who we are charging so we can detatch next time
 	      pps_charging.push_front( hispp );
 	    }
@@ -805,7 +805,7 @@ void Model::UpdateTrail()
 {
   // get the current item and increment the counter
   TrailItem* item = &trail[trail_index++];
-	
+
   // record the current info
   item->time = world->sim_time;
   item->pose = GetGlobalPose();
@@ -816,7 +816,7 @@ void Model::UpdateTrail()
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
-{  
+{
   if( (this->type == type) && (this->subs == 0) )
     return const_cast<Model*> (this); // discard const
 
@@ -827,7 +827,7 @@ Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
       if( found )
 	return found;
     }
-  
+
   // nothing matching below this model
   return NULL;
 }
@@ -850,7 +850,7 @@ void Model::Redraw( void )
 Model* Model::GetUnusedModelOfType( const std::string& type )
 {
   //printf( "searching for type %d in model %s type %d\n", type, token, this->type );
-  
+
   if( (this->type == type) && (!this->used ) )
     {
       this->used = true;
@@ -864,7 +864,7 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
       if( found )
       	return found;
     }
-  
+
   // nothing matching below this model
   if( ! parent )  PRINT_WARN1( "Request for unused model of type %s failed", type.c_str() );
   return NULL;
@@ -873,7 +873,7 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
 kg_t Model::GetTotalMass() const
 {
   kg_t sum = mass;
-  
+
   FOR_EACH( it, children )
     sum += (*it)->GetTotalMass();
 
@@ -889,7 +889,7 @@ kg_t Model::GetMassOfChildren() const
 void Model::Map( unsigned int layer )
 {
   blockgroup.Map( layer );
-} 
+}
 
 void Model::UnMap( unsigned int layer )
 {
@@ -902,19 +902,19 @@ void Model::BecomeParentOf( Model* child )
     child->parent->RemoveChild( child );
   else
     world->RemoveChild( child );
-  
+
   child->parent = this;
-  
+
   this->AddChild( child );
-  
-  world->dirty = true; 
+
+  world->dirty = true;
 }
 
 PowerPack* Model::FindPowerPack() const
 {
   if( power_pack )
     return power_pack;
-  
+
   if( parent )
     return parent->FindPowerPack();
 
@@ -922,14 +922,14 @@ PowerPack* Model::FindPowerPack() const
 }
 
 void Model::RegisterOption( Option* opt )
-{ 
+{
   world->RegisterOption( opt );
 }
 
 
-void Model::Rasterize( uint8_t* data, 
-		       unsigned int width, 
-		       unsigned int height, 
+void Model::Rasterize( uint8_t* data,
+		       unsigned int width,
+		       unsigned int height,
 		       meters_t cellwidth,
 		       meters_t cellheight )
 {
@@ -946,14 +946,14 @@ void Model::SetFriction( double friction )
 Model* Model::GetChild( const std::string& modelname ) const
 {
   // construct the full model name and look it up
-  
+
   const std::string fullname = token + "." + modelname;
-  
+
   Model* mod = world->GetModel( fullname );
-  
+
   if( mod == NULL )
     PRINT_WARN1( "Model %s not found", fullname.c_str() );
-  
+
   return mod;
 }
 
@@ -961,7 +961,7 @@ Model* Model::GetChild( const std::string& modelname ) const
 //***************************************************************
 // Raster data visualizer
 //
-Model::RasterVis::RasterVis() 
+Model::RasterVis::RasterVis()
   : Visualizer( "Rasterization", "raster_vis" ),
     data(NULL),
     width(0),
@@ -972,46 +972,46 @@ Model::RasterVis::RasterVis()
     subs(0),
     used(0)
 {
-  
+
 }
 
-void Model::RasterVis::Visualize( Model* mod, Camera* cam ) 
+void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 {
   (void)cam; // avoid warning about unused var
 
   if( data == NULL )
     return;
 
-  // go into world coordinates  
+  // go into world coordinates
   glPushMatrix();
   mod->PushColor( 1,0,0,0.5 );
 
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
-  
+
   if( pts.size() > 0 )
     {
       glPushMatrix();
       //Size sz = mod->blockgroup.GetSize();
       //glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
       //glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
-		
+
       // now we're in world meters coordinates
       glPointSize( 4 );
       glBegin( GL_POINTS );
-		
+
       FOR_EACH( it, pts )
 	{
 	  point_t& pt = *it;
 	  glVertex2f( pt.x, pt.y );
-			 
+
 	  char buf[128];
 	  snprintf( buf, 127, "[%.2f x %.2f]", pt.x, pt.y );
-	  Gl::draw_string( pt.x, pt.y, 0, buf );		  
+	  Gl::draw_string( pt.x, pt.y, 0, buf );
 	}
       glEnd();
-		
+
       mod->PopColor();
-		
+
       glPopMatrix();
     }
 
@@ -1040,15 +1040,15 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
       {
 	if( data[ x + y*width ] )
 	  glRectf( x, y, x+1, y+1 );
-		  
+
 	// 		  char buf[128];
 	// 		  snprintf( buf, 127, "[%u x %u]", x, y );
-	// 		  Gl::draw_string( x, y, 0, buf );		  
+	// 		  Gl::draw_string( x, y, 0, buf );
       }
 
-	
+
   glPolygonMode( GL_FRONT, GL_FILL );
-	
+
   mod->PopColor();
   mod->PopColor();
 
@@ -1057,21 +1057,21 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   snprintf( buf, 127, "[%u x %u]", width, height );
   glTranslatef( 0,0,0.01 );
   Gl::draw_string( 1, height-1, 0, buf );
-  
+
   mod->PopColor();
 
   glPopMatrix();
 }
 
-void Model::RasterVis::SetData( uint8_t* data, 
-				const unsigned int width, 
+void Model::RasterVis::SetData( uint8_t* data,
+				const unsigned int width,
 				const unsigned int height,
-				const meters_t cellwidth, 
+				const meters_t cellwidth,
 				const meters_t cellheight )
 {
   // copy the raster for test visualization
-  if( this->data ) 
-    delete[] this->data;  
+  if( this->data )
+    delete[] this->data;
   size_t len = sizeof(uint8_t) * width * height;
   //printf( "allocating %lu bytes\n", len );
   this->data = new uint8_t[len];
@@ -1094,9 +1094,9 @@ void Model::RasterVis::ClearPts()
 }
 
 
-Model::Flag::Flag( const Color& color, const double size ) 
+Model::Flag::Flag( const Color& color, const double size )
   : color(color), size(size), displaylist(0)
-{ 
+{
 }
 
 Model::Flag* Model::Flag::Nibble( double chunk )
@@ -1117,7 +1117,7 @@ Model::Flag* Model::Flag::Nibble( double chunk )
 void Model::Flag::SetColor( const Color& c )
 {
   color = c;
-	
+
   if( displaylist )
     {
       // force recreation of list
@@ -1129,7 +1129,7 @@ void Model::Flag::SetColor( const Color& c )
 void Model::Flag::SetSize( double sz )
 {
   size = sz;
-	
+
   if( displaylist )
     {
       // force recreation of list
@@ -1145,20 +1145,20 @@ void Model::Flag::Draw(  GLUquadric* quadric )
     {
       displaylist = glGenLists(1);
       assert( displaylist > 0 );
-			
-      glNewList( displaylist, GL_COMPILE );	
-			
+
+      glNewList( displaylist, GL_COMPILE );
+
       glColor4f( color.r, color.g, color.b, color.a );
-			
+
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.0, 1.0);
       gluQuadricDrawStyle( quadric, GLU_FILL );
       gluSphere( quadric, size/2.0, 4,2  );
       glDisable(GL_POLYGON_OFFSET_FILL);
-			
+
       // draw the edges darker version of the same color
       glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
-			
+
       gluQuadricDrawStyle( quadric, GLU_LINE );
       gluSphere( quadric, size/2.0, 4,2 );
 
@@ -1171,21 +1171,21 @@ void Model::Flag::Draw(  GLUquadric* quadric )
 
 
 void Model::SetGeom( const Geom& val )
-{  
+{
   UnMapWithChildren(0);
   UnMapWithChildren(1);
-  
+
   geom = val;
-  
+
   blockgroup.CalcSize();
-  
-  //printf( "model %s SetGeom size [%.3f %.3f %.3f]\n", Token(), geom.size.x, geom.size.y, geom.size.z ); 
+
+  //printf( "model %s SetGeom size [%.3f %.3f %.3f]\n", Token(), geom.size.x, geom.size.y, geom.size.z );
 
   NeedRedraw();
-  
+
   MapWithChildren(0);
   MapWithChildren(1);
-    
+
   CallCallbacks( CB_GEOM );
 }
 
@@ -1213,7 +1213,7 @@ void Model::SetGripperReturn( bool val )
 void Model::SetFiducialReturn(  int val )
 {
   vis.fiducial_return = val;
-  
+
   // non-zero values mean we need to be in the world's set of
   // detectable models
   if( val == 0 )
@@ -1277,14 +1277,14 @@ void Model::SetMapResolution(  meters_t val )
   map_resolution = val;
 }
 
-// set the pose of model in global coordinates 
+// set the pose of model in global coordinates
 void Model::SetGlobalPose( const Pose& gpose )
 {
   SetPose( parent ? parent->GlobalToLocal( gpose ) : gpose );
 }
 
 int Model::SetParent( Model* newparent)
-{  
+{
   Pose oldPose = GetGlobalPose();
 
   // remove the model from its old parent (if it has one)
@@ -1294,7 +1294,7 @@ int Model::SetParent( Model* newparent)
     world->RemoveChild( this );
   // link from the model to its new parent
   this->parent = newparent;
-  
+
   if( newparent )
     newparent->AddChild( this );
   else
@@ -1303,23 +1303,23 @@ int Model::SetParent( Model* newparent)
   CallCallbacks( CB_PARENT );
 
   SetGlobalPose( oldPose ); // Needs to recalculate position due to change in parent
-  
+
   return 0; //ok
 }
 
 // get the model's position in the global frame
 Pose Model::GetGlobalPose() const
-{ 
+{
   // if I'm a top level model, my global pose is my local pose
   if( parent == NULL )
     return pose;
-  
-  // otherwise    
-  Pose global_pose = parent->GetGlobalPose() + pose;		
-  
+
+  // otherwise
+  Pose global_pose = parent->GetGlobalPose() + pose;
+
   if ( parent->stack_children ) // should we be on top of our parent?
     global_pose.z += parent->geom.size.z;
-  
+
   return global_pose;
 }
 
@@ -1336,7 +1336,7 @@ void Model::SetPose( const Pose& newpose )
       //       if( isnan( pose.a ) )
       // 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
       // 					 token, pose.x, pose.y, pose.z, pose.a );
-			
+
       NeedRedraw();
 
       UnMapWithChildren(0);
@@ -1347,28 +1347,28 @@ void Model::SetPose( const Pose& newpose )
 
       world->dirty = true;
     }
-	
+
   CallCallbacks( CB_POSE );
 }
 
 void Model::Load()
-{  
+{
   assert( wf );
   assert( wf_entity );
-  
+
   PRINT_DEBUG1( "Model \"%s\" loading...", token.c_str() );
-  
-  // choose the thread to run in, if thread_safe > 0 
+
+  // choose the thread to run in, if thread_safe > 0
   event_queue_num = wf->ReadInt( wf_entity, "event_queue", event_queue_num );
 
   if( wf->PropertyExists( wf_entity, "joules" ) )
     {
       if( !power_pack )
 	power_pack = new PowerPack( this );
-		
-      joules_t j = wf->ReadFloat( wf_entity, "joules", 
-				  power_pack->GetStored() ) ;	 
-		
+
+      joules_t j = wf->ReadFloat( wf_entity, "joules",
+				  power_pack->GetStored() ) ;
+
       /* assume that the store is full, so the capacity is the same as
 	 the charge */
       power_pack->SetStored( j );
@@ -1379,63 +1379,63 @@ void Model::Load()
     {
       if( !power_pack )
 	power_pack = new PowerPack( this );
-		
+
       power_pack->SetCapacity( wf->ReadFloat( wf_entity, "joules_capacity",
-					      power_pack->GetCapacity() ) ); 		
+					      power_pack->GetCapacity() ) );
     }
 
   if( wf->PropertyExists( wf_entity, "kjoules" ) )
     {
       if( !power_pack )
 	power_pack = new PowerPack( this );
-		
-      joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules", 
-					   power_pack->GetStored() ) ;	 
-		
+
+      joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules",
+					   power_pack->GetStored() ) ;
+
       /* assume that the store is full, so the capacity is the same as
 	 the charge */
       power_pack->SetStored( j );
       power_pack->SetCapacity( j );
     }
-  
+
   if( wf->PropertyExists( wf_entity, "kjoules_capacity" ) )
     {
       if( !power_pack )
 	power_pack = new PowerPack( this );
-		
+
       power_pack->SetCapacity( 1000.0 * wf->ReadFloat( wf_entity, "kjoules_capacity",
-						       power_pack->GetCapacity() ) ); 		
+						       power_pack->GetCapacity() ) );
     }
 
-    
-  watts = wf->ReadFloat( wf_entity, "watts", watts );    
-  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );    
+
+  watts = wf->ReadFloat( wf_entity, "watts", watts );
+  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
-  
+
   debug = wf->ReadInt( wf_entity, "debug", debug );
-  
+
   const std::string& name = wf->ReadString(wf_entity, "name", token );
   if( name != token )
     SetToken( name );
-  
+
   //PRINT_WARN1( "%s::Load", token );
-  
+
   Geom g( GetGeom() );
-  
+
   if( wf->PropertyExists( wf_entity, "origin" ) )
     g.pose.Load( wf, wf_entity, "origin" );
-  
+
   if( wf->PropertyExists( wf_entity, "size" ) )
     g.size.Load( wf, wf_entity, "size" );
-  
+
   SetGeom( g );
 
   if( wf->PropertyExists( wf_entity, "pose" ))
     SetPose( GetPose().Load( wf, wf_entity, "pose" ) );
-  
+
 
   if( wf->PropertyExists( wf_entity, "color" ))
-    {      
+    {
       Color col( 1,0,0 ); // red;
       const std::string& colorstr = wf->ReadString( wf_entity, "color", "" );
       if( colorstr != "" )
@@ -1446,10 +1446,10 @@ void Model::Load()
 	    col = Color( colorstr );
 	}
       this->SetColor( col );
-    }        
-  
+    }
+
   this->SetColor( GetColor().Load( wf, wf_entity ) );
-  
+
   if( wf->ReadInt( wf_entity, "noblocks", 0 ) )
     {
       if( has_default_block )
@@ -1457,88 +1457,88 @@ void Model::Load()
 	  blockgroup.Clear();
 	  has_default_block = false;
 	  blockgroup.CalcSize();
-	}		
+	}
     }
-  
+
   if( wf->PropertyExists( wf_entity, "bitmap" ) )
     {
       const std::string bitmapfile = wf->ReadString( wf_entity, "bitmap", "" );
       if( bitmapfile == "" )
 	PRINT_WARN1( "model %s specified empty bitmap filename\n", Token() );
-		
+
       if( has_default_block )
 	{
 	  blockgroup.Clear();
 	  has_default_block = false;
 	}
-		
+
       blockgroup.LoadBitmap( bitmapfile, wf );
     }
-  
+
   if( wf->PropertyExists( wf_entity, "boundary" ))
     {
       this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
-		
+
       if( boundary )
 	{
 	  //PRINT_WARN1( "setting boundary for %s\n", token );
-			 
+
 	  blockgroup.CalcSize();
-			 
-	  const double epsilon = 0.01;	      
+
+	  const double epsilon = 0.01;
 	  const bounds3d_t b = blockgroup.BoundingBox();
-	  
-	  const Size size( b.x.max - b.x.min, 
-			   b.y.max - b.y.min, 
+
+	  const Size size( b.x.max - b.x.min,
+			   b.y.max - b.y.min,
 			   b.z.max - b.z.min );
-	  
-	  AddBlockRect(b.x.min, b.y.min, epsilon, size.y, size.z );	      
-	  AddBlockRect(b.x.min, b.y.min, size.x, epsilon, size.z );	      
-	  AddBlockRect(b.x.min, b.y.max-epsilon, size.x, epsilon, size.z );	      
-	  AddBlockRect(b.x.max-epsilon, b.y.min, epsilon, size.y, size.z );	      
-	}     
-    }	  
-  
+
+	  AddBlockRect(b.x.min, b.y.min, epsilon, size.y, size.z );
+	  AddBlockRect(b.x.min, b.y.min, size.x, epsilon, size.z );
+	  AddBlockRect(b.x.min, b.y.max-epsilon, size.x, epsilon, size.z );
+	  AddBlockRect(b.x.max-epsilon, b.y.min, epsilon, size.y, size.z );
+	}
+    }
+
   this->stack_children =
     wf->ReadInt( wf_entity, "stack_children", this->stack_children );
-  
+
   kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
-  if( m != this->mass ) 
+  if( m != this->mass )
     SetMass( m );
-  	
+
   vis.Load( wf, wf_entity );
   SetFiducialReturn( vis.fiducial_return ); // may have some work to do
-  
+
   gui.Load( wf, wf_entity );
 
   double res = wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution );
   if( res != this->map_resolution )
     SetMapResolution( res );
-  
+
   if( wf->PropertyExists( wf_entity, "friction" ))
     {
       this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));
     }
-  
+
   if( CProperty* ctrlp = wf->GetProperty( wf_entity, "ctrl" ) )
     {
       for( unsigned int index=0; index < ctrlp->values.size(); index++ )
 	{
-			 
+
 	  const char* lib = wf->GetPropertyValue( ctrlp, index );
-			 
+
 	  if( !lib )
 	    printf( "Error - NULL library name specified for model %s\n", Token() );
 	  else
 	    LoadControllerModule( lib );
 	}
     }
-    
+
   // internally interval is in usec, but we use msec in worldfiles
   interval = 1000 * wf->ReadInt( wf_entity, "update_interval", interval/1000 );
 
   Say( wf->ReadString(wf_entity, "say", "" ));
-  
+
   trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
   trail.resize( trail_length );
 
@@ -1547,20 +1547,20 @@ void Model::Load()
   this->alwayson = wf->ReadInt( wf_entity, "alwayson",  alwayson );
   if( alwayson )
     Subscribe();
-	
+
   // call any type-specific load callbacks
   this->CallCallbacks( CB_LOAD );
-  
+
   // we may well have changed blocks or geometry
   blockgroup.CalcSize();
-  
+
   // remove and re-add to both layers
   UnMapWithChildren(0);
   MapWithChildren(0);
 
   UnMapWithChildren(1);
   MapWithChildren(1);
-  
+
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", Token() );
 
@@ -1569,7 +1569,7 @@ void Model::Load()
 
 
 void Model::Save( void )
-{  
+{
   //printf( "Model \"%s\" saving...\n", Token() );
 
   // some models were not loaded, so have no worldfile. Just bail here.
@@ -1577,24 +1577,24 @@ void Model::Save( void )
     return;
 
   assert( wf_entity );
-	
+
   PRINT_DEBUG5( "saving model %s pose [ %.2f, %.2f, %.2f, %.2f]",
 		token.c_str(),
 		pose.x,
 		pose.y,
 		pose.z,
 		pose.a );
-	
+
   // just in case
   pose.a = normalize( pose.a );
   geom.pose.a = normalize( geom.pose.a );
-  
+
   if( wf->PropertyExists( wf_entity, "pose" ) )
     pose.Save( wf, wf_entity, "pose" );
-  
+
   if( wf->PropertyExists( wf_entity, "size" ) )
     geom.size.Save( wf, wf_entity, "size" );
-  
+
   if( wf->PropertyExists( wf_entity, "origin" ) )
     geom.pose.Save( wf, wf_entity, "origin" );
 
@@ -1627,18 +1627,18 @@ void Model::LoadControllerModule( const char* lib )
 
   //printf( "STAGEPATH: %s\n",  FileManager::stagePath().c_str());
   //  printf( "ltdl search path: %s\n", lt_dlgetsearchpath() );
-        
+
   // PLUGIN_PATH now defined in config.h
   lt_dladdsearchdir( PLUGIN_PATH );
 
   //printf( "ltdl search path: %s\n", lt_dlgetsearchpath() );
 
   lt_dlhandle handle = NULL;
-  
+
   // the library name is the first word in the string
   char libname[256];
   sscanf( lib, "%255s %*s", libname );
-  
+
   if(( handle = lt_dlopenext( libname ) ))
     {
       //printf( "]" );
@@ -1656,23 +1656,23 @@ void Model::LoadControllerModule( const char* lib )
 	  fflush( stdout );
 	  exit(-1);
 	}
-		
+
       AddCallback( CB_INIT, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
     }
   else
     {
       printf( "(Libtool error: %s.) Can't open your plugin.\n",
 	      lt_dlerror() ); // report the error from libtool
-		
+
       PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", libname );
-            
-        printf( "ctrl \"%s\" STAGEPATH \"%s\"\n", libname, PLUGIN_PATH ); 
-            
+
+        printf( "ctrl \"%s\" STAGEPATH \"%s\"\n", libname, PLUGIN_PATH );
+
       puts( "libtool error #2" );
       fflush( stdout );
       exit(-1);
     }
-  
+
   fflush(stdout);
 }
 

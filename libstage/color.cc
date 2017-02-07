@@ -7,11 +7,11 @@ using namespace Stg;
 #include <errno.h>
 
 Color::Color( double r, double g, double b, double a )
-  : r(r),g(g),b(b),a(a) 
+  : r(r),g(g),b(b),a(a)
 {}
 
-Color::Color() : 
-  r(1.0), g(0.0), b(0.0), a(1.0) 
+Color::Color() :
+  r(1.0), g(0.0), b(0.0), a(1.0)
 {}
 
 bool Color::operator!=( const Color& other ) const
@@ -28,7 +28,7 @@ Color::Color( const std::string& name) :
 {
   if( name == "" )  // empty string?
 	return; // red
-  
+
   static FILE *file = NULL;
   static std::map<std::string,Color> table;
 
@@ -36,7 +36,7 @@ Color::Color( const std::string& name) :
 	{
 	  std::string rgbFile = FileManager::findFile( "rgb.txt" );
 	  file = fopen( rgbFile.c_str(), "r" );
-	  
+
 	  if( file == NULL )
 		{
 		  PRINT_ERR1("unable to open color database: %s "
@@ -45,9 +45,9 @@ Color::Color( const std::string& name) :
 
 		  exit(0);
 		}
-	  
+
 	  PRINT_DEBUG( "Success!" );
-	  
+
 	  // load the file into the map
 	  while(1)
 		{
@@ -57,7 +57,7 @@ Color::Color( const std::string& name) :
 
 			// it's a macro or comment line - ignore the line
 			// also ignore empty lines
-			if (line[0] == '!' || line[0] == '#' || line[0] == '%' || line[0] == '\0') 
+			if (line[0] == '!' || line[0] == '#' || line[0] == '%' || line[0] == '\0')
 				continue;
 
 			// Trim the trailing space
@@ -68,19 +68,19 @@ Color::Color( const std::string& name) :
 			int r, g, b;
 			int chars_matched = 0;
 			sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
-			
+
 			// Read the name
 			const char* colorname = line + chars_matched;
-			
+
 			// map the name to the color in the table
 			table[colorname] = Color( r/255.0, g/255.0, b/255.0 );
 		}
 	  fclose(file);
 	}
-  
-  // look up the colorname in the database    
+
+  // look up the colorname in the database
   Color& found = table[name];
-  
+
   this->r = found.r;
   this->g = found.g;
   this->b = found.b;
@@ -100,12 +100,12 @@ Color Color::RandomColor()
 void Color::Print( const char* prefix ) const
 {
   printf( "%s [%.2f %.2f %.2f %.2f]\n", prefix, r,g,b,a );
-} 
+}
 
 const Color& Color::Load( Worldfile* wf, const int section )
 {
   if( wf->PropertyExists( section, "color" ))
-    {      
+    {
       const std::string& colorstr = wf->ReadString( section, "color", "" );
 
       if( colorstr != "" )
@@ -126,7 +126,7 @@ const Color& Color::Load( Worldfile* wf, const int section )
 	      a = c.a;
 	    }
 	}
-    }        
+    }
   else
     wf->ReadTuple( section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a );
 

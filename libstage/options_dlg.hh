@@ -20,7 +20,7 @@ namespace Stg {
 	class OptionsDlg : public Fl_Window {
 	public:
 		enum event_t { NO_EVENT, CHANGE, CHANGE_ALL, CLOSE };
-		
+
 	private:
 		std::vector<Option*> options;
 		Option* changedItem;
@@ -29,7 +29,7 @@ namespace Stg {
 		Fl_Scroll* scroll;
 		Fl_Check_Button* showAllCheck;
 		void updateChecks();
-		
+
 		static void checkChanged( Fl_Widget* w, void* p );
 
 		// constants
@@ -40,7 +40,7 @@ namespace Stg {
 	public:
 		OptionsDlg( int x, int y, int w, int h );
 		virtual ~OptionsDlg();
-		
+
 		void setOptions( const std::set<Option*>& opts );
 		void clearOptions() { options.clear(); }
 		void showAllOpt( Option* opt );
@@ -49,6 +49,6 @@ namespace Stg {
 	};
 
 }
-	
+
 #endif
 

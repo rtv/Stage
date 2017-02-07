@@ -6,26 +6,26 @@
 using namespace Stg;
 
 
-Option::Option( const std::string& n, 
-					 const std::string& tok, 
-					 const std::string& key, 
-					 bool v, 
-					 World* world ) : 
-  optName( n ), 
-  value( v ), 
-  wf_token( tok ), 
-  shortcut( key ), 
+Option::Option( const std::string& n,
+					 const std::string& tok,
+					 const std::string& key,
+					 bool v,
+					 World* world ) :
+  optName( n ),
+  value( v ),
+  wf_token( tok ),
+  shortcut( key ),
   menu( NULL ),
   menuIndex( 0 ),
   menuCb( NULL ),
   menuCbWidget( NULL ),
   _world( world ),
   htname( n )
-{ 
-  /* do nothing */ 
+{
+  /* do nothing */
 }
 
-Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) 
+Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i )
 {
   const Fl_Menu_Item* mArr = menu->menu();
   return const_cast<Fl_Menu_Item*>( &mArr[ i ] );
@@ -62,8 +62,8 @@ void Option::createMenuItem( Fl_Menu_Bar* m, std::string path )
 	menu = m;
 	path = path + "/" + optName;
 	// create a menu item and save its index
-	menuIndex = menu->add( path.c_str(), shortcut.c_str(), 
-				 toggleCb, this, 
+	menuIndex = menu->add( path.c_str(), shortcut.c_str(),
+				 toggleCb, this,
 				 FL_MENU_TOGGLE | (value ? FL_MENU_VALUE : 0 ) );
 }
 

@@ -55,18 +55,18 @@ actuator
 - axis
   if a linear actuator the axis that the actuator will move along
  */
-  
+
 //static const double WATTS_KGMS = 5.0; // cost per kg per meter per second
 static const double WATTS_BASE = 2.0; // base cost of position device
 
 ModelActuator::ModelActuator( World* world,
 										Model* parent,
-										const std::string& type ) : 
+										const std::string& type ) :
   Model( world, parent, type ),
-  goal(0), 
-  pos(0), 
-  max_speed(1), 
-  min_position(0), 
+  goal(0),
+  pos(0),
+  max_speed(1),
+  min_position(0),
   max_position(1),
   start_position(0),
   cosa(0.0),
@@ -76,10 +76,10 @@ ModelActuator::ModelActuator( World* world,
   axis(0,0,0)
 {
   this->SetWatts( WATTS_BASE );
-  
+
   // sensible position defaults
   //this->SetVelocity( Velocity(0,0,0,0) );
-  this->SetBlobReturn(true);  
+  this->SetBlobReturn(true);
 
   // Allow the models to move
   //VelocityEnable();
@@ -100,7 +100,7 @@ void ModelActuator::Load( void )
 	 {
 		const std::string&  type_str =
 		  wf->ReadString( wf_entity, "type", "linear" );
-		
+
 		if( type_str == "linear" )
 		  actuator_type = TYPE_LINEAR;
 		else if ( type_str ==  "rotational" )
@@ -110,14 +110,14 @@ void ModelActuator::Load( void )
 			  PRINT_ERR1( "invalid actuator type specified: \"%s\" - should be one of: \"linear\" or \"rotational\". Using \"linear\" as default.", type_str.c_str() );
 			}
 	 }
-    
+
 	if (actuator_type == TYPE_LINEAR)
 	{
 		// if we are a linear actuator find the axis we operate in
 		if( wf->PropertyExists( wf_entity, "axis" ) )
 		  {
 		    wf->ReadTuple( wf_entity, "axis", 0, 3, "fff", &axis.x, &axis.y, &axis.z );
-		    
+
 		    // normalise the axis
 		    double length = sqrt(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
 		    if (length == 0)
@@ -152,19 +152,19 @@ void ModelActuator::Load( void )
 	if( wf->PropertyExists( wf_entity, "start_position" ) )
 	{
 		start_position = wf->ReadFloat ( wf_entity, "start_position", 0 );
-		
+
 		Pose DesiredPose = InitialPose;
-		
+
 		cosa = cos(InitialPose.a);
 		sina = sin(InitialPose.a);
-		
+
 		switch (actuator_type)
 		  {
 		  case TYPE_LINEAR:
-			 {				 
+			 {
 				double cosa = cos(DesiredPose.a);
 				double sina = sin(DesiredPose.a);
-				
+
 				DesiredPose.x += (axis.x * cosa - axis.y * sina) * start_position;
 				DesiredPose.y += (axis.x * sina + axis.y * cosa) * start_position;
 				DesiredPose.z += axis.z * start_position;

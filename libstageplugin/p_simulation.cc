@@ -307,7 +307,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 
 
 
-      // check they want to set the colour. 
+      // check they want to set the colour.
 
       //strncmp returns 0 if the strings match
       if( !(strncmp(req->prop, "color", (size_t)req->prop_count) ))
@@ -365,25 +365,25 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	      PRINT_WARN("Simulation time requires a uint64_t to store\n");
 	      return(-1);
 	    }
-				
+
 	  //return simulation time
 	  // look up the named model
 	  Model* mod = StgDriver::world->GetModel( req->name );
-				
+
 	  if( mod )
 	    {
 	      //make a new structure and copy req into it
 	      player_simulation_property_req_t reply;
 	      memcpy( &reply, req, sizeof(reply));
-						
+
 	      // and copy the time data
 	      *(uint64_t*)&reply.value = mod->GetWorld()->SimTimeNow();
-						
+
 	      this->driver->Publish( this->addr, resp_queue,
 				     PLAYER_MSGTYPE_RESP_ACK,
 				     PLAYER_SIMULATION_REQ_GET_PROPERTY,
 				     (void*)&reply, sizeof(reply), NULL );
-						
+
 	      return(0);
 	    }
 	  else
@@ -391,16 +391,16 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	      PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
 	      return(-1);
 	    }
-				
+
 	}
       else
 	{
 	  PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\" for changing colour. \"simtime\" or \"sim_time\" for getting the simulation time.", req->prop);
 	  return(-1);
 	}
-		
+
     }
-	
+
   else
     {
       // Don't know how to handle this message.

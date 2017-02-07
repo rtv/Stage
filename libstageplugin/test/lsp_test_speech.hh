@@ -12,12 +12,12 @@ namespace lspTest {
 		CPPUNIT_TEST_SUB_SUITE( Speech, Proxy );
 		CPPUNIT_TEST( testSay1 );
 		CPPUNIT_TEST_SUITE_END();
-		
+
 	protected:
 		playerc_speech_t* speechProxy;
-		
+
 		void testSay1();
-		
+
 	public:
 		void setUp();
 		void tearDown();

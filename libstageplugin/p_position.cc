@@ -1,8 +1,8 @@
 /*
  *  Player - One Hell of a Robot Server
  *  Copyright (C) 2004, 2005 Richard Vaughan
- *                      
- * 
+ *
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -27,7 +27,7 @@
  */
 // DOCUMENTATION ------------------------------------------------------------
 
-/** @addtogroup player 
+/** @addtogroup player
 @par Position interface
 - PLAYER_POSITION2D_CMD_POS
 - PLAYER_POSITION2D_CMD_VEL
@@ -45,11 +45,11 @@
 #include "p_driver.h"
 using namespace Stg;
 
-InterfacePosition::InterfacePosition(  player_devaddr_t addr, 
+InterfacePosition::InterfacePosition(  player_devaddr_t addr,
 				       StgDriver* driver,
 				       ConfigFile* cf,
 				       int section )
-						   
+
   : InterfaceModel( addr, driver, cf, section, "position" )
 {
   //puts( "InterfacePosition constructor" );
@@ -62,14 +62,14 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   ModelPosition* mod = (ModelPosition*)this->mod;
 
   // Is it a new motor command?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_POSITION2D_CMD_VEL, 
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
+                           PLAYER_POSITION2D_CMD_VEL,
                            this->addr))
   {
     // convert from Player to Stage format
     player_position2d_cmd_vel_t* pcmd = (player_position2d_cmd_vel_t*)data;
 
-    //position_cmd_t scmd; 
+    //position_cmd_t scmd;
     //memset( &scmd, 0, sizeof(scmd));
 
     mod->SetSpeed( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
@@ -78,8 +78,8 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   }
 
   // Is it a new motor command?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_POSITION2D_CMD_POS, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
+                           PLAYER_POSITION2D_CMD_POS,
                            this->addr))
   {
     // convert from Player to Stage format
@@ -90,8 +90,8 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   }
 
   // Is it a new motor command?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_POSITION2D_CMD_CAR, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
+                           PLAYER_POSITION2D_CMD_CAR,
                            this->addr))
   {
     // convert from Player to Stage format
@@ -100,10 +100,10 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     mod->SetSpeed( pcmd->velocity, 0, pcmd->angle );
     return 0;
   }
- 
+
   // Is it a request for position geometry?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_POSITION2D_REQ_GET_GEOM, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                PLAYER_POSITION2D_REQ_GET_GEOM,
                                 this->addr))
   {
     if(hdr->size == 0)
@@ -116,25 +116,25 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
       pgeom.pose.py = geom.pose.y;
       pgeom.pose.pyaw = geom.pose.a;
 
-      pgeom.size.sl = geom.size.x; 
-      pgeom.size.sw = geom.size.y; 
+      pgeom.size.sl = geom.size.x;
+      pgeom.size.sw = geom.size.y;
 
       this->driver->Publish( this->addr, resp_queue,
-                             PLAYER_MSGTYPE_RESP_ACK, 
+                             PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_GET_GEOM,
                              (void*)&pgeom, sizeof(pgeom), NULL );
       return 0;
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
 		 (int)hdr->size, 0);
       return(-1);
     }
   }
   // Is it a request to reset odometry?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_POSITION2D_REQ_RESET_ODOM, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                PLAYER_POSITION2D_REQ_RESET_ODOM,
                                 this->addr))
   {
     if(hdr->size == 0)
@@ -146,29 +146,29 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
 	  mod->est_pose.z = 0;
 	  mod->est_pose.a = 0;
 
-      this->driver->Publish( this->addr, resp_queue, 
+      this->driver->Publish( this->addr, resp_queue,
                              PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_RESET_ODOM );
       return 0;
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
                  (int)hdr->size, 0);
       return -1;
     }
   }
   // Is it a request to set odometry?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_POSITION2D_REQ_SET_ODOM, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                PLAYER_POSITION2D_REQ_SET_ODOM,
                                 this->addr))
   {
     if(hdr->size == sizeof(player_position2d_set_odom_req_t))
     {
-      player_position2d_set_odom_req_t* req = 
+      player_position2d_set_odom_req_t* req =
               (player_position2d_set_odom_req_t*)data;
 
-		
+
 	  mod->est_pose.x = req->pose.px;
 	  mod->est_pose.y = req->pose.py;
 	  //mod->est_pose.z = req->pose.pz;
@@ -179,53 +179,53 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
                     pose.y,
                     pose.a );
 
-      this->driver->Publish( this->addr, resp_queue, 
-                             PLAYER_MSGTYPE_RESP_ACK, 
+      this->driver->Publish( this->addr, resp_queue,
+                             PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_SET_ODOM );
       return(0);
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
                  (int)hdr->size, (int)sizeof(player_position2d_set_odom_req_t));
       return(-1);
     }
   }
   // Is it a request to enable motor power?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_POSITION2D_REQ_MOTOR_POWER, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                PLAYER_POSITION2D_REQ_MOTOR_POWER,
                                 this->addr))
   {
     if(hdr->size == sizeof(player_position2d_power_config_t))
     {
-      player_position2d_power_config_t* req = 
+      player_position2d_power_config_t* req =
               (player_position2d_power_config_t*)data;
 
       int motors_on = req->state;
 
       PRINT_WARN1( "Stage ignores motor power state (%d)",
                    motors_on );
-      this->driver->Publish( this->addr, resp_queue, 
-                             PLAYER_MSGTYPE_RESP_ACK, 
+      this->driver->Publish( this->addr, resp_queue,
+                             PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_MOTOR_POWER );
       return(0);
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
                  (int)hdr->size, (int)sizeof(player_position2d_power_config_t));
       return(-1);
     }
   }
   // Is it a request to switch control mode?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_POSITION2D_REQ_POSITION_MODE, 
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                PLAYER_POSITION2D_REQ_POSITION_MODE,
                                 this->addr))
   {
     if(hdr->size == sizeof(player_position2d_position_mode_req_t))
     {
 
-      //player_position2d_position_mode_req_t* req = 
+      //player_position2d_position_mode_req_t* req =
 		//      (player_position2d_position_mode_req_t*)data;
 
       //position_control_mode_t mode = (position_control_mode_t)req->state;
@@ -234,22 +234,22 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
       PRINT_WARN2( "Put model %s into %s control mode", this->mod->Token(), mod ? "POSITION" : "VELOCITY" );
       PRINT_WARN( "set control mode not yet implemented") ;
 
-      this->driver->Publish( this->addr, resp_queue, 
-                             PLAYER_MSGTYPE_RESP_ACK, 
+      this->driver->Publish( this->addr, resp_queue,
+                             PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_POSITION_MODE );
       return(0);
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
-                 (int)hdr->size, 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
+                 (int)hdr->size,
                  (int)sizeof(player_position2d_position_mode_req_t));
       return(-1);
     }
   }
-  
+
   //else
-  
+
   // Don't know how to handle this message.
   PRINT_WARN2( "position doesn't support msg with type %d subtype %d",
 	       hdr->type, hdr->subtype);
@@ -258,16 +258,16 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
 
 void InterfacePosition::Publish( void )
 {
-  //puts( "publishing position data" ); 
+  //puts( "publishing position data" );
 
   ModelPosition* mod = (ModelPosition*)this->mod;
-  
+
   //printf( "stage position data: %.2f,%.2f,%.2f\n",
   //  data->pose.x, data->pose.y, data->pose.a );
-  
+
   player_position2d_data_t ppd;
   bzero( &ppd, sizeof(ppd) );
-  
+
   // pack the data into player format
   // packing by hand allows for type conversions
   ppd.pos.px = mod->est_pose.x;
@@ -280,10 +280,10 @@ void InterfacePosition::Publish( void )
   ppd.vel.px = v.x;
   ppd.vel.py = v.y;
   ppd.vel.pa = v.a;
-  
+
   // etc
   ppd.stall = this->mod->Stalled();
-  
+
   // publish this data
   this->driver->Publish( this->addr,
 			 PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,

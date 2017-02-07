@@ -6,10 +6,10 @@ using namespace Stg;
 extern "C" int Init( Model* mod )
 {
   printf( "Creating 100 models" );
-  
+
   for( int i=0; i<100; i++ )
 	 {
-		Model* child = mod->GetWorld()->CreateModel( mod, "model" );		
+		Model* child = mod->GetWorld()->CreateModel( mod, "model" );
 		assert(child);
 
 		child->SetPose( Pose::Random( -1, 1, -1, 1 ) );

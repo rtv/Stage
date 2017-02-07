@@ -19,16 +19,16 @@ namespace Stg
   class TextureManager {
   private:
 	 TextureManager( void ) { }
-	 
+
   public:
-		
+
 		//TODO figure out where to store standard textures
 		GLuint _stall_texture_id;
 		GLuint _mains_texture_id;
-		
+
 		//TODO make this threadsafe
-		static TextureManager& getInstance( void ) 
-		{ 
+		static TextureManager& getInstance( void )
+		{
 			static TextureManager* the_instance = NULL;
 			//TODO add a lock here
 			if( the_instance == NULL ) {
@@ -36,10 +36,10 @@ namespace Stg
 			}
 			return *the_instance;
 		}
-		
+
 		///load a texture on the GPU, returned value is the texture ID, or 0 for failure
 		GLuint loadTexture( const char *filename );
-		
+
   };
 }
 #endif //_TEXTURE_MANAGER_H_

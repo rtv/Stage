@@ -12,10 +12,10 @@ namespace lspTest {
 
 	protected:
 		playerc_client_t* client;
-		
+
 		void connect();
 		void disconnect();
-		
+
 		static const double Delta;
 	};
 };

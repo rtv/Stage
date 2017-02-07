@@ -165,23 +165,23 @@ bool Worldfile::Load(const std::string& filename )
       DumpProperties();
       return false;
     }
-  
+
   // Work out what the length units are
   const std::string& unitl = ReadString(0, "unit_length", "m");
   if(  unitl == "m")
     this->unit_length = 1.0;
   else if( unitl == "cm")
     this->unit_length = 0.01;
-  else if( unitl == "mm") 
+  else if( unitl == "mm")
     this->unit_length = 0.001;
-  
+
   // Work out what the angle units are
   const std::string& unita = ReadString(0, "unit_angle", "degrees");
   if(  unita == "degrees")
     this->unit_angle = M_PI / 180;
   else if( unita == "radians")
     this->unit_angle = 1;
-  
+
   //printf( "f: %s\n", this->filename.c_str() );
 
   return true;
@@ -204,16 +204,16 @@ bool Worldfile::Save(const std::string& filename )
 								 filename.c_str(), strerror(errno));
       return false;
     }
-	
+
   // TODO - make a backup before saving the file
-	
+
   // Write the current set of tokens to the file
   if (!SaveTokens(file))
     {
       fclose(file);
       return false;
     }
-	
+
   fclose(file);
   return true;
 }
@@ -224,7 +224,7 @@ bool Worldfile::Save(const std::string& filename )
 bool Worldfile::WarnUnused()
 {
   bool unused = false;
-  
+
   FOR_EACH( it, properties )
     {
       if( ! it->second->used )
@@ -234,7 +234,7 @@ bool Worldfile::WarnUnused()
 	  unused = true;
 	}
     }
-  
+
   return unused;
 }
 
@@ -737,11 +737,11 @@ bool Worldfile::ParseTokens()
   for (int i = 0; i < (int)this->tokens.size(); i++)
     {
       CToken * token = &this->tokens[0] + i;
-			
+
       switch (token->type)
 				{
 				case TokenWord:
-					if ( token->value == "include") 
+					if ( token->value == "include")
 						{
 							if (!ParseTokenInclude(&i, &line))
 								return false;
@@ -780,7 +780,7 @@ bool Worldfile::ParseTokenInclude(int *index, int *line)
   for (int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
       CToken *token = &this->tokens[i];
-			
+
       switch (token->type)
 				{
 				case TokenString:
@@ -999,7 +999,7 @@ bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 {
   CProperty* property(NULL);
   int name( *index );
-  
+
   for(int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
       CToken *token = &this->tokens[i];
@@ -1088,7 +1088,7 @@ void Worldfile::AddMacro(const char *macroname, const char *entityname,
 Worldfile::CMacro* Worldfile::LookupMacro(const char *macroname)
 {
 	std::map<std::string,CMacro>::iterator it = macros.find( macroname );
-	
+
 	if( it == macros.end() )
 		return NULL;
 	else
@@ -1221,7 +1221,7 @@ void Worldfile::DumpEntities()
 void Worldfile::ClearProperties()
 {
 	FOR_EACH( it, properties )
-		delete it->second;	
+		delete it->second;
 	properties.clear();
 }
 
@@ -1248,7 +1248,7 @@ void Worldfile::AddPropertyValue( CProperty* property, int index, int value_toke
   assert(property);
 
   // Set the relevant value
-	
+
 	if( index >= (int)property->values.size() )
 		property->values.resize( index+1 );
 
@@ -1263,25 +1263,25 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 {
   char key[128];
   snprintf( key, 127, "%d%s", entity, name );
-  
+
   //printf( "looking up key %s for entity %d name %s\n", key, entity, name );
-  
-  static char cache_key[128] = { 0 }; 
+
+  static char cache_key[128] = { 0 };
   static CProperty* cache_property = NULL;
-  
+
   if( strncmp( key, cache_key, 128 ) != 0 ) // different to last time
-	 {		
-		strncpy( cache_key, key, 128 ); // remember for next time		
-		
-		std::map<std::string,CProperty*>::iterator it = properties.find( key );	
+	 {
+		strncpy( cache_key, key, 128 ); // remember for next time
+
+		std::map<std::string,CProperty*>::iterator it = properties.find( key );
 		if( it == properties.end() ) // not found
 		  cache_property = NULL;
 		else
-		  cache_property = it->second;		
+		  cache_property = it->second;
 	 }
   //else
   // printf( "cache hit with %s\n", cache_key );
-	
+
   return cache_property;
 }
 
@@ -1383,7 +1383,7 @@ void Worldfile::WriteFloat(int entity, const char *name, double value)
 {
   // compact zeros make the file more readable
   if( fabs(value) < 0.001 ) // nearly 0
-    WriteString(entity, name, "0" ); 
+    WriteString(entity, name, "0" );
   else
     {
       char default_str[64];
@@ -1473,28 +1473,28 @@ int Worldfile::ReadTuple( const int entity, const char *name,
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
     return 0;
-  
+
   if( property->values.size() < first+count )
     {
       PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %u - tuple has length %u\n",
 		  name, first, first+count-1, (unsigned int)property->values.size() );
       exit(-1);
     }
-    
+
   if( strlen(format) != count )
     {
-      PRINT_ERR2( "format string length %u does not match argument count %u", 
+      PRINT_ERR2( "format string length %u does not match argument count %u",
 		  (unsigned int)strlen(format), count );
       exit(-1);
     }
-  
+
   va_list args;
   va_start( args, format );
 
   for( unsigned int i=0; i<count; i++ )
-    {      
+    {
       const char* val = GetPropertyValue(property, first+i);
-     
+
       switch( format[i] )
 	{
 	case 'i': // signed integer
@@ -1508,19 +1508,19 @@ int Worldfile::ReadTuple( const int entity, const char *name,
 	case 'f': // float
 	  *va_arg( args, double* ) = atof(val);
 	  break;
-	  
+
 	case 'l': //length
 	  *va_arg( args, double* ) = atof(val) * unit_length;
 	  break;
-	  
+
 	case 'a': // angle
 	  *va_arg( args, double* ) = atof(val) * unit_angle;
 	  break;
-	  
+
 	case 's': // string
 	  *va_arg( args, char** ) = strdup(val);
 	  break;
-	  
+
 	default:
 	  PRINT_ERR3( "Unknown format character %c in string %s loading %s",
 		      format[i], format, name );
@@ -1528,7 +1528,7 @@ int Worldfile::ReadTuple( const int entity, const char *name,
     }
 
   va_end( args );
-  
+
   return count;
 }
 
@@ -1540,29 +1540,29 @@ void Worldfile::WriteTuple( const int entity, const char *name,
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
     return;
-  
+
   if( property->values.size() < first+count )
     {
       PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %d - tuple has length %u\n",
       name, first, int(first+count)-1, static_cast<unsigned int>(property->values.size()) );
       exit(-1);
     }
-  
+
   if( strlen(format) != count )
     {
-      PRINT_ERR2( "format string length %u does not match argument count %u", 
+      PRINT_ERR2( "format string length %u does not match argument count %u",
 		  (unsigned int)strlen(format), count );
       exit(-1);
     }
-  
+
   char buf[2048];
   buf[0] = 0;
-  
+
   va_list args;
   va_start( args, format );
-  
+
   for( unsigned int i=0; i<count; i++ )
-    {      
+    {
       switch( format[i] )
 	{
 	case 'i': // integer
@@ -1576,29 +1576,29 @@ void Worldfile::WriteTuple( const int entity, const char *name,
 	case 'f': // float
 	  snprintf( buf, sizeof(buf), "%.3f", va_arg( args, double ) );
 	  break;
-	  
+
 	case 'l': //length
 	  snprintf( buf, sizeof(buf), "%.3f",  va_arg( args, double ) / unit_length );
 	  break;
-	  
+
 	case 'a': // angle
 	  snprintf( buf, sizeof(buf), "%.3f", va_arg( args, double ) / unit_angle );
 	  break;
-	  
+
 	case 's': // string
 	  strncpy( buf, va_arg( args, char* ), sizeof(buf) );
 	  buf[sizeof(buf)-1] = 0; // force zero terminator
 	  break;
-	  
+
 	default:
 	  PRINT_ERR3( "Unknown format character %c in string %s loading %s",
 		      format[i], format, name );
 	  exit(-1);
 	}
-      
+
       //printf( "writing %s %d %s\n", name, first+i, buf );
       SetPropertyValue(property, first+i, buf );
     }
-  
+
   va_end( args );
 }

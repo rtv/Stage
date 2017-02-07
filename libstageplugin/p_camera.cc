@@ -55,7 +55,7 @@ void InterfaceCamera::Publish( void )
 
   player_camera_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
-  
+
   pdata.width = mod->getWidth();
   pdata.height = mod->getHeight();
   pdata.bpp = 8*3;
@@ -65,7 +65,7 @@ void InterfaceCamera::Publish( void )
 
   /* Image from Stage is stored as R G B A R G B A ...
    * With the row fartherest from the camera as row 0 (opposite of Player).
-   * 
+   *
    * Here we dump the Alpha data (so just R G B R G B and also flip the image
    */
   uint8_t *ptr = (uint8_t *) mod->FrameColor();

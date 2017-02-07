@@ -1,10 +1,10 @@
 #include "stage.hh"
 using namespace Stg;
 
-static const double cruisespeed = 0.4; 
-static const double avoidspeed = 0.05; 
+static const double cruisespeed = 0.4;
+static const double avoidspeed = 0.05;
 static const double avoidturn = 0.5;
-static const double minfrontdistance = 1.0; // 0.6  
+static const double minfrontdistance = 1.0; // 0.6
 static const bool verbose = false;
 static const double stopdist = 0.3;
 static const int avoidduration = 10;
@@ -24,28 +24,28 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 {
   // local arguments
   /*  printf( "\nWander controller initialised with:\n"
-      "\tworldfile string \"%s\"\n" 
+      "\tworldfile string \"%s\"\n"
       "\tcmdline string \"%s\"",
       args->worldfile.c_str(),
       args->cmdline.c_str() );
   */
 
   robot_t* robot = new robot_t;
- 
+
   robot->avoidcount = 0;
   robot->randcount = 0;
-  
+
   robot->pos = (ModelPosition*)mod;
-  
+
   if( verbose )
     robot->pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdate, robot );
-  
+
   robot->pos->Subscribe(); // starts the position updates
-  
+
   robot->laser = (ModelRanger*)mod->GetChild( "ranger:1" );
   robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
   robot->laser->Subscribe(); // starts the ranger updates
-  
+
   return 0; //ok
 }
 
@@ -58,10 +58,10 @@ int LaserUpdate( Model* mod, robot_t* robot )
   uint32_t sample_count = scan.size();
   if( sample_count < 1 )
     return 0;
-  
+
   bool obstruction = false;
   bool stop = false;
-	
+
   // find the closest distance to the left and right and check if
   // there's anything in front
   double minleft = 1e6;
@@ -72,27 +72,27 @@ int LaserUpdate( Model* mod, robot_t* robot )
 
       if( verbose ) printf( "%.3f ", scan[i] );
 
-      if( (i > (sample_count/3)) 
-	  && (i < (sample_count - (sample_count/3))) 
+      if( (i > (sample_count/3))
+	  && (i < (sample_count - (sample_count/3)))
 	  && scan[i] < minfrontdistance)
 	{
 	  if( verbose ) puts( "  obstruction!" );
 	  obstruction = true;
 	}
-		
+
       if( scan[i] < stopdist )
 	{
 	  if( verbose ) puts( "  stopping!" );
 	  stop = true;
 	}
-      
+
       if( i > sample_count/2 )
 	minleft = std::min( minleft, scan[i] );
-      else      
+      else
 	minright = std::min( minright, scan[i] );
     }
-  
-  if( verbose ) 
+
+  if( verbose )
     {
       puts( "" );
       printf( "minleft %.3f \n", minleft );
@@ -102,16 +102,16 @@ int LaserUpdate( Model* mod, robot_t* robot )
   if( obstruction || stop || (robot->avoidcount>0) )
     {
       if( verbose ) printf( "Avoid %d\n", robot->avoidcount );
-	  		
-      robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );      
-      
+
+      robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );
+
       /* once we start avoiding, select a turn direction and stick
 	 with it for a few iterations */
       if( robot->avoidcount < 1 )
         {
 	  if( verbose ) puts( "Avoid START" );
           robot->avoidcount = random() % avoidduration + avoidduration;
-			 
+
 	  if( minleft < minright  )
 	    {
 	      robot->pos->SetTurnSpeed( -avoidturn );
@@ -123,7 +123,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
 	      if( verbose ) printf( "turning left %2f\n", +avoidturn );
 	    }
         }
-		
+
       robot->avoidcount--;
     }
   else
@@ -131,7 +131,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
       if( verbose ) puts( "Cruise" );
 
       robot->avoidcount = 0;
-      robot->pos->SetXSpeed( cruisespeed );	  
+      robot->pos->SetXSpeed( cruisespeed );
       robot->pos->SetTurnSpeed(  0 );
     }
 
@@ -140,7 +140,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
   // 		robot->pos->SetSpeed( 0,0,0 );
   // 		robot->pos->SetTurnSpeed( 0 );
   // }
-			
+
   return 0; // run again
 }
 

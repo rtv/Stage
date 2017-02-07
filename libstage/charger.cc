@@ -10,7 +10,7 @@
 #include "worldfile.hh"
 using namespace Stg;
 
-Charger::Charger( World* world ) 
+Charger::Charger( World* world )
   : world( world ), watts( 1000.0 )
 {
   //printf( "Charger constructed" );
@@ -31,13 +31,13 @@ bool Charger::Contains( Pose pose )
 			 pose.z >= volume.z.min &&
 			 pose.z  < volume.z.max );
 }
-	 
+
 void Charger::Charge( PowerPack* pp )
 {
   double given = watts * world->interval_sim * 1e-6;
-  
+
   pp->stored += given;
-  
+
   // do not exceed capacity
   pp->stored = MIN( pp->stored, pp->capacity );
   pp->charging = true;
@@ -51,7 +51,7 @@ void Charger::Charge( PowerPack* pp )
 	 volume.z.min,
 	 volume.z.max,
 	 pp, given );
-  
+
   pp->Print( "just charged" );
   */
 }
@@ -64,7 +64,7 @@ void Charger::Visualize()
   glColor4f( 1, 0.5,0,0.4 );
   glTranslatef( 0,0,volume.z.min);
   glRectf( volume.x.min, volume.y.min, volume.x.max, volume.y.max );
-  
+
   glTranslatef( 0,0,volume.z.max );
   glRectf( volume.x.min, volume.y.min, volume.x.max, volume.y.max );
   glPopMatrix();
@@ -74,7 +74,7 @@ void Charger::Visualize()
   glColor4f( 1, 0.5,0,0.8 );
   glTranslatef( 0,0,volume.z.min);
   glRectf( volume.x.min, volume.y.min, volume.x.max, volume.y.max );
-  
+
   glTranslatef( 0,0,volume.z.max );
   glRectf( volume.x.min, volume.y.min, volume.x.max, volume.y.max );
   glPopMatrix();
@@ -100,18 +100,18 @@ void Charger::Load( Worldfile* wf, int entity )
 		volume.y.max = wf->ReadTupleLength( entity, "volume", 3, volume.y.max );
 		volume.z.min = wf->ReadTupleLength( entity, "volume", 4, volume.z.min );
 		volume.z.max = wf->ReadTupleLength( entity, "volume", 5, volume.z.max );
-		
+
 		// force the windings for GL's sake
  		if( volume.x.min > volume.x.max )
  		  swap( volume.x.min, volume.x.max );
-		
+
  		if( volume.y.min > volume.y.max )
  		  swap( volume.y.min, volume.y.max );
 
  		if( volume.z.min > volume.z.max )
  		  swap( volume.z.min, volume.z.max );
-		
+
 	 }
-  
+
   watts = wf->ReadFloat( entity, "watts", watts );
 }

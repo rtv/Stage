@@ -14,21 +14,21 @@ namespace lspTest {
 		CPPUNIT_TEST( testGeom );
 		CPPUNIT_TEST( testData );
 		CPPUNIT_TEST_SUITE_END();
-		
+
 	protected:
 		playerc_laser_t* laserProxy;
-		
+
 		void testConfig();
 		void testGeom();
 		void testData();
-		
+
 		static const int Samples;
 	public:
 		void setUp();
 		void tearDown();
 	};
 };
-	
+
 CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Laser );
 
 #endif

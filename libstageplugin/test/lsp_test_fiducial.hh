@@ -13,14 +13,14 @@ namespace lspTest {
 			CPPUNIT_TEST( testGeom );
 			CPPUNIT_TEST( testData );
 			CPPUNIT_TEST_SUITE_END();
-			
+
 		protected:
 			playerc_fiducial_t* fiducialProxy;
-			
+
 			void testConfig();
 			void testGeom();
 			void testData();
-			
+
 		public:
 			void setUp();
 			void tearDown();

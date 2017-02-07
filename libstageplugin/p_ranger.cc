@@ -53,59 +53,59 @@ InterfaceRanger::InterfaceRanger( player_devaddr_t addr,
 void InterfaceRanger::Publish( void )
 {
   ModelRanger* rgr = dynamic_cast<ModelRanger*>(this->mod);
-	
+
   // the Player interface dictates that if multiple sensor poses are
   // given, then we have exactly one range reading per sensor. To give
   // multiple ranges from the same origin, only one sensor is allowed.
-  
+
   // need to use the mutable version since we access the range data via a regular pointer
   std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensorsMutable();
-	
+
   player_ranger_data_range_t prange;
-  memset( &prange, 0, sizeof(prange) );  
-	
+  memset( &prange, 0, sizeof(prange) );
+
   player_ranger_data_intns_t pintens;
-  memset( &pintens, 0, sizeof(pintens) );	
-  
+  memset( &pintens, 0, sizeof(pintens) );
+
   std::vector<double> rv, iv;
-  
-  if( sensors.size() == 1 ) // a laser scanner type, with one beam origin and many ranges					
+
+  if( sensors.size() == 1 ) // a laser scanner type, with one beam origin and many ranges
     {
       prange.ranges_count = sensors[0].ranges.size();
       prange.ranges = prange.ranges_count ? &sensors[0].ranges[0] : NULL;
 
-      pintens.intensities_count = sensors[0].intensities.size();      
+      pintens.intensities_count = sensors[0].intensities.size();
       pintens.intensities = pintens.intensities_count ? &sensors[0].intensities[0] : NULL;
     }
   else
-    {  // a sonar/IR type with one range per beam origin 	
+    {  // a sonar/IR type with one range per beam origin
       FOR_EACH( it, sensors )
 	{
-	  if( it->ranges.size() ) 
+	  if( it->ranges.size() )
 	    rv.push_back( it->ranges[0] );
-					
-	  if( it->intensities.size() ) 
+
+	  if( it->intensities.size() )
 	    iv.push_back( it->intensities[0] );
 	}
-			
+
       prange.ranges_count = rv.size();
-      prange.ranges = rv.size() ? &rv[0] : NULL;	
-			
+      prange.ranges = rv.size() ? &rv[0] : NULL;
+
       pintens.intensities_count = iv.size();
       pintens.intensities = iv.size() ? &iv[0] : NULL;
     }
-	
+
   if( prange.ranges_count )
     this->driver->Publish(this->addr,
 			  PLAYER_MSGTYPE_DATA,
 			  PLAYER_RANGER_DATA_RANGE,
-			  (void*)&prange, sizeof(prange), NULL);			
-		
+			  (void*)&prange, sizeof(prange), NULL);
+
   if( pintens.intensities_count )
     this->driver->Publish(this->addr,
 			  PLAYER_MSGTYPE_DATA,
 			  PLAYER_RANGER_DATA_INTNS,
-			  (void*)&pintens, sizeof(pintens), NULL);		
+			  (void*)&pintens, sizeof(pintens), NULL);
 }
 
 
@@ -114,23 +114,23 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 				    void* data)
 {
   ModelRanger* mod = (ModelRanger*)this->mod;
-	
+
   // Is it a request to get the ranger's config?
   if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
 			    PLAYER_RANGER_REQ_GET_CONFIG,
 			    this->addr))
     {
       if( hdr->size == 0 )
-	{			 
+	{
 	  // the Player ranger config is a little weaker than Stage's
 	  // natice device, so all we can do is warn about this.
 	  PRINT_WARN( "stageplugin ranger config describes only the first sensor of the ranger." );
-					
+
 	  player_ranger_config_t prc;
 	  bzero(&prc,sizeof(prc));
-					
+
 	  const ModelRanger::Sensor& s = mod->GetSensors()[0];
-					
+
 	  prc.min_angle = -s.fov/2.0;
 	  prc.max_angle = +s.fov/2.0;
 	  prc.angular_res = s.fov / (double)s.sample_count;
@@ -138,7 +138,7 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 	  prc.min_range = s.range.min;
 	  prc.range_res = 1.0 / mod->GetWorld()->Resolution();
 	  prc.frequency = 1.0E6 / mod->GetInterval();
-					
+
 	  this->driver->Publish(this->addr, resp_queue,
 				PLAYER_MSGTYPE_RESP_ACK,
 				PLAYER_RANGER_REQ_GET_CONFIG,
@@ -160,9 +160,9 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 	  {
 	    Geom geom = mod->GetGeom();
 	    Pose pose = mod->GetPose();
-						
+
 	    const std::vector<ModelRanger::Sensor>& sensors = mod->GetSensors();
-			 
+
 	    // fill in the geometry data formatted player-like
 	    player_ranger_geom_t pgeom;
 	    bzero( &pgeom, sizeof(pgeom));
@@ -171,12 +171,12 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 	    pgeom.pose.pyaw = pose.a;
 	    pgeom.size.sl = geom.size.x;
 	    pgeom.size.sw = geom.size.y;
-			 			 
+
 	    pgeom.element_poses_count = pgeom.element_sizes_count = sensors.size();
 
 	    player_pose3d_t poses[ sensors.size() ];
 	    player_bbox3d_t sizes[ sensors.size() ];
-			 
+
 	    for( size_t s=0; s<pgeom.element_poses_count; s++ )
 	      {
 		poses[s].px = sensors[s].pose.x;
@@ -206,7 +206,7 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 	    return(-1);
 	  }
       }
-  
+
   // Don't know how to handle this message.
   PRINT_WARN2( "stage ranger doesn't support message %d:%d.",
 	       hdr->type, hdr->subtype);

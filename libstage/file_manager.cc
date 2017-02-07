@@ -15,7 +15,7 @@ std::string searchDirs( const std::vector<std::string>& dirs, const std::string&
 			return path;
 		}
 	}
-	
+
 	PRINT_DEBUG1("FileManager: %s not found.\n", filename.c_str() );
 	return "";
 }
@@ -33,7 +33,7 @@ namespace Stg
 			return std::string( stgPath );
 	}
 
-	std::string FileManager::findFile( const std::string& filename ) 
+	std::string FileManager::findFile( const std::string& filename )
 	{
 		PRINT_DEBUG1("FileManager: trying %s\n", filename.c_str());
 		if ( readable( filename ) )
@@ -57,7 +57,7 @@ namespace Stg
 			}
 
 			ranOnce = true;
-			
+
       PRINT_DEBUG1("FileManager - INIT: %d paths in search paths\n", int(paths.size()) );
 		}
 

@@ -44,13 +44,13 @@ class StgDriver : public Driver
 
   /// find the device record with this Player id
   Interface* LookupInterface( player_devaddr_t addr );
-  
+
   Stg::Model* LocateModel( char* basename,
 			   player_devaddr_t* addr,
 			   const std::string& type );
-  
+
  protected:
-  
+
   /// an array of pointers to Interface objects, defined below
   std::vector<Interface*> ifaces;
 };
@@ -63,21 +63,21 @@ class Interface
             StgDriver* driver,
             ConfigFile* cf,
             int section );
-  
+
   virtual ~Interface( void ){ /* TODO: clean up*/ };
-  
+
   player_devaddr_t addr;
-  
+
   StgDriver* driver; // the driver instance that created this device
-  
+
   virtual int ProcessMessage(QueuePointer &resp_queue,
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
-  
+
   virtual void Publish( void ){}; // do nothing
   virtual void StageSubscribe( void ){}; // do nothing
   virtual void StageUnsubscribe( void ){}; // do nothing
-   
+
   virtual void Subscribe( QueuePointer &queue ){}; // do nothing
   virtual void Unsubscribe( QueuePointer &queue ){}; // do nothing};
 };

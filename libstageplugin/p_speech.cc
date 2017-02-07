@@ -1,8 +1,8 @@
 /*
  *  Player - One Hell of a Robot Server
  *  Copyright (C) 2004, 2005 Richard Vaughan
- *                      
- * 
+ *
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -36,11 +36,11 @@ using namespace Stg;
 */
 
 
-InterfaceSpeech::InterfaceSpeech( player_devaddr_t addr, 
+InterfaceSpeech::InterfaceSpeech( player_devaddr_t addr,
                               StgDriver* driver,
                               ConfigFile* cf,
                               int section )
-  
+
   : InterfaceModel( addr, driver, cf, section, "" )
 {
   // nothing to do
@@ -56,13 +56,13 @@ void InterfaceSpeech::Publish( void )
   memset( &pdata, 0, sizeof(pdata) );
 
   // Translate the Stage-formatted sdata into the Player-formatted pdata
-  
+
   // Publish it
   this->driver->Publish(this->addr, NULL,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_SPEECH_CMD_SAY,
 			(void*)&pdata, sizeof(pdata), NULL);
-*/			
+*/
 }
 
 int InterfaceSpeech::ProcessMessage( QueuePointer & resp_queue,
@@ -70,8 +70,8 @@ int InterfaceSpeech::ProcessMessage( QueuePointer & resp_queue,
 									 void* data )
 {
 // PROCESS INCOMING REQUESTS HERE
-	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-				   PLAYER_SPEECH_CMD_SAY, 
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
+				   PLAYER_SPEECH_CMD_SAY,
 				   this->addr))
 	{
 //		if( hdr->size == sizeof(player_speech_cmd_t) )

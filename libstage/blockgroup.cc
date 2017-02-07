@@ -10,14 +10,14 @@
 using namespace Stg;
 using namespace std;
 
-BlockGroup::BlockGroup( Model& mod ) 
+BlockGroup::BlockGroup( Model& mod )
 : blocks(),
   displaylist(0),
   mod(mod)
 { /* empty */ }
 
 BlockGroup::~BlockGroup()
-{	 
+{
   Clear();
 }
 
@@ -37,7 +37,7 @@ void BlockGroup::Clear()
 void BlockGroup::AppendTouchingModels( std::set<Model*>& v )
 {
   FOR_EACH( it, blocks )
-  it->AppendTouchingModels( v );  
+  it->AppendTouchingModels( v );
 }
 
 Model* BlockGroup::TestCollision()
@@ -59,7 +59,7 @@ Model* BlockGroup::TestCollision()
     double minx, miny, maxx, maxy, minz, maxz;
     minx = miny = minz = billion;
     maxx = maxy = maxz = -billion;
-    
+
     FOR_EACH( it, blocks )
     {
         // examine all the points in the polygon
@@ -71,7 +71,7 @@ Model* BlockGroup::TestCollision()
         if( pit->y > maxy ) maxy = pit->y;
       }
 
-      if( it->local_z.min < minz ) minz = it->local_z.min;	  
+      if( it->local_z.min < minz ) minz = it->local_z.min;
       if( it->local_z.max > maxz ) maxz = it->local_z.max;
     }
 
@@ -80,26 +80,26 @@ Model* BlockGroup::TestCollision()
 
   // scale all blocks to fit into the bounding box of this group's model
   void BlockGroup::CalcSize()
-  {  
+  {
     const bounds3d_t b = BoundingBox();
-    
-    const Size size( b.x.max - b.x.min, 
-     b.y.max - b.y.min, 
+
+    const Size size( b.x.max - b.x.min,
+     b.y.max - b.y.min,
      b.z.max - b.z.min );
 
     const Size offset( b.x.min + size.x/2.0, b.y.min + size.y/2.0,  0 );
-    
+
     // now scale the blocks to fit in the model's 3d bounding box, so
     // that the original points are now in model coordinates
     const Size modsize = mod.geom.size;
-    
+
     FOR_EACH( it, blocks )
     {
         // polygon edges
       FOR_EACH( pit, it->pts  )
       {
        pit->x = (pit->x - offset.x) * (modsize.x/size.x);
-       pit->y = (pit->y - offset.y) * (modsize.y/size.y);     
+       pit->y = (pit->y - offset.y) * (modsize.y/size.y);
      }
 
         // vertical bounds
@@ -124,7 +124,7 @@ void BlockGroup::DrawSolid( const Geom & geom )
 {
   glPushMatrix();
 
-  Gl::pose_shift( geom.pose );    
+  Gl::pose_shift( geom.pose );
 
   FOR_EACH( it, blocks )
   it->DrawSolid(false);
@@ -161,7 +161,7 @@ static void combineCallback(GLdouble coords[3],
     // data, and doesn't happen much, but it would be tidy.
 }
 
-  // render each block as a polygon extruded into Z  
+  // render each block as a polygon extruded into Z
 void BlockGroup::BuildDisplayList()
 {
   static GLUtesselator *tobj = NULL;
@@ -172,19 +172,19 @@ void BlockGroup::BuildDisplayList()
   if( displaylist == 0 )
   {
         CalcSize(); // todo: is this redundant? count calls per model to figure this out.
-        
+
         displaylist = glGenLists(1);
         assert(displaylist !=0 );
-        
+
         // Stage polygons need not be convex, so we have to tesselate them for rendering in OpenGL.
         tobj = gluNewTess();
         assert(tobj != NULL);
-        
+
         // these use the standard GL calls
         gluTessCallback(tobj, GLU_TESS_VERTEX,
           (GLvoid (*) ()) &glVertex3dv);
         gluTessCallback(tobj, GLU_TESS_EDGE_FLAG,
-          (GLvoid (*) ()) &glEdgeFlag);      
+          (GLvoid (*) ()) &glEdgeFlag);
         gluTessCallback(tobj, GLU_TESS_BEGIN,
           (GLvoid (*) ()) &glBegin);
         gluTessCallback(tobj, GLU_TESS_END,
@@ -194,25 +194,25 @@ void BlockGroup::BuildDisplayList()
         gluTessCallback(tobj, GLU_TESS_ERROR,
           (GLvoid (*) ()) &errorCallback);
         gluTessCallback(tobj, GLU_TESS_COMBINE,
-          (GLvoid (*) ()) &combineCallback);      
+          (GLvoid (*) ()) &combineCallback);
       }
 
 
       std::vector<std::vector<GLdouble> > contours;
 
       FOR_EACH( blk, blocks )
-      {      
-        std::vector<GLdouble> verts;      
+      {
+        std::vector<GLdouble> verts;
         FOR_EACH( it, blk->pts )
         {
-         verts.push_back( it->x ); 
-         verts.push_back( it->y ); 
+         verts.push_back( it->x );
+         verts.push_back( it->y );
          verts.push_back( blk->local_z.max );
-       }       
+       }
        contours.push_back( verts );
      }
 
-     glNewList( displaylist, GL_COMPILE );	
+     glNewList( displaylist, GL_COMPILE );
 
      Gl::pose_shift( mod.GetGeom().pose );
 
@@ -226,10 +226,10 @@ void BlockGroup::BuildDisplayList()
      gluTessBeginPolygon(tobj, NULL);
 
      FOR_EACH( contour, contours )
-     {      
-      gluTessBeginContour(tobj);      
+     {
+      gluTessBeginContour(tobj);
       for( size_t v=0; v<contour->size(); v+=3 )
-       gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);      
+       gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);
      gluTessEndContour(tobj);
    }
 
@@ -241,7 +241,7 @@ void BlockGroup::BuildDisplayList()
    mod.PopColor();
 
     // now outline the polys
-   glDisable(GL_POLYGON_OFFSET_FILL);  
+   glDisable(GL_POLYGON_OFFSET_FILL);
    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
    glDepthMask(GL_FALSE);
 
@@ -254,10 +254,10 @@ void BlockGroup::BuildDisplayList()
    gluTessBeginPolygon(tobj, NULL);
 
    FOR_EACH( contour, contours )
-   {      
-    gluTessBeginContour(tobj);      
+   {
+    gluTessBeginContour(tobj);
     for( size_t v=0; v<contour->size(); v+=3 )
-     gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);      
+     gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);
    gluTessEndContour(tobj);
  }
 
@@ -289,7 +289,7 @@ void BlockGroup::LoadBlock( Worldfile* wf, int entity )
 {
   AppendBlock( Block( this, wf, entity ));
   //CalcSize(); // adjust the blocks so they fit in our bounding box
-}				
+}
 
 void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
 {
@@ -302,21 +302,21 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
   else
   {
     char* workaround_const = strdup(wf->filename.c_str());
-    full = std::string(dirname(workaround_const)) + "/" + bitmapfile;			
+    full = std::string(dirname(workaround_const)) + "/" + bitmapfile;
     free( workaround_const );
   }
-  
+
   char buf[512];
-  snprintf( buf, 512, "[Image \"%s\"", bitmapfile.c_str() ); 
+  snprintf( buf, 512, "[Image \"%s\"", bitmapfile.c_str() );
   fputs( buf, stdout );
   fflush( stdout );
-  
+
   PRINT_DEBUG1( "attempting to load image %s", full.c_str() );
-    
+
   Color col( 1.0, 0.0, 1.0, 1.0 );
-  
+
   std::vector<std::vector<point_t> > polys;
-  
+
   if( polys_from_image_file( full,
 			     polys ) )
     {
@@ -324,24 +324,24 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
 		  full.c_str() );
       return;
     }
-  
+
   FOR_EACH( it, polys )
     AppendBlock( Block( this,
 			*it,
 			Bounds(0,1) ));
-  
+
   CalcSize();
-  
-  fputs( "]", stdout ); 
+
+  fputs( "]", stdout );
 }
 
 
-void BlockGroup::Rasterize( uint8_t* data, 
-			    unsigned int width, 
+void BlockGroup::Rasterize( uint8_t* data,
+			    unsigned int width,
 			    unsigned int height,
 			    meters_t cellwidth,
 			    meters_t cellheight )
-{  
+{
   FOR_EACH( it, blocks )
     it->Rasterize( data, width, height, cellwidth, cellheight );
 }

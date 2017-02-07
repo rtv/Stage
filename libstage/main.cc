@@ -30,7 +30,7 @@
 #include "config.h"
 using namespace Stg;
 
-const char* USAGE = 
+const char* USAGE =
   "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldfileN]\n"
   "Available [options] are:\n"
   "  --clock        : print simulation time peridically on standard output\n"
@@ -58,11 +58,11 @@ int main( int argc, char* argv[] )
   Stg::Init( &argc, &argv );
 
   printf( "%s %s ", PROJECT, VERSION );
-  
+
   int ch=0, optindex=0;
   bool usegui = true;
   bool showclock = false;
-  
+
   while ((ch = getopt_long(argc, argv, "cgh?", longopts, &optindex)) != -1)
 	 {
 		switch( ch )
@@ -73,16 +73,16 @@ int main( int argc, char* argv[] )
 		  case 'a':
 			 World::ctrlargs = std::string(optarg);
 			 break;
-		  case 'c': 
+		  case 'c':
 			 showclock = true;
 			 printf( "[Clock enabled]" );
 			 break;
-		  case 'g': 
+		  case 'g':
 			 usegui = false;
 			 printf( "[GUI disabled]" );
 			 break;
-		  case 'h':  
-		  case '?':  
+		  case 'h':
+		  case '?':
 			 puts( USAGE );
 			 //			 exit(0);
 			 break;
@@ -92,32 +92,32 @@ int main( int argc, char* argv[] )
 			 //exit(0);
 		  }
 	 }
-  
+
   puts("");// end the first start-up line
 
   // arguments at index [optindex] and later are not options, so they
   // must be world file names
-  
+
   optindex = optind; //points to first non-option
   while( optindex < argc )
 	 {
 		if( optindex > 0 )
-		  {      
+		  {
 			 const char* worldfilename = argv[optindex];
-			 World* world = ( usegui ? 
-										new WorldGui( 400, 300, worldfilename ) : 
+			 World* world = ( usegui ?
+										new WorldGui( 400, 300, worldfilename ) :
 									new World( worldfilename ) );
 			 world->Load( worldfilename );
 			 world->ShowClock( showclock );
 
-			 if( ! world->paused ) 
+			 if( ! world->paused )
 				world->Start();
 		  }
 		optindex++;
 	 }
 
-  World::Run();  
-  
+  World::Run();
+
   puts( "\n[Stage: done]" );
 
 	return EXIT_SUCCESS;

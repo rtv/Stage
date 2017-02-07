@@ -6,8 +6,8 @@
 #include "canvas.hh"
 using namespace Stg;
 
-StripPlotVis::StripPlotVis( float x, float y, float w, float h, 
-									 size_t len, 
+StripPlotVis::StripPlotVis( float x, float y, float w, float h,
+									 size_t len,
 									 Color fgcolor, Color bgcolor,
 									 const char* name, const char* wfname )
   : Visualizer( name, wfname ),
@@ -34,22 +34,22 @@ StripPlotVis::~StripPlotVis()
 }
 
 void StripPlotVis::Visualize( Model* mod, Camera* )
-{  
+{
   Canvas* canvas = dynamic_cast<WorldGui*>(mod->GetWorld())->GetCanvas();
 
   if( ! canvas->selected( mod ) ) // == canvas->SelectedVisualizeAll() )
 	 return;
 
   canvas->EnterScreenCS();
-  
+
   mod->PushColor( bgcolor );
   glRectf( x,y,w,h );
   mod->PopColor();
-  
+
   mod->PushColor( fgcolor );
   Gl::draw_array( x,y,w,h,data,len,count%len,min,max );
   mod->PopColor();
-  
+
   canvas->LeaveScreenCS();
 }
 
@@ -57,7 +57,7 @@ void StripPlotVis::AppendValue( float value )
 {
   data[count%len] = value;
   count++;
-  
+
   min = std::min( value, min );
   max = std::max( value, max );
 }

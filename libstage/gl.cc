@@ -21,22 +21,22 @@ void Stg::Gl::pose_inverse_shift( const Pose &pose )
   coord_shift( -pose.x, -pose.y, -pose.z, 0 );
 }
 
-void Stg::Gl::draw_array( float x, float y, float w, float h, 
+void Stg::Gl::draw_array( float x, float y, float w, float h,
 								  float* data, size_t len, size_t offset,
 								  float min, float max )
 {
   float sample_spacing = w / (float)len;
   float yscale = h / (max-min);
-  
+
   //printf( "min %.2f max %.2f\n", min, max );
 
   glBegin( GL_LINE_STRIP );
 
   for( unsigned int i=0; i<len; i++ )
 	 glVertex3f( x + (float)i*sample_spacing, y+(data[(i+offset)%len]-min)*yscale, 0.01 );
-  
+
   glEnd();
-  
+
   glColor3f( 0,0,0 );
   char buf[64];
   snprintf( buf, 63, "%.2f", min );
@@ -46,13 +46,13 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
 
 }
 
-void Stg::Gl::draw_array( float x, float y, float w, float h, 
+void Stg::Gl::draw_array( float x, float y, float w, float h,
 			  float* data, size_t len, size_t offset )
 {
   // wild initial bounds
   float smallest = 1e16;
   float largest = -1e16;
-  
+
   for( size_t i=0; i<len; i++ )
     {
       smallest = std::min( smallest, data[i] );
@@ -62,26 +62,26 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
   draw_array( x,y,w,h,data,len,offset,smallest,largest );
 }
 
-void Stg::Gl::draw_string( float x, float y, float z, const char *str ) 
-{  
+void Stg::Gl::draw_string( float x, float y, float z, const char *str )
+{
   glRasterPos3f( x, y, z );
-   
-   GLboolean b;
-   glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &b );  
 
-   //printf( "[%.2f %.2f %.2f] %d string %u %s\n", x,y,z, (int)b, (unsigned int)strlen(str), str ); 
-   
+   GLboolean b;
+   glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &b );
+
+   //printf( "[%.2f %.2f %.2f] %d string %u %s\n", x,y,z, (int)b, (unsigned int)strlen(str), str );
+
    if( b ) gl_draw( str ); // fltk function
 }
 
-void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align ) 
-{  
-  //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
+void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align )
+{
+  //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str );
   gl_draw(str, x, y, w, h, align ); // fltk function
 }
 
 void Stg::Gl::draw_speech_bubble( float x, float y, float z, const char* str )
-{  
+{
 	draw_string( x, y, z, str );
 }
 

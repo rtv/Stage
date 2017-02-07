@@ -60,24 +60,24 @@ void InterfaceFiducial::Publish( void )
 {
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
-  
-	std::vector<ModelFiducial::Fiducial>& fids = 
-		((ModelFiducial*)mod)->GetFiducials();	
-	
+
+	std::vector<ModelFiducial::Fiducial>& fids =
+		((ModelFiducial*)mod)->GetFiducials();
+
 	pdata.fiducials_count = fids.size();
 
 	if( pdata.fiducials_count > 0 )
     {
 			pdata.fiducials = new player_fiducial_item_t[pdata.fiducials_count];
-			
+
       for( unsigned int i=0; i<pdata.fiducials_count; i++ )
 				{
-					pdata.fiducials[i].id = fids[i].id;					
+					pdata.fiducials[i].id = fids[i].id;
 
 					// 2D x,y only
 					double xpos = fids[i].range * cos(fids[i].bearing);
 					double ypos = fids[i].range * sin(fids[i].bearing);
-					
+
 					pdata.fiducials[i].pose.px = xpos;
 					pdata.fiducials[i].pose.py = ypos;
 					pdata.fiducials[i].pose.pz = 0.0;
@@ -86,13 +86,13 @@ void InterfaceFiducial::Publish( void )
 					pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
 				}
     }
-	
+
   // publish this data
   this->driver->Publish( this->addr,
 												 PLAYER_MSGTYPE_DATA,
 												 PLAYER_FIDUCIAL_DATA_SCAN,
 												 &pdata, sizeof(pdata), NULL);
-	
+
   if ( pdata.fiducials )
 		delete [] pdata.fiducials;
 }
@@ -166,7 +166,7 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 
       player_fiducial_id_t pid;
 		pid.id = mod->GetFiducialReturn();
-		
+
       // acknowledge, including the new ID
       this->driver->Publish(this->addr, resp_queue,
 									 PLAYER_MSGTYPE_RESP_ACK,

@@ -54,7 +54,7 @@ void InterfaceBlobfinder::Publish( void )
   bzero( &bfd, sizeof(bfd) );
 
   ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
-  
+
   const std::vector<Stg::ModelBlobfinder::Blob>& blobs = blobmod->GetBlobs();
 
   if ( blobs.size() > 0 )
@@ -82,24 +82,24 @@ void InterfaceBlobfinder::Publish( void )
 		<< " color: " << hex << blobs[b].color << dec
 		<< endl;
 		  */
-		  
+
 		  int dx = blobs[b].right - blobs[b].left;
 		  int dy = blobs[b].top - blobs[b].bottom;
-		  
+
 		  bfd.blobs[b].x      = blobs[b].left + dx/2;
 		  bfd.blobs[b].y      = blobs[b].bottom + dy/2;
-		  
+
 		  bfd.blobs[b].left   = blobs[b].left;
 		  bfd.blobs[b].right  = blobs[b].right;
 		  bfd.blobs[b].top    = blobs[b].top;
 		  bfd.blobs[b].bottom = blobs[b].bottom;
-		  
-		  bfd.blobs[b].color = 
+
+		  bfd.blobs[b].color =
 		    ((uint8_t)(blobs[b].color.r*255.0) << 16) +
 		    ((uint8_t)(blobs[b].color.g*255.0) << 8) +
 		    ((uint8_t)(blobs[b].color.b*255.0));
-		  
-		  bfd.blobs[b].area  = dx * dy;		  
+
+		  bfd.blobs[b].area  = dx * dy;
 		  bfd.blobs[b].range = blobs[b].range;
 		}
   }

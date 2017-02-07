@@ -27,9 +27,9 @@ void Ancestor::AddChild( Model* mod )
 		  mod->Token(), this->Token() );
       exit( -1 );
     }
-  
+
   children.push_back( mod );
-  child_type_counts[mod->type]++;  
+  child_type_counts[mod->type]++;
 }
 
 void Ancestor::RemoveChild( Model* mod )

@@ -12,10 +12,10 @@ namespace Stg {
 	/** option.hh
 	 Class that encapsulates a boolean and pairs it with a string description
 	 Used to pass settings between the GUI and the drawing classes
-	 
+
 	 Author: Jeremy Asher, Richard Vaughan
 	 SVN: $Id$
-	 */	
+	 */
 	class Option {
 	private:
 		friend bool compare( const Option* lhs, const Option* rhs );
@@ -23,20 +23,20 @@ namespace Stg {
 		std::string optName;
 		bool value;
 		/** worldfile entry string for loading and saving this value */
-		std::string wf_token; 
+		std::string wf_token;
 		std::string shortcut;
 		Fl_Menu_* menu;
 		int menuIndex;
 		Fl_Callback* menuCb;
 		Fl_Widget* menuCbWidget;
 		World* _world;
-	  
+
 	public:
-		Option( const std::string& n, 
+		Option( const std::string& n,
 						const std::string& tok,
-						const std::string& key, 
-						bool v, 
-						World *world );	  
+						const std::string& key,
+						bool v,
+						World *world );
 
 		const std::string name() const { return optName; }
 		inline bool isEnabled() const { return value; }
@@ -45,16 +45,16 @@ namespace Stg {
 		inline bool operator<( const Option& rhs ) const
 			{
 			  puts( "comparing" );
-			  return optName<rhs.optName; 
-			} 
+			  return optName<rhs.optName;
+			}
 		void set( bool val );
 		void invert() { set( !value ); }
 
 // 		// Comparator to dereference Option pointers and compare their strings
 // 		struct optComp {
 // 			inline bool operator()( const Option* a, const Option* b ) const
-// 			//{ return lhs->operator<(*rhs); } 
-// 				{ return a->optName < b->optName; } 
+// 			//{ return lhs->operator<(*rhs); }
+// 				{ return a->optName < b->optName; }
 // 		};
 
 
@@ -62,10 +62,10 @@ namespace Stg {
 		void menuCallback( Fl_Callback* cb, Fl_Widget* w );
 		static void toggleCb( Fl_Widget* w, void* p );
 		void Load( Worldfile* wf, int section );
-		void Save( Worldfile* wf, int section );	  
+		void Save( Worldfile* wf, int section );
 
 		std::string htname;
 	};
 }
-	
+
 #endif

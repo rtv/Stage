@@ -1,9 +1,9 @@
 /*
  *  Player - One Hell of a Robot Server
  *  glutgraphics.cc: GLUT-based graphics3d + 2d driver
- *  Copyright (C) 2007  
+ *  Copyright (C) 2007
  *     Brian Gerkey, Richard Vaughan
- *                      
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -25,7 +25,7 @@
  * shared object.
  */
 
-// ONLY if you need something that was #define'd as a result of configure 
+// ONLY if you need something that was #define'd as a result of configure
 // (e.g., HAVE_CFMAKERAW), then #include <config.h>, like so:
 /*
 #if HAVE_CONFIG_H
@@ -58,7 +58,7 @@ GLfloat light2_position[] =
 float s = 0.0;
 GLfloat angle1 = 0.0, angle2 = 0.0;
 
-	void 
+	void
 output(GLfloat x, GLfloat y, char *text)
 {
 	char *p;
@@ -70,7 +70,7 @@ output(GLfloat x, GLfloat y, char *text)
 	glPopMatrix();
 }
 
-	void 
+	void
 display(void)
 {
 	static GLfloat amb[] =
@@ -129,7 +129,7 @@ display(void)
 	glutSwapBuffers();
 }
 
-	void 
+	void
 idle(void)
 {
 	angle1 = (GLfloat) fmod(angle1 + 0.8, 360.0);
@@ -144,7 +144,7 @@ idle(void)
 	glutPostRedisplay();
 }
 
-	void 
+	void
 redraw( int val )
 {
 	angle1 = (GLfloat) fmod(angle1 + 0.8, 360.0);
@@ -161,7 +161,7 @@ redraw( int val )
 	glutTimerFunc( 100, redraw, 0 );
 }
 
-	void 
+	void
 visible(int vis)
 {
 	if (vis == GLUT_VISIBLE)
@@ -186,7 +186,7 @@ class ExampleDriver : public Driver
 		virtual int Shutdown();
 
 		// This method will be invoked on each incoming message
-		virtual int ProcessMessage(MessageQueue* resp_queue, 
+		virtual int ProcessMessage(MessageQueue* resp_queue,
 				player_msghdr * hdr,
 				void * data);
 
@@ -204,7 +204,7 @@ class ExampleDriver : public Driver
 // can be invoked without any object context (alternatively, you can
 // declare it static in the class).  In this function, we create and return
 // (as a generic Driver*) a pointer to a new instance of this driver.
-	Driver* 
+	Driver*
 ExampleDriver_Init(ConfigFile* cf, int section)
 {
 	puts( "my init" );
@@ -225,7 +225,7 @@ void ExampleDriver_Register(DriverTable* table)
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 	ExampleDriver::ExampleDriver(ConfigFile* cf, int section)
-: Driver(cf, section, false, PLAYER_MSGQUEUE_DEFAULT_MAXLEN, 
+: Driver(cf, section, false, PLAYER_MSGQUEUE_DEFAULT_MAXLEN,
 		PLAYER_GRAPHICS3D_CODE), foop(0)
 {
 	// Read an option from the configuration file
@@ -241,7 +241,7 @@ static char *argv = "fake";
 ////////////////////////////////////////////////////////////////////////////////
 // Set up the device.  Return 0 if things go well, and -1 otherwise.
 int ExampleDriver::Setup()
-{   
+{
 	puts("Example driver initialising");
 
 	// Here you do whatever is necessary to setup the device, like open and
@@ -312,7 +312,7 @@ int ExampleDriver::Shutdown()
 	return(0);
 }
 
-int ExampleDriver::ProcessMessage(MessageQueue* resp_queue, 
+int ExampleDriver::ProcessMessage(MessageQueue* resp_queue,
 		player_msghdr * hdr,
 		void * data)
 {
@@ -336,7 +336,7 @@ void ExampleDriver::Update()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main function for device thread
-void ExampleDriver::Main() 
+void ExampleDriver::Main()
 {
 	printf( "entering main loop" );
 	//glutMainLoop();

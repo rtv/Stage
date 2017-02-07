@@ -222,7 +222,7 @@ Interface::Interface(  player_devaddr_t addr,
 
 int PublishCb( Model* mod, Interface* iface )
 {
-  iface->Publish();  
+  iface->Publish();
   return 0; // run again
 }
 
@@ -231,7 +231,7 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 				 ConfigFile* cf,
 				 int section,
 				 const std::string& type )
-  : Interface( addr, driver, cf, section ), 
+  : Interface( addr, driver, cf, section ),
     mod( NULL ), subscribed( false )
 {
   char* model_name = (char*)cf->ReadString(section, "model", NULL );
@@ -257,10 +257,10 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 
       exit(-1);
     }
-  
+
   // install a callback to publish this model's data every time it is updated.
   this->mod->AddCallback( Model::CB_UPDATE, (model_callback_t)PublishCb, this );
-  
+
   if( !player_quiet_startup )
     printf( "\"%s\"\n", this->mod->Token() );
 }
@@ -297,11 +297,11 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   if( StgDriver::world == NULL )
     {
       Stg::Init( &player_argc, &player_argv );
-      
+
       StgDriver::usegui = cf->ReadBool(section, "usegui", 1 );
-      
+
       const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
-      
+
       if( worldfile_name == NULL )
 	{
 	  PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
@@ -310,11 +310,11 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
           "the worldfile.", "<empty>" );
 	  return; // error
 	}
-      
-      printf( " [Stage plugin] Loading world \"%s\"\n", worldfile_name ); 
-      
+
+      printf( " [Stage plugin] Loading world \"%s\"\n", worldfile_name );
+
       char fullname[MAXPATHLEN];
-      
+
       if( worldfile_name[0] == '/' )
 	strcpy( fullname, worldfile_name );
       else
@@ -324,7 +324,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 		    "%s/%s", dirname(tmp), worldfile_name );
 	  free(tmp);
 	}
-      
+
       // a little sanity testing
       // XX TODO
       //  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
@@ -332,18 +332,18 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       //  PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
       //  return;
       //}
-      
+
       // create a passel of Stage models in the local cache based on the
       // worldfile
-      
+
       // if the initial size is to large this crashes on some systems
       StgDriver::world = ( StgDriver::usegui ? new WorldGui( 400, 300, worldfile_name ) : new World(worldfile_name));
-      assert(StgDriver::world);	
+      assert(StgDriver::world);
       puts("");
-      
+
       StgDriver::world->Load( fullname );
       //printf( " done.\n" );
-      
+
       // poke the P/S name into the window title bar
       //   if( StgDriver::world )
       //     {
@@ -351,35 +351,35 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       //       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
       //       StgDriverworld_set_title(StgDriver::world, txt );
       //     }
-      
+
       // steal the global clock - a bit aggressive, but a simple approach
-      
+
       delete GlobalTime;
       GlobalTime = new StTime( this );
       assert(GlobalTime);
       // start the simulation
       // printf( "  Starting world clock... " ); fflush(stdout);
       //world_resume( world );
-      
+
       StgDriver::world->Start();
-      
+
       // this causes Driver::Update() to be called even when the device is
       // not subscribed
       Driver::alwayson = true;
 
       // only this instance will update the world clock
-      StgDriver::master_driver = this; 
-            
+      StgDriver::master_driver = this;
+
       puts( "" ); // end the Stage startup line
     }
 
   // init the array of device ids
   int device_count = cf->GetTupleCount( section, "provides" );
-  
+
   for( int d=0; d<device_count; d++ )
     {
       player_devaddr_t player_addr;
-      
+
       if (cf->ReadDeviceAddr( &player_addr, section,
                               "provides", 0, d, NULL) != 0)
 	{
@@ -558,13 +558,13 @@ Interface* StgDriver::LookupInterface( player_devaddr_t addr )
   FOR_EACH( it, this->ifaces )
     {
       Interface* candidate = *it;
-      
+
       if( candidate->addr.robot == addr.robot &&
 	  candidate->addr.interf == addr.interf &&
 	  candidate->addr.index == addr.index )
 	return candidate; // found
     }
-  
+
   return NULL; // not found
 }
 
@@ -593,9 +593,9 @@ int StgDriver::Unsubscribe(QueuePointer &queue,player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
-  
+
   Interface* device = this->LookupInterface( addr );
-  
+
   if( device )
     {
       device->StageUnsubscribe();
@@ -619,9 +619,9 @@ int StgDriver::Shutdown()
 {
   FOR_EACH( it, this->ifaces )
     (*it)->StageUnsubscribe();
-  
+
   puts("[Stage plugin] Stage driver has been shutdown");
-  
+
   return(0);
 }
 
@@ -656,15 +656,15 @@ void StgDriver::Update(void)
 {
   assert( StgDriver::world );
   assert( StgDriver::master_driver );
-  
+
   FOR_EACH( it, this->ifaces )
     {
       if( (*it)->addr.interf == PLAYER_SIMULATION_CODE )
 	{
 	  //static int c=0;
 	  //printf( "StgDriver::Update() driver %p world time %llu c %d\n",
-	  //      this, world->SimTimeNow(), c++ );    
-	  
+	  //      this, world->SimTimeNow(), c++ );
+
 	  // each model publishes its data in an update callback so we just
 	  // have to keep the world ticking along.  So we do either one round
 	  // of FLTK's update loop, or one no-gui update
@@ -674,6 +674,6 @@ void StgDriver::Update(void)
 	    StgDriver::world->Update();
 	}
     }
-  
+
   Driver::Update(); // calls ProcessMessages()
 }

@@ -17,14 +17,14 @@ Block::Block(  BlockGroup* group,
   pts(pts),
   local_z( zrange ),
   global_z(),
-  rendered_cells() 
+  rendered_cells()
 {
   assert( group );
   //canonicalize_winding(this->pts);
 }
 
 /** A from-file  constructor */
-Block::Block( BlockGroup* group,  
+Block::Block( BlockGroup* group,
 	      Worldfile* wf,
 	      int entity)
   : group(group),
@@ -36,7 +36,7 @@ Block::Block( BlockGroup* group,
   assert(group);
   assert(wf);
   assert(entity);
-  
+
   Load( wf, entity );
 }
 
@@ -55,7 +55,7 @@ void Block::Translate( double x, double y )
       it->x += x;
       it->y += y;
     }
-  
+
   group->BuildDisplayList();
 }
 
@@ -67,13 +67,13 @@ double Block::CenterY()
   // assume the polygon fits in a square a billion m a side
   double min = billion;
   double max = -billion;
-  
+
   FOR_EACH( it, pts )
     {
       if( it->y > max ) max = it->y;
       if( it->y < min ) min = it->y;
     }
-  
+
   // return the value half way between max and min
   return( min + (max - min)/2.0 );
 }
@@ -86,7 +86,7 @@ double Block::CenterX()
   // assume the polygon fits in a square a billion m a side
   double min = billion;
   double max = -billion;
-  
+
   FOR_EACH( it, pts )
     {
       if( it->x > max ) max = it->x;
@@ -130,7 +130,7 @@ void Block::SetZ( double min, double max )
 void Block::AppendTouchingModels( std::set<Model*>& touchers )
 {
   unsigned int layer = group->mod.world->updates % 2;
-  
+
   // for every cell we are rendered into
   FOR_EACH( cell_it, rendered_cells[layer] )
     // for every block rendered into that cell
@@ -147,12 +147,12 @@ Model* Block::TestCollision()
 
   // find the set of cells we would render into given the current global pose
   //GenerateCandidateCells();
-  
+
   if( group->mod.vis.obstacle_return )
     {
       if ( global_z.min < 0 )
 	return group->mod.world->GetGround();
-	  
+
       unsigned int layer = group->mod.world->updates % 2;
 
       // for every cell we may be rendered into
@@ -163,15 +163,15 @@ Model* Block::TestCollision()
 	    {
 	      Block* testblock = *block_it;
 	      Model* testmod = &testblock->group->mod;
-				
+
 	      //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
-				
+
 	      // if the tested model is an obstacle and it's not attached to this model
 	      if( (testmod != &group->mod) &&
 		  testmod->vis.obstacle_return &&
-		  (!group->mod.IsRelated( testmod )) && 
+		  (!group->mod.IsRelated( testmod )) &&
 		  // also must intersect in the Z range
-		  testblock->global_z.min <= global_z.max && 
+		  testblock->global_z.min <= global_z.max &&
 		  testblock->global_z.max >= global_z.min )
 		{
 		  //puts( "HIT");
@@ -186,11 +186,11 @@ Model* Block::TestCollision()
 }
 
 void Block::Map( unsigned int layer )
-{  
+{
   // calculate the global pixel coords of the block vertices
   // and render this block's polygon into the world
   group->mod.world->MapPoly( group->mod.LocalToPixels( pts ), this, layer );
-  
+
   // update the block's absolute z bounds at this rendering
   Pose gpose( group->mod.GetGlobalPose() );
   gpose.z += group->mod.geom.pose.z;
@@ -203,7 +203,7 @@ void Block::UnMap( unsigned int layer )
 {
   FOR_EACH( it, rendered_cells[layer] )
     (*it)->RemoveBlock(this, layer );
-  
+
   rendered_cells[layer].clear();
 }
 
@@ -222,29 +222,29 @@ void Block::Rasterize( uint8_t* data,
 {
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
-	
+
   const size_t pt_count = pts.size();
   for( size_t i=0; i<pt_count; ++i )
     {
       // convert points from local to model coords
       point_t mpt1 = pts[i];              //BlockPointToModelMeters( pts[i] );
       point_t mpt2 = pts[(i+1)%pt_count]; // BlockPointToModelMeters( pts[(i+1)%pt_count] );
-	  
+
       // record for debug visualization
       group->mod.rastervis.AddPoint( mpt1.x, mpt1.y );
-	  
+
       // shift to the bottom left of the model
       mpt1.x += group->mod.geom.size.x/2.0;
       mpt1.y += group->mod.geom.size.y/2.0;
       mpt2.x += group->mod.geom.size.x/2.0;
       mpt2.y += group->mod.geom.size.y/2.0;
-	  
+
       // convert from meters to cells
       point_int_t a( floor( mpt1.x / cellwidth  ),
 		     floor( mpt1.y / cellheight ));
       point_int_t b( floor( mpt2.x / cellwidth  ),
 		     floor( mpt2.y / cellheight ) );
-	  
+
       // render a line in the output bitmap for this edge, from mpt1
       // to mpt2
       bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
@@ -253,13 +253,13 @@ void Block::Rasterize( uint8_t* data,
 	  swap( a.x, a.y );
 	  swap( b.x, b.y );
 	}
-	  
+
       if( a.x > b.x )
 	{
 	  swap( a.x, b.x );
 	  swap( a.y, b.y );
 	}
-	  
+
       double dydx = (double) (b.y - a.y) / (double) (b.x - a.x);
       double y = a.y;
       for(int x=a.x; x<=b.x; ++x)
@@ -278,7 +278,7 @@ void Block::Rasterize( uint8_t* data,
 	      if( ! (floor(y) >= 0) ) continue;
 	      if( ! (floor(y) < (int)height) ) continue;
 	    }
-		  
+
 	  if( steep )
 	    data[ (int)floor(y) + (x * width)] = 1;
 	  else
@@ -319,7 +319,7 @@ void Block::DrawSides()
 
 void Block::DrawFootPrint()
 {
-  glBegin(GL_POLYGON);	
+  glBegin(GL_POLYGON);
   FOR_EACH( it, pts )
     glVertex2f( it->x, it->y );
   glEnd();
@@ -336,18 +336,18 @@ void Block::Load( Worldfile* wf, int entity )
   const size_t pt_count = wf->ReadInt( entity, "points", 0);
 
   char key[256];
-  for( size_t p=0; p<pt_count; ++p )	      
+  for( size_t p=0; p<pt_count; ++p )
     {
       snprintf(key, sizeof(key), "point[%d]", (int)p );
-      
-      point_t pt( 0, 0 );      
+
+      point_t pt( 0, 0 );
       wf->ReadTuple( entity, key, 0, 2, "ll", &pt.x, &pt.y );
       pts.push_back( pt );
     }
-  
+
   canonicalize_winding(pts);
 
-  wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );  
+  wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

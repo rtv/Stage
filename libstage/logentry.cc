@@ -8,7 +8,7 @@ LogEntry::LogEntry( usec_t timestamp, Model* mod ) :
   timestamp( timestamp ),
   mod( mod ),
   pose( mod->GetPose() )
-{ 
+{
   // all log entries are added to the static vector history
   log.push_back( *this );
 }

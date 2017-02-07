@@ -31,7 +31,7 @@ confirm_on_quit 1
 window
 (
   size [ 400 300 ]
-  
+
   # camera options
   center [ 0 0 ]
   rotate [ 0 0 ]
@@ -103,7 +103,7 @@ paused or resumed by pressing the 'p' key. Run one simulation step at
 a time by pressing the '.' (period) key. Hold down the '.' key to step
 repeatedly. Stepping leaves the simulation paused, so press 'p' to
 resume running. The initial paused/unpaused state can be set in the
-worldfile using the "paused" property. 
+worldfile using the "paused" property.
 
 <h3>Selecting models</h3> <p>Models can be selected by clicking on
 them with the left mouse button.  It is possible to select multiple
@@ -130,7 +130,7 @@ selected ones.
 
 <p>The "Follow" option keeps the view centered on the last selected model.
 
-<p>The "Perspective camera" option switches from orthogonal viewing to perspective viewing. 
+<p>The "Perspective camera" option switches from orthogonal viewing to perspective viewing.
 
 <h3>Saving a screenshot</h3>
 <p> To save a sequence of screenshots of the world, select the "Save
@@ -160,20 +160,20 @@ then select the option from the menu again to stop.
 
 using namespace Stg;
 
-static const char* AboutText = 
-	"\n" 
+static const char* AboutText =
+	"\n"
 	"Part of the Player Project\n"
 	"http://playerstage.org\n"
 	"\n"
 	"Copyright 2000-2008 Richard Vaughan,\n"
 	"Brian Gerkey, Andrew Howard, Reed Hedges, \n"
 	"Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
-	"and contributors\n" 
+	"and contributors\n"
 	"\n"
   "Distributed under the terms of the \n"
   "GNU General Public License v2";
 
-static const char* MoreHelpText = 
+static const char* MoreHelpText =
   "http://playerstage.org\n"
   "\n"
   "has these resources to help you:\n"
@@ -188,7 +188,7 @@ static const char* MoreHelpText =
   "in the directory \"docsrc\" to produce \"docsrc/stage/index.html\" .\n"
   "(requires Doxygen and supporting programs to be installed first).\n";
 
-WorldGui::WorldGui(int W,int H,const char* L) : 
+WorldGui::WorldGui(int W,int H,const char* L) :
   Fl_Window(W,H,L ),
   canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
@@ -198,7 +198,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   confirm_on_quit( true ),
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
-  pause_time( false ),	
+  pause_time( false ),
   real_time_interval( sim_interval ),
   real_time_now( RealTimeNow() ),
   real_time_recorded( real_time_now ),
@@ -209,18 +209,18 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   label( PROJECT );
 
   end();
-  
+
   // make this menu's shortcuts work whoever has focus
   mbar->global();
   mbar->textsize(12);
-  
+
   mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
   mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback*)fileLoadCb, this, FL_MENU_DIVIDER );
   mbar->add( "File/&Save World", FL_CTRL + 's', (Fl_Callback*)fileSaveCb, this );
   mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback*)WorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
-  
+
   mbar->add( "File/E&xit", FL_CTRL+'q', (Fl_Callback*)fileExitCb, this );
-  
+
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
 
   mbar->add( "View/Reset", ' ', (Fl_Callback*)resetViewCb, this );
@@ -235,14 +235,14 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->add( "Run/Slower", '[', (Fl_Callback*)slowerCb, this, FL_MENU_DIVIDER  );
   mbar->add( "Run/Realtime", '{', (Fl_Callback*)realtimeCb, this );
   mbar->add( "Run/Fast", '}', (Fl_Callback*)fasttimeCb, this );
-  
+
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/Getting help...", 0,  (Fl_Callback*)moreHelptCb, this, FL_MENU_DIVIDER );
   mbar->add( "Help/&About Stage...", 0, (Fl_Callback*)helpAboutCb, this );
-  
-  callback( (Fl_Callback*)windowCb, this );	 
-  
-  show();	
+
+  callback( (Fl_Callback*)windowCb, this );
+
+  show();
 }
 
 WorldGui::~WorldGui()
@@ -261,45 +261,45 @@ void WorldGui::Show()
 bool WorldGui::Load( const std::string& filename )
 {
   PRINT_DEBUG1( "%s.Load()", token.c_str() );
-	
+
   // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
   Fl::check();
 
   fileMan->newWorld( filename );
-  
+
   const usec_t load_start_time = RealTimeNow();
 
   if(!World::Load( filename ))
   {
 	  return false;
   }
-  
+
   // worldgui exclusive properties live in the top-level section
-  const int world_section = 0; 
-  speedup = wf->ReadFloat( world_section, "speedup", speedup );    
+  const int world_section = 0;
+  speedup = wf->ReadFloat( world_section, "speedup", speedup );
   paused = wf->ReadInt( world_section, "paused", paused );
   confirm_on_quit = wf->ReadInt( world_section, "confirm_on_quit", confirm_on_quit );
 
   // use the window section for the rest
   const int window_section = wf->LookupEntity( "window" );
-  
-  if( window_section > 0 ) 
-    {	
+
+  if( window_section > 0 )
+    {
       unsigned int width = w();
       unsigned int height = h();
       wf->ReadTuple(window_section, "size", 0, 2, "uu", &width, &height );
-      
-      
+
+
       size( width,height );
       size_range( 100, 100 ); // set min size to 100/100, max size to screen size
-      
+
       // configure the canvas
       canvas->Load(  wf, window_section );
-      
+
       std::string title = PROJECT;
       if ( wf->filename.size() ) {
 	// improve the title bar to say "Stage: <worldfile name>"
-	title += ": ";		
+	title += ": ";
 	title += wf->filename;
       }
       label( title.c_str() );
@@ -310,18 +310,18 @@ bool WorldGui::Load( const std::string& filename )
       // warn about unused WF lines
       wf->WarnUnused();
     }
- 
+
   const usec_t load_end_time = RealTimeNow();
-	
+
   if( debug )
-    printf( "[Load time %.3fsec]\n", 
+    printf( "[Load time %.3fsec]\n",
 	    (load_end_time - load_start_time) / 1e6 );
-  
+
   Show();
   return true;
 }
 
-void WorldGui::UnLoad() 
+void WorldGui::UnLoad()
 {
   World::UnLoad();
 }
@@ -329,55 +329,55 @@ void WorldGui::UnLoad()
 bool WorldGui::Save( const char* filename )
 {
   PRINT_DEBUG1( "%s.Save()", token.c_str() );
-  
+
   // worldgui exclusive properties live in the top-level section
-  const int world_section = 0; 
-  wf->WriteFloat( world_section, "speedup", speedup );    
+  const int world_section = 0;
+  wf->WriteFloat( world_section, "speedup", speedup );
   wf->WriteInt( world_section, "paused", paused );
   wf->WriteInt( world_section, "confirm_on_quit", confirm_on_quit );
 
   // use the window section for the rest
   const int window_section = wf->LookupEntity( "window" );
-	
+
   if( window_section > 0 ) // section defined
     {
       unsigned int width = w();
       unsigned int height = h();
       wf->WriteTuple( window_section, "size", 0, 2, "uu", width, height );
-	    
+
       canvas->Save( wf, window_section );
-	    
+
     FOR_EACH( it, option_table )
 	(*it)->Save( wf, window_section );
     }
-	
+
 	World::Save( filename );
-	
+
   // TODO - error checking
   return true;
 }
 
 static void UpdateCallback( WorldGui* world )
-{	
+{
   world->Update();
 }
 
 bool WorldGui::Update()
-{ 
+{
   if( speedup > 0 )
 	 Fl::repeat_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
   // else we're called by an idle callback
 
   //printf( "speedup %.2f timeout %.6f\n", speedup, timeout );
-  
+
   // occasionally we measure the real time elapsing, for reporting the
   // run speed
   if( updates % timing_interval == 0 )
-	 { 
-		const usec_t timenow = RealTimeNow();	 
-		real_time_interval = timenow - real_time_recorded; 
+	 {
+		const usec_t timenow = RealTimeNow();
+		real_time_interval = timenow - real_time_recorded;
 		real_time_recorded = timenow;
-	 }   
+	 }
 
   // inherit
   const bool done = World::Update();
@@ -391,24 +391,24 @@ bool WorldGui::Update()
       quit_time = 0; // allows us to continue by un-pausing
       Stop();
     }
-  
+
   return done;
 }
 
 std::string WorldGui::ClockString() const
 {
   std::string str = World::ClockString();
-  
-  const double localratio = 
+
+  const double localratio =
 		(double)sim_interval / (double)(real_time_interval/timing_interval);
-  
+
   char buf[32];
   snprintf( buf, 32, " [%.1f]", localratio );
   str += buf;
-  
+
   if( paused == true )
 	 str += " [ PAUSED ]";
-  
+
   return str;
 }
 
@@ -417,7 +417,7 @@ void WorldGui::AddModel( Model*  mod  )
 {
   if( mod->parent == NULL )
 	 canvas->AddModel( mod );
-  
+
   World::AddModel( mod );
 }
 
@@ -430,30 +430,30 @@ void WorldGui::RemoveChild( Model* mod )
 
 
 std::string WorldGui::EnergyString() const
-{	
-  char str[512]; 
+{
+  char str[512];
   snprintf( str, 255, "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f KJ\n  output:   %.0f KJ at %.2f KW\n",
 	    PowerPack::global_stored / 1e3,
 	    PowerPack::global_capacity /1e3,
 	    PowerPack::global_input / 1e3,
 	    PowerPack::global_dissipated / 1e3,
 	    (PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
-  
+
   return std::string( str );
 }
 
 void WorldGui::DrawOccupancy() const
-{  
+{
 // 	int count=0;
 //   FOR_EACH( it, superregions )
 // 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x, it->first.y, it->second );
 // 	printf( "done\n" );
 
 //  unsigned int layer( updates % 2 );
-  
+
   FOR_EACH( it, superregions )
     it->second->DrawOccupancy();
-  
+
   // 	 {
 
   // it->second->DrawOccupancy(0);
@@ -463,7 +463,7 @@ void WorldGui::DrawOccupancy() const
 }
 
 void WorldGui::DrawVoxels() const
-{  
+{
   unsigned int layer( updates % 2 );
 
   FOR_EACH( it, superregions )
@@ -490,18 +490,18 @@ void WorldGui::fileLoadCb( Fl_Widget*, WorldGui* wg )
 {
   const char* filename;
   const char* pattern = "World Files (*.world)";
-	
+
 	std::string worldsPath = wg->fileMan->worldsRoot();
 	worldsPath.append( "/" );
   Fl_File_Chooser fc( worldsPath.c_str(), pattern, Fl_File_Chooser::CREATE, "Load World File..." );
   fc.ok_label( "Load" );
-	
+
   fc.show();
   while (fc.shown())
     Fl::wait();
-	
+
   filename = fc.value();
-	
+
   if (filename != NULL) { // chose something
     if ( FileManager::readable( filename ) ) {
       // file is readable, clear and load
@@ -510,7 +510,7 @@ void WorldGui::fileLoadCb( Fl_Widget*, WorldGui* wg )
       wg->Stop();
       wg->UnLoad();
       // }
-			
+
       // todo: make sure loading is successful
       wg->Load( filename );
       wg->Start(); // if (stopped)
@@ -518,7 +518,7 @@ void WorldGui::fileLoadCb( Fl_Widget*, WorldGui* wg )
     else {
       fl_alert( "Unable to read selected world file." );
     }
-		
+
 
   }
 }
@@ -549,8 +549,8 @@ void WorldGui::fileExitCb( Fl_Widget*, WorldGui* wg )
 void WorldGui::resetViewCb( Fl_Widget*, WorldGui* wg )
 {
   wg->canvas->current_camera->reset();
-  
-  if( Fl::event_state( FL_CTRL ) ) 
+
+  if( Fl::event_state( FL_CTRL ) )
 	 {
 		wg->canvas->resetCamera();
 	 }
@@ -565,7 +565,7 @@ void WorldGui::slowerCb( Fl_Widget*, WorldGui* wg )
 		wg->SetTimeouts();
 	 }
   else
-	 wg->speedup *= 0.8;  
+	 wg->speedup *= 0.8;
 }
 
 void WorldGui::fasterCb( Fl_Widget*, WorldGui* wg )
@@ -581,7 +581,7 @@ void WorldGui::realtimeCb( Fl_Widget*, WorldGui* wg )
   //puts( "real time" );
   wg->speedup = 1.0;
 
-  if( !wg->paused ) 
+  if( !wg->paused )
 	 wg->SetTimeouts();
 }
 
@@ -589,9 +589,9 @@ void WorldGui::fasttimeCb( Fl_Widget*, WorldGui* wg )
 {
   //puts( "fast time" );
   wg->speedup = -1;
- 
-  if( !wg->paused ) 
-	 wg->SetTimeouts();  
+
+  if( !wg->paused )
+	 wg->SetTimeouts();
 }
 
 void WorldGui::Redraw()
@@ -603,12 +603,12 @@ void WorldGui::Redraw()
 void WorldGui::Start()
 {
   World::Start();
-  
+
   // start the timer that causes regular redraws
-  Fl::add_timeout( ((double)canvas->interval/1000), 
-						 (Fl_Timeout_Handler)Canvas::TimerCallback, 
+  Fl::add_timeout( ((double)canvas->interval/1000),
+						 (Fl_Timeout_Handler)Canvas::TimerCallback,
 						 canvas );
-  
+
   SetTimeouts();
 }
 
@@ -616,13 +616,13 @@ void WorldGui::Start()
 void WorldGui::SetTimeouts()
 {
   // remove the old callback, wherever it was
-  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
-  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
-  
-  if( speedup > 0.0 ) 
-	 // attempt some multiple of real time	 
+  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );
+  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );
+
+  if( speedup > 0.0 )
+	 // attempt some multiple of real time
 	 Fl::add_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
-  else 
+  else
 	 // go as fast as possible
 	 Fl::add_idle( (Fl_Timeout_Handler)UpdateCallback, this );
 }
@@ -630,15 +630,15 @@ void WorldGui::SetTimeouts()
 void WorldGui::Stop()
 {
   World::Stop();
-  
-  Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );	
-  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback );	
-  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
+
+  Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );
+  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback );
+  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );
 
   // drawn 'cos we cancelled the timeout
   canvas->redraw(); // in case something happened that will never be
 										// drawn otherwise
-}  
+}
 
 void WorldGui::pauseCb( Fl_Widget*, WorldGui* wg )
 {
@@ -660,58 +660,58 @@ void WorldGui::viewOptionsCb( OptionsDlg*, WorldGui* wg )
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
 
-  if ( !wg->oDlg ) 
+  if ( !wg->oDlg )
     {
       int x = wg->w()+wg->x() + 10;
       int y = wg->y();
       OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
       oDlg->callback( (Fl_Callback*)optionsDlgCb, wg );
-      
+
       oDlg->setOptions( wg->option_table );
       oDlg->showAllOpt( &wg->canvas->visualizeAll );
       wg->oDlg = oDlg;
       oDlg->show();
     }
-  else 
+  else
     {
       wg->oDlg->hide();
       delete wg->oDlg;
       wg->oDlg = NULL;
     }
-  
+
 }
 
-void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg ) 
+void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg )
 {
   // get event from dialog
   OptionsDlg::event_t event = oDlg->event();
-	
+
   // Check FLTK events first
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
-    if ( Fl::event_key() != FL_Escape ) 
+    if ( Fl::event_key() != FL_Escape )
       break; //return
     // otherwise, ESC pressed-> do as below
   case FL_CLOSE: // clicked close button
-    // override event to close		
+    // override event to close
     event = OptionsDlg::CLOSE;
     break;
   }
-	
+
   switch ( event ) {
-  case OptionsDlg::CHANGE: 
+  case OptionsDlg::CHANGE:
     {
       //Option* o = oDlg->changed();
-      //printf( "\"%s\" changed to %d!\n", o->name().c_str(), o->val() );			
+      //printf( "\"%s\" changed to %d!\n", o->name().c_str(), o->val() );
       break;
-    }			
+    }
   case OptionsDlg::CLOSE:
     // invalidate the oDlg pointer from the Wg
     //   instance before the dialog is destroyed
-    wg->oDlg = NULL; 
+    wg->oDlg = NULL;
     oDlg->hide();
     Fl::delete_widget( oDlg );
-    return;	
+    return;
   case OptionsDlg::NO_EVENT:
   case OptionsDlg::CHANGE_ALL:
     break;
@@ -723,7 +723,7 @@ void aboutOKBtnCb( Fl_Return_Button* btn, void* )
   btn->window()->do_callback();
 }
 
-void aboutCloseCb( Fl_Window* win, Fl_Text_Display* textDisplay ) 
+void aboutCloseCb( Fl_Window* win, Fl_Text_Display* textDisplay )
 {
   Fl_Text_Buffer* tbuf = textDisplay->buffer();
   textDisplay->buffer( NULL );
@@ -740,24 +740,24 @@ void WorldGui::helpAboutCb( Fl_Widget*, WorldGui* )
   const int ButtonW = 60;
   const int pngH = 82;
   //const int pngW = 264;
-	
+
   Fl_Window* win = new Fl_Window( Width, Height ); // make a window
 
-  Fl_Box* box = new Fl_Box( Spc, Spc, 
+  Fl_Box* box = new Fl_Box( Spc, Spc,
 			    Width-2*Spc, pngH ); // widget that will contain image
-	
+
   std::string fullpath = FileManager::findFile( "assets/stagelogo.png" );
-	
+
   box->image( new Fl_PNG_Image( fullpath.c_str() )); // load image and attach image to box
-	
-	Fl_Text_Display* textDisplay = 
+
+	Fl_Text_Display* textDisplay =
 		new Fl_Text_Display( Spc, pngH+2*Spc,
 												 Width-2*Spc, Height-pngH-ButtonH-4*Spc );
-	
+
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
   win->callback( (Fl_Callback*)aboutCloseCb, textDisplay );
-		
+
   Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
   tbuf->text( PROJECT );
   tbuf->append( "-" );
@@ -765,13 +765,13 @@ void WorldGui::helpAboutCb( Fl_Widget*, WorldGui* )
   tbuf->append( AboutText );
   //textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );
-	
-  Fl_Return_Button* button = 
+
+  Fl_Return_Button* button =
 		new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
 													ButtonW, ButtonH,
 													"&OK" );
   button->callback( (Fl_Callback*)aboutOKBtnCb );
-	
+
   win->show();
 }
 
@@ -780,23 +780,23 @@ void WorldGui::moreHelptCb( Fl_Widget*, WorldGui* )
   const int Width =  500;
   const int Height = 250;
   const int Spc = 10;
-	
+
   Fl_Window* win = new Fl_Window( Width, Height ); // make a window
 	win->label( "Getting help with Stage" );
-	
+
 	Fl_Text_Display* textDisplay =
 		new Fl_Text_Display( Spc, Spc,
 												 Width-2*Spc, Height-2*Spc );
-	
+
   win->resizable( textDisplay );
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
-		
+
   Fl_Text_Buffer* tbuf = new Fl_Text_Buffer();
   tbuf->append( MoreHelpText );
   // textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );
-	
+
   win->show();
 }
 
@@ -836,18 +836,18 @@ bool WorldGui::closeWindowQuery()
 		       "&Save, then quit", // ->1
 		       "&Quit without saving" // ->2
 		       );
-		
+
     switch (choice) {
     case 1: // Save before quitting
-      if ( saveAsDialog() ) 
-	return true;      
-      else 
+      if ( saveAsDialog() )
+	return true;
+      else
 	return false;
-      
+
     case 2: // Quit without saving
       return true;
     }
-		
+
     // Cancel
     return false;
   }
@@ -864,7 +864,7 @@ void WorldGui::DrawBoundingBoxTree()
 }
 
 void WorldGui::PushColor( Color col )
-{ canvas->PushColor( col ); } 
+{ canvas->PushColor( col ); }
 
 void WorldGui::PushColor( double r, double g, double b, double a )
 { canvas->PushColor( r,g,b,a ); }

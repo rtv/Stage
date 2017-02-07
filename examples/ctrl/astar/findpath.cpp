@@ -40,8 +40,8 @@ class MapSearchNode
 {
 public:
 	unsigned int x;	 // the (x,y) positions of the node
-	unsigned int y;	
-	
+	unsigned int y;
+
 	MapSearchNode() { x = y = 0; }
 	MapSearchNode( unsigned int px, unsigned int py ) { x=px; y=py; }
 
@@ -51,7 +51,7 @@ public:
 	float GetCost( MapSearchNode &successor );
 	bool IsSameState( MapSearchNode &rhs );
 
-	void PrintNodeInfo(); 
+	void PrintNodeInfo();
 
 
 };
@@ -79,13 +79,13 @@ void MapSearchNode::PrintNodeInfo()
 }
 
 // Here's the heuristic function that estimates the distance from a Node
-// to the Goal. 
+// to the Goal.
 
 float MapSearchNode::GoalDistanceEstimate( MapSearchNode &nodeGoal )
 {
   float xd = fabs(float(((float)x - (float)nodeGoal.x)));
   float yd = fabs(float(((float)y - (float)nodeGoal.y)));
-  return xd + yd;	
+  return xd + yd;
   //return 1.001 * (xd + yd );
 }
 
@@ -105,19 +105,19 @@ bool MapSearchNode::IsGoal( MapSearchNode &nodeGoal )
 // AddSuccessor to give the successors to the AStar class. The A* specific initialisation
 // is done for each node internally, so here you just set the state information that
 // is specific to the application
-bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, 
+bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch,
 											  MapSearchNode *parent_node )
 {
 
-	int parent_x = -1; 
-	int parent_y = -1; 
+	int parent_x = -1;
+	int parent_y = -1;
 
 	if( parent_node )
 	{
 		parent_x = parent_node->x;
 		parent_y = parent_node->y;
 	}
-	
+
 	MapSearchNode NewNode;
 
 	int ix = (int)x;
@@ -125,44 +125,44 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch,
 
 	// push each possible move except allowing the search to go backwards
 
-	if( (GetMap( ix-1, iy ) < 9u) 
+	if( (GetMap( ix-1, iy ) < 9u)
 			&& !((parent_x == ix-1) && (parent_y == iy))
-	  ) 
+	  )
 	{
 		NewNode = MapSearchNode( ix-1, iy );
 		astarsearch->AddSuccessor( NewNode );
-	}	
+	}
 
-	if( (GetMap( ix, iy-1 ) < 9u) 
+	if( (GetMap( ix, iy-1 ) < 9u)
 		&& !((parent_x == ix) && (parent_y == iy-1))
-	  ) 
+	  )
 	{
 		NewNode = MapSearchNode( ix, iy-1 );
 		astarsearch->AddSuccessor( NewNode );
-	}	
+	}
 
 	if( (GetMap( ix+1, iy ) < 9u)
 		&& !((parent_x == ix+1) && (parent_y == iy))
-	  ) 
+	  )
 	{
 		NewNode = MapSearchNode( ix+1, iy );
 		astarsearch->AddSuccessor( NewNode );
-	}	
+	}
 
-		
-	if( (GetMap( ix, iy+1 ) < 9u) 
+
+	if( (GetMap( ix, iy+1 ) < 9u)
 		&& !((parent_x == ix) && (parent_y == iy+1))
 		)
 	{
 		NewNode = MapSearchNode( ix, iy+1 );
 		astarsearch->AddSuccessor( NewNode );
-	}	
+	}
 
 	return true;
 }
 
 // given this node, what does it cost to move to successor. In the case
-// of our map the answer is the map terrain value at this node since that is 
+// of our map the answer is the map terrain value at this node since that is
 // conceptually where we're moving
 
 float MapSearchNode::GetCost( MapSearchNode & )
@@ -192,9 +192,9 @@ bool ast::astar(uint8_t* map,
 	_map_height = height;
 
 	// Our sample problem defines the world as a 2d array representing a terrain
-	// Each element contains an integer from 0 to 5 which indicates the cost 
-	// of travel across the terrain. Zero means the least possible difficulty 
-	// in travelling (think ice rink if you can skate) whilst 5 represents the 
+	// Each element contains an integer from 0 to 5 which indicates the cost
+	// of travel across the terrain. Zero means the least possible difficulty
+	// in travelling (think ice rink if you can skate) whilst 5 represents the
 	// most difficult. 9 indicates that we cannot pass.
 
 	// Create an instance of the search class...
@@ -204,12 +204,12 @@ bool ast::astar(uint8_t* map,
 	unsigned int SearchCount = 0;
 
 	const unsigned int NumSearches = 1;
-	
+
 	bool path_found = false;
 
 	while(SearchCount < NumSearches)
 	{
-	  
+
 		// Create a start state
 		MapSearchNode nodeStart;
 		nodeStart.x = start.x;
@@ -219,9 +219,9 @@ bool ast::astar(uint8_t* map,
 		MapSearchNode nodeEnd;
 		nodeEnd.x = goal.x;
 		nodeEnd.y = goal.y;
-		
+
 		// Set Start and goal states
-		
+
 		astarsearch.SetStartAndGoalStates( nodeStart, nodeEnd );
 
 		unsigned int SearchState;
@@ -236,36 +236,36 @@ bool ast::astar(uint8_t* map,
 	#if DEBUG_LISTS
 
 			cout << "Steps:" << SearchSteps << "\n";
-			
+
 			int len = 0;
-			
+
 			cout << "Open:\n";
 			MapSearchNode *p = astarsearch.GetOpenListStart();
 			while( p )
 				{
 					len++;
-#if !DEBUG_LIST_LENGTHS_ONLY			
+#if !DEBUG_LIST_LENGTHS_ONLY
 					((MapSearchNode *)p)->PrintNodeInfo();
 #endif
 					p = astarsearch.GetOpenListNext();
-					
+
 				}
-			
+
 			cout << "Open list has " << len << " nodes\n";
-			
+
 			len = 0;
-			
+
 			cout << "Closed:\n";
 			p = astarsearch.GetClosedListStart();
 			while( p )
 				{
 					len++;
-#if !DEBUG_LIST_LENGTHS_ONLY			
+#if !DEBUG_LIST_LENGTHS_ONLY
 					p->PrintNodeInfo();
-#endif			
+#endif
 					p = astarsearch.GetClosedListNext();
 				}
-			
+
 			cout << "Closed list has " << len << " nodes\n";
 #endif
 
@@ -277,56 +277,56 @@ bool ast::astar(uint8_t* map,
 		  //cout << "Search found goal state\n";
 
 				MapSearchNode *node = astarsearch.GetSolutionStart();
-				
+
 #if DISPLAY_SOLUTION
 				cout << "Displaying solution\n";
 #endif
 				int steps = 0;
-				
+
 				//node->PrintNodeInfo();
-				
+
 				path.push_back( point_t( node->x, node->y ) );
-				
+
 				for( ;; )
 				  {
 					 node = astarsearch.GetSolutionNext();
-					 
+
 					 if( !node )
 						{
 						  break;
 						}
-					 
+
 					 //node->PrintNodeInfo();
-					 
+
 					 path.push_back( point_t( node->x, node->y ) );
-					 
+
 					 steps ++;
-					 
+
 				  };
-				
+
 				//cout << "Solution steps " << steps << endl;
-				
+
 				// Once you're done with the solution you can free the nodes up
 				astarsearch.FreeSolutionNodes();
-				
+
 				path_found = true;
-				
+
 		}
-		else if( SearchState == AStarSearch<MapSearchNode>::SEARCH_STATE_FAILED ) 
+		else if( SearchState == AStarSearch<MapSearchNode>::SEARCH_STATE_FAILED )
 		  {
 			 cout << "Search terminated. Did not find goal state\n";
-			 
+
 		  }
-		
+
 		// Display the number of loops the search went through
 		//cout << "SearchSteps : " << SearchSteps << "\n";
-		
+
 		SearchCount ++;
-		
+
 		astarsearch.EnsureMemoryFreed();
 	}
-	
-	return path_found;  
+
+	return path_found;
 }
 
 //   // STL container iterator macros
@@ -340,7 +340,7 @@ bool ast::astar(uint8_t* map,
 //   bool result = astar( map, 30, 30, point_t( 1,1 ), point_t( 25,20 ), path );
 
 //   printf( "#%s:\n", result ? "PATH" : "NOPATH" );
-  
+
 //   FOR_EACH( it, path )
 // 	 printf( "%d, %d\n", it->x, it->y );
 //   puts("");

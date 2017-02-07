@@ -60,7 +60,7 @@ static const Color BUMPER_NOHIT_RGB(0, 1, 0, 1);// green
 
 Option ModelBumper::showBumperData( "Show Bumper Data", "show_bumper", "", true, NULL );
 
-ModelBumper::ModelBumper( World* world, 
+ModelBumper::ModelBumper( World* world,
 			  Model* parent,
 			  const std::string& type )
   : Model( world, parent, type ),
@@ -126,9 +126,9 @@ void ModelBumper::Load( void )
       // Load the geometry of a bumper array
       bumper_count = wf->ReadInt( wf_entity, "bcount", 0);
       assert( bumper_count > 0 );
-		
+
       char key[256];
-		
+
       if( bumpers ) delete [] bumpers;
       bumpers = new BumperConfig[bumper_count];
 
@@ -155,17 +155,17 @@ void ModelBumper::Load( void )
 	  bumpers[i].length = wf->ReadLength( wf_entity, key, bumpers[i].length );
 	}
 
-      PRINT_DEBUG1( "loaded %d bumpers configs", (int)bumper_count );	  
+      PRINT_DEBUG1( "loaded %d bumpers configs", (int)bumper_count );
     }
 }
 
-static bool bumper_match( Model* candidate, 
+static bool bumper_match( Model* candidate,
         const Model* finder, const void* )
 {
   // Ignore myself, my children, and my ancestors.
-  return( //candidate->vis.obstacle_return && 
+  return( //candidate->vis.obstacle_return &&
 	  !finder->IsRelated( candidate ) );
-}	
+}
 
 void ModelBumper::Update( void )
 {
@@ -194,12 +194,12 @@ void ModelBumper::Update( void )
 					    bumper_match,
 					    NULL,
 					    false );
-					    
+
       samples[t].hit = ray.mod;
       if (ray.mod) {
         samples[t].hit_point = point_t(ray.pose.x, ray.pose.y);
       }
-    }   
+    }
 }
 
 void ModelBumper::Print( char* prefix ) const
@@ -215,7 +215,7 @@ void ModelBumper::Print( char* prefix ) const
 
 ModelBumper::BumperVis::BumperVis()
 	: Visualizer( "Bumper hits", "show_bumper_hits" )
-{ 
+{
 	// Nothing to do here
 }
 

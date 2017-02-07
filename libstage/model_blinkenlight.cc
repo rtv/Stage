@@ -13,7 +13,7 @@
 
 /**
   @ingroup model
-  @defgroup model_blinkenlight Blinkenlight model 
+  @defgroup model_blinkenlight Blinkenlight model
   Simulates a blinking light.
 
 API: Stg::ModelBlinkenlight
@@ -38,8 +38,8 @@ enabled 1
 @par Notes
 
 @par Details
- 
-- enabled int 
+
+- enabled int
 - if 0, the light is off, else it is on
 - period int
 - the period of one on/of cycle, in msec
@@ -59,7 +59,7 @@ Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", tru
 
 ModelBlinkenlight::ModelBlinkenlight( World* world,
 												  Model* parent,
-												  const std::string& type ) : 
+												  const std::string& type ) :
   Model( world, parent, type ),
   dutycycle( 1.0 ),
   enabled( true ),
@@ -78,11 +78,11 @@ ModelBlinkenlight::ModelBlinkenlight( World* world,
 	// geom.size.x = 0.02;
 	// geom.size.y = 0.02;
 	// geom.size.z = 0.02;
-	this->SetGeom( Geom( Pose(), 
+	this->SetGeom( Geom( Pose(),
 			     Size( 0.02, 0.02, 0.02 ) ));
-	
+
 	this->Startup();
-	
+
 	RegisterOption( &showBlinkenData );
 }
 
@@ -93,7 +93,7 @@ ModelBlinkenlight::~ModelBlinkenlight()
 void ModelBlinkenlight::Load( void )
 {
   Model::Load();
-  
+
   this->dutycycle = wf->ReadFloat( wf_entity, "dutycycle", this->dutycycle );
   this->period = wf->ReadInt( wf_entity, "period", this->period );
   this->enabled = wf->ReadInt( wf_entity, "dutycycle", this->enabled );
@@ -101,7 +101,7 @@ void ModelBlinkenlight::Load( void )
 
 
 void ModelBlinkenlight::Update( void )
-{     
+{
 	// invert
 	this->on = ! this->on;
 	Model::Update();

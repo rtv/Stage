@@ -27,59 +27,59 @@ int main(int argc, char **argv)
     PlayerClient robot (gHostname, gPort);
     robot.SetDataMode( PLAYER_DATAMODE_PULL );
     robot.SetReplaceRule( true );
-    
+
     Position2dProxy pp( &robot, gIndex );
     SonarProxy      sp( &robot, gIndex );
     Graphics2dProxy gp( &robot, gIndex );
 
     sp.RequestGeom(); 	// query the server for sonar positions
-        
+
     while(1)
       {
 	// blocks until new data comes from Player
 	robot.Read();
-	
+
 	for( int i=0; i<POP; i++ )
 	  {
-	    // compute the vector sum of the sonar ranges	      
+	    // compute the vector sum of the sonar ranges
 	    double dx=0, dy=0;
-	    
+
 	    int num_ranges = sp.GetCount();
 	    for( int s=0; s<num_ranges; s++ )
 	      {
 		player_pose3d_t spose = sp.GetPose(s);
 		double srange = sp.GetScan(s);
-		
+
 		dx += srange * cos( spose.pyaw );
 		dy += srange * sin( spose.pyaw );
 	      }
-	    
-	    // compute the direction of the resultant vector 
+
+	    // compute the direction of the resultant vector
 	    double resultant_angle = atan2( dy, dx );
 	    //double resultant_magnitude = hypot( dy, dx );
-	    
+
 	    double forward_speed = 0.0;
-	    double side_speed = 0.0;	   
+	    double side_speed = 0.0;
 	    double turn_speed = WGAIN * resultant_angle;
-	    	    
+
 	    // find the index of the forward-pointing sensor
 	    int forward = num_ranges/2 -1 ;
-	    
+
 	    // if the front is clear, drive forwards
 	    if( (sp.GetScan(forward-1) > SAFE_DIST) &&
 		(sp.GetScan(forward) > SAFE_DIST) &&
-		(sp.GetScan(forward+1) > SAFE_DIST) && 
+		(sp.GetScan(forward+1) > SAFE_DIST) &&
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	      {
 		forward_speed = VSPEED;
 	      }
-	
+
 	    // send a command to the robot's position device
 	    pp.SetSpeed( forward_speed, side_speed, turn_speed );
-	    
+
 	    // draw the resultant vector on the robot to show what it
 	    // is thinking
-	    if( forward_speed > 0 )	      
+	    if( forward_speed > 0 )
 	      gp.Color( 0,255,0,0 );
 	    else
 	      gp.Color( 0,255,255,0 );
@@ -88,12 +88,12 @@ int main(int argc, char **argv)
 	    pts[0].px = 0;
 	    pts[0].py = 0;
 	    pts[1].px = dx;
-	    pts[1].py = dy;	
-	    
+	    pts[1].py = dy;
+
 	    gp.Clear();
 	    gp.DrawPolyline( pts, 2 );
-	    
-	  }    
+
+	  }
       }
   }
   catch (PlayerCc::PlayerError &e)

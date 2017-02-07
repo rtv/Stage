@@ -13,7 +13,7 @@
 
 /**
   @ingroup model
-  @defgroup model_wifi Wifi model 
+  @defgroup model_wifi Wifi model
 
   @todo Fill this in
 
@@ -50,7 +50,7 @@ extern "C" {
 	void gui_wifi_init( model_t* mod );
 
 
-	int 
+	int
 		wifi_init( model_t* mod )
 		{
 			// we don't consume any power until subscribed
@@ -82,9 +82,9 @@ extern "C" {
 			return 0;
 		}
 
-	int 
+	int
 		wifi_update( model_t* mod, void* unused )
-		{   
+		{
 			// no work to do if we're unsubscribed
 			if( mod->subs < 1 )
 				return 0;
@@ -119,16 +119,16 @@ extern "C" {
 			return 0; //ok
 		}
 
-	int 
+	int
 		wifi_startup( model_t* mod, void* unused )
-		{ 
+		{
 			PRINT_DEBUG( "wifi startup" );
 			model_add_callback( mod, &mod->startup, wifi_startup, NULL );
 			model_set_watts( mod, STG_WIFI_WATTS );
 			return 0; // ok
 		}
 
-	int 
+	int
 		wifi_shutdown( model_t* mod, void* unused )
 		{
 			PRINT_DEBUG( "wifi shutdown" );

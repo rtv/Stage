@@ -11,7 +11,7 @@ namespace Stg
   {
 	 friend class WorldGui; // allow access to private members
 	 friend class Model;
-  
+
   private:
 
 	 class GlColorStack
@@ -19,18 +19,18 @@ namespace Stg
 	 public:
 		GlColorStack() : colorstack() {}
 		~GlColorStack() {}
-		
+
 		void Push( double r, double g, double b, double a=1.0 )
 		{
 		  Push( Color(r,g,b,a) );
 		}
-		
+
 		void Push( Color col )
 		{
-		  colorstack.push( col );		
+		  colorstack.push( col );
 		  glColor4f( col.r, col.g, col.b, col.a );
 		}
-		
+
 		void Pop()
 		{
 		  if( colorstack.size() < 1 )
@@ -40,19 +40,19 @@ namespace Stg
 			 {
 				Color& old = colorstack.top();
 				colorstack.pop();
-				glColor4f( old.r,  old.g,  old.b,  old.a ); 
+				glColor4f( old.r,  old.g,  old.b,  old.a );
 			 }
 		}
-		
+
 		unsigned int Length()
 		{ return colorstack.size(); }
-		
+
 	 private:
 		std::stack<Color> colorstack;
 	 } colorstack;
-	 
+
 	 std::list<Model*> models_sorted;
-  
+
 	 Camera* current_camera;
 	 OrthoCamera camera;
 	 PerspectiveCamera perspective_camera;
@@ -73,46 +73,46 @@ namespace Stg
 	 void DrawRays();
 	 void ClearRays();
 	 void DrawGlobalGrid();
-  
+
 	 void AddModel( Model* mod );
 	 void RemoveModel( Model* mod );
 
-	 Option //showBlinken, 
+	 Option //showBlinken,
 		showBBoxes,
-		showBlocks, 
+		showBlocks,
 		showBlur,
-		showClock, 
-		showData, 
+		showClock,
+		showData,
 		showFlags,
 		showFollow,
-		showFootprints, 
-		showGrid, 
-		showOccupancy, 
+		showFootprints,
+		showGrid,
+		showOccupancy,
 		showScreenshots,
 		showStatus,
-		showTrailArrows, 
-		showTrailRise, 
-		showTrails, 
+		showTrailArrows,
+		showTrailRise,
+		showTrails,
 		showVoxels,
 		pCamOn,
 		visualizeAll;
-  
+
   public:
 	 Canvas( WorldGui* world, int x, int y, int width, int height);
 	 ~Canvas();
-  
+
 	 bool graphics;
 	 WorldGui* world;
 	 unsigned long frames_rendered_count;
 	 int screenshot_frame_skip;
-  
+
 	 std::map< std::string, Option* > _custom_options;
 
 	 void Screenshot();
 	 void InitGl();
 	 void InitTextures();
 	 void createMenuItems( Fl_Menu_Bar* menu, std::string path );
-  
+
 	 void FixViewport(int W,int H);
 	 void DrawFloor(); //simpler floor compared to grid
 	 void DrawBlocks();
@@ -123,7 +123,7 @@ namespace Stg
 	 virtual int handle( int event );
 	 void resize(int X,int Y,int W,int H);
 
-	 void CanvasToWorld( int px, int py, 
+	 void CanvasToWorld( int px, int py,
 								double *wx, double *wy, double* wz );
 
      Model* getModel( int x, int y );
@@ -134,30 +134,30 @@ namespace Stg
 
 	 inline void setDirtyBuffer( void ) { dirty_buffer = true; }
 	 inline bool dirtyBuffer( void ) const { return dirty_buffer; }
-	
+
 	 void PushColor( Color col )
-	 { colorstack.Push( col ); } 
+	 { colorstack.Push( col ); }
 
 	 void PushColor( double r, double g, double b, double a )
 	 { colorstack.Push( r,g,b,a ); }
 
-	 void PopColor(){ colorstack.Pop(); } 
-  
+	 void PopColor(){ colorstack.Pop(); }
+
 	 void InvertView( uint32_t invertflags );
 
 	 bool VisualizeAll(){ return ! visualizeAll; }
-  
+
 	 static void TimerCallback( Canvas* canvas );
 	 static void perspectiveCb( Fl_Widget* w, void* p );
-  
+
 	 void EnterScreenCS();
 	 void LeaveScreenCS();
 
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
-	 
-	 bool IsTopView(){ return( (fabs( camera.yaw() ) < 0.1) && 
-										(fabs( camera.pitch() ) < 0.1) ); } 
+
+	 bool IsTopView(){ return( (fabs( camera.yaw() ) < 0.1) &&
+										(fabs( camera.pitch() ) < 0.1) ); }
   };
 
 } // namespace Stg

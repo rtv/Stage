@@ -12,14 +12,14 @@ namespace lspTest {
 			CPPUNIT_TEST_SUITE( Blobfinder );
 			CPPUNIT_TEST( testData );
 			CPPUNIT_TEST_SUITE_END();
-			
+
 		protected:
 			playerc_blobfinder_t* blobProxy;
-			
+
 			void testConfig();
 			void testGeom();
 			void testData();
-			
+
 		public:
 			void setUp();
 			void tearDown();
