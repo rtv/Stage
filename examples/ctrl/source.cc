@@ -23,11 +23,10 @@ void split( const std::string& text,
 				std::vector<std::string>& words)
 {
   int n = text.length();
-  int start, stop;
-  start = text.find_first_not_of(separators);
+  int start = text.find_first_not_of(separators);
   while ((start >= 0) && (start < n))
 	 {
-		stop = text.find_first_of(separators, start);
+    int stop = text.find_first_of(separators, start);
 		if ((stop < 0) || (stop > n)) stop = n;
 		words.push_back(text.substr(start, stop - start));
 		start = text.find_first_not_of(separators, stop+1);
@@ -51,7 +50,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   info_t* info = new info_t;
   info->capacity = atoi( words[1].c_str() );
 
-  printf( "Source Capacity: %d\n", info->capacity );
+  printf( "Source Capacity: %u\n", info->capacity );
 
   mod->AddCallback( Model::CB_UPDATE, (model_callback_t)Update, info );  
   mod->Subscribe();

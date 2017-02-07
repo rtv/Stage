@@ -13,8 +13,8 @@ public:
 bool astar( uint8_t* map, 
 				uint32_t width, 
 				uint32_t height,
-				const point_t start, 
-				const point_t goal, 
+        const point_t &start,
+        const point_t &goal,
 				std::vector<point_t>& path );
 
 }

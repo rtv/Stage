@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 	    }    
       }
   }
-  catch (PlayerCc::PlayerError e)
+  catch (PlayerCc::PlayerError &e)
     {
       std::cerr << e << std::endl;
       return -1;

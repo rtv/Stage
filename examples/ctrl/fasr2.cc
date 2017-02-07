@@ -164,7 +164,7 @@ private:
 	public:
 		Graph** graphpp;
 		
-		GraphVis( Graph** graphpp ) 
+    explicit GraphVis( Graph** graphpp )
 			: Visualizer( "graph", "vis_graph" ), graphpp(graphpp) {}
 		virtual ~GraphVis(){}
 		
@@ -392,9 +392,6 @@ public:
 
  void Plan( Pose sp )
   {
-		static float hits = 0;
-		static float misses = 0;
-
 		// change my color to that of my destination
 		//pos->SetColor( dest->GetColor() );
 		
@@ -426,6 +423,7 @@ public:
 
 		if( ! graphp ) // no plan cached
 			{
+        static float misses = 0;
 				misses++;
 				
 				std::vector<ast::point_t> path;
@@ -469,6 +467,7 @@ public:
 			}
 		else
 			{
+        static float hits = 0;
 				hits++;
 				//puts( "FOUND CACHED PLAN" );
 			}
@@ -925,7 +924,7 @@ public:
 				break;
 		
 			default:
-				printf( "unrecognized mode %u\n", mode );		
+        printf( "unrecognized mode %d\n", int(mode) );
 			}
   
   
@@ -981,11 +980,10 @@ std::vector<Robot::Task> Robot::tasks;
 void split( const std::string& text, const std::string& separators, std::vector<std::string>& words)
 {
   const int n = text.length();
-  int start, stop;
-  start = text.find_first_not_of(separators);
+  int start = text.find_first_not_of(separators);
   while ((start >= 0) && (start < n))
 		{
-			stop = text.find_first_of(separators, start);
+      int stop = text.find_first_of(separators, start);
 			if ((stop < 0) || (stop > n)) stop = n;
 			words.push_back(text.substr(start, stop - start));
 			start = text.find_first_not_of(separators, stop+1);

@@ -114,12 +114,13 @@ public: // methods
 
 
 	// constructor just initialises private data
- AStarSearch( int MaxNodes = 2000 ) :
+ explicit AStarSearch( int MaxNodes = 2000 ) :
+    m_State( SEARCH_STATE_NOT_INITIALISED ),
+    m_Steps(0), m_Start(NULL), m_Goal(NULL),
+    m_CurrentSolutionNode( NULL ),
 #if USE_FSA_MEMORY
 	m_FixedSizeAllocator( MaxNodes ),
 #endif
-		m_State( SEARCH_STATE_NOT_INITIALISED ),
-		m_CurrentSolutionNode( NULL ),
 		m_AllocateNodeCount(0),
 		m_CancelRequest( false )
 			{
@@ -253,7 +254,7 @@ public: // methods
 			    typename vector< Node * >::iterator successor;
 
 				// free the nodes that may previously have been added 
-				for( successor = m_Successors.begin(); successor != m_Successors.end(); successor ++ )
+        for( successor = m_Successors.begin(); successor != m_Successors.end(); ++successor )
 				{
 					FreeNode( (*successor) );
 				}
@@ -268,7 +269,7 @@ public: // methods
 			}
 			
 			// Now handle each successor to the current node ...
-			for( typename vector< Node * >::iterator successor = m_Successors.begin(); successor != m_Successors.end(); successor ++ )
+      for( typename vector< Node * >::iterator successor = m_Successors.begin(); successor != m_Successors.end(); ++successor )
 			{
 
 				// 	The g value for this successor ...
@@ -282,7 +283,7 @@ public: // methods
 
 				typename vector< Node * >::iterator openlist_result;
 
-				for( openlist_result = m_OpenList.begin(); openlist_result != m_OpenList.end(); openlist_result ++ )
+        for( openlist_result = m_OpenList.begin(); openlist_result != m_OpenList.end(); ++openlist_result )
 				{
 					if( (*openlist_result)->m_UserState.IsSameState( (*successor)->m_UserState ) )
 					{
@@ -306,7 +307,7 @@ public: // methods
 
 				typename vector< Node * >::iterator closedlist_result;
 
-				for( closedlist_result = m_ClosedList.begin(); closedlist_result != m_ClosedList.end(); closedlist_result ++ )
+        for( closedlist_result = m_ClosedList.begin(); closedlist_result != m_ClosedList.end(); ++closedlist_result )
 				{
 					if( (*closedlist_result)->m_UserState.IsSameState( (*successor)->m_UserState ) )
 					{
@@ -534,7 +535,7 @@ public: // methods
 
 	UserState *GetOpenListNext( float &f, float &g, float &h )
 	{
-		iterDbgOpen++;
+    ++iterDbgOpen;
 		if( iterDbgOpen != m_OpenList.end() )
 		{
 			f = (*iterDbgOpen)->f;
@@ -575,7 +576,7 @@ public: // methods
 
 	UserState *GetClosedListNext( float &f, float &g, float &h )
 	{
-		iterDbgClosed++;
+    ++iterDbgClosed;
 		if( iterDbgClosed != m_ClosedList.end() )
 		{
 			f = (*iterDbgClosed)->f;
@@ -614,7 +615,7 @@ private: // methods
 			Node *n = (*iterOpen);
 			FreeNode( n );
 
-			iterOpen ++;
+      ++iterOpen;
 		}
 
 		m_OpenList.clear();
@@ -622,7 +623,7 @@ private: // methods
 		// iterate closed list and delete unused nodes
 		typename vector< Node * >::iterator iterClosed;
 
-		for( iterClosed = m_ClosedList.begin(); iterClosed != m_ClosedList.end(); iterClosed ++ )
+    for( iterClosed = m_ClosedList.begin(); iterClosed != m_ClosedList.end(); ++iterClosed )
 		{
 			Node *n = (*iterClosed);
 			FreeNode( n );
@@ -655,7 +656,7 @@ private: // methods
 				n = NULL;
 			}
 
-			iterOpen ++;
+      ++iterOpen;
 		}
 
 		m_OpenList.clear();
@@ -663,7 +664,7 @@ private: // methods
 		// iterate closed list and delete unused nodes
 		typename vector< Node * >::iterator iterClosed;
 
-		for( iterClosed = m_ClosedList.begin(); iterClosed != m_ClosedList.end(); iterClosed ++ )
+    for( iterClosed = m_ClosedList.begin(); iterClosed != m_ClosedList.end(); ++iterClosed )
 		{
 			Node *n = (*iterClosed);
 
@@ -727,7 +728,7 @@ private: // data
 	unsigned int m_State;
 
 	// Counts steps
-	int m_Steps;
+  int m_Steps;
 
 	// Start and goal state pointers
 	Node *m_Start;

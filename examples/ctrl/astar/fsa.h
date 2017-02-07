@@ -68,15 +68,16 @@ public:
 		FSA_ELEMENT *pPrev;
 		FSA_ELEMENT *pNext;
 	};
-
+private:
+  FixedSizeAllocator(const FixedSizeAllocator&) { }
 public: // methods
-	FixedSizeAllocator( unsigned int MaxElements = FSA_DEFAULT_SIZE ) :
+  explicit FixedSizeAllocator( unsigned int MaxElements = FSA_DEFAULT_SIZE ) :
 	m_MaxElements( MaxElements ),
 	m_pFirstUsed( NULL )
 	{
 		// Allocate enough memory for the maximum number of elements
 
-		m_pMemory = (FSA_ELEMENT *) (new char[ m_MaxElements * sizeof(FSA_ELEMENT) ]); 
+    m_pMemory = new char[m_MaxElements];
 
 		// Set the free list first pointer
 		m_pFirstFree = m_pMemory;
@@ -107,7 +108,7 @@ public: // methods
 	~FixedSizeAllocator()
 	{
 		// Free up the memory
-		delete [] (char *) m_pMemory;
+    delete [] m_pMemory;
 	}
 
 	// Allocate a new USER_TYPE and return a pointer to it 
@@ -203,7 +204,7 @@ public: // methods
 		FSA_ELEMENT *p = m_pFirstFree;
 		while( p )
 		{
-			printf( "%x!%x ", p->pPrev, p->pNext );
+      printf( "%p!%p ", p->pPrev, p->pNext );
 			p = p->pNext;
 		}
 		printf( "\n" );
@@ -213,7 +214,7 @@ public: // methods
 		p = m_pFirstUsed;
 		while( p )
 		{
-			printf( "%x!%x ", p->pPrev, p->pNext );
+      printf( "%p!%p ", p->pPrev, p->pNext );
 			p = p->pNext;
 		}
 		printf( "\n" );

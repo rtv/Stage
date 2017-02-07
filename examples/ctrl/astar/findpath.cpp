@@ -177,12 +177,12 @@ float MapSearchNode::GetCost( MapSearchNode &successor )
 #include "astar.h"
 using namespace ast;
 
-bool ast::astar( uint8_t* map, 
-				uint32_t width, 
-				uint32_t height,
-				const point_t start, 
-				const point_t goal, 
-				std::vector<point_t>& path )
+bool ast::astar(uint8_t* map,
+        uint32_t width,
+        uint32_t height,
+        const point_t &start,
+        const point_t &goal,
+        std::vector<point_t>& path )
 {
   //cout << "STL A* Search implementation\n(C)2001 Justin Heyes-Jones\n";
 

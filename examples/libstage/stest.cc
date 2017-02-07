@@ -26,6 +26,7 @@ public:
 
 class Logic
 {
+  Logic(const Logic&) { }
 public:
     static int Callback(Stg::World* world, void* userarg)
     {
@@ -37,7 +38,7 @@ public:
         return 0;
     }
     
-    Logic(unsigned int popsize)
+    explicit Logic(unsigned int popsize)
     : 
     population_size(popsize),
     robots(new Robot[population_size])
@@ -105,7 +106,7 @@ public:
             typedef std::vector<Stg::ModelRanger::Sensor>::const_iterator sensor_iterator;
             const std::vector<Stg::ModelRanger::Sensor> sensors = rgr->GetSensors();
             
-            for(sensor_iterator sensor = sensors.begin(); sensor != sensors.end(); sensor++)
+            for(sensor_iterator sensor = sensors.begin(); sensor != sensors.end(); ++sensor)
             {
                 // each sensor takes a single sample (as specified in the .world)
                 const double srange = (*sensor).ranges[0];

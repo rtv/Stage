@@ -362,7 +362,7 @@ public:
 		  break;
 		
 		default:
-		  printf( "unrecognized mode %u\n", robot->mode );		
+      printf( "unrecognized mode %d\n", int(robot->mode) );
 		}
   
 	 return 0;
