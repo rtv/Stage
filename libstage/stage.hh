@@ -260,7 +260,7 @@ namespace Stg
     Pose() : x(0.0), y(0.0), z(0.0), a(0.0)
     { /*empty*/ }		 
     
-    virtual ~Pose(){};
+    virtual ~Pose(){}
     
     /** return a random pose within the bounding rectangle, with z=0 and
 	angle random */
@@ -292,7 +292,7 @@ namespace Stg
 	
     /* returns true iff all components of the velocity are zero. */
     bool IsZero() const 
-    { return( !(x || y || z || a )); };
+    { return( !(x || y || z || a )); }
 	
     /** Set the pose to zero [0,0,0,0] */
     void Zero()
@@ -928,16 +928,16 @@ namespace Stg
 	 
     bool paused; ///< if true, the simulation is stopped
 
-    virtual void Start(){ paused = false; };
-    virtual void Stop(){ paused = true; };
-    virtual void TogglePause(){ paused ? Start() : Stop(); };
+    virtual void Start(){ paused = false; }
+    virtual void Stop(){ paused = true; }
+    virtual void TogglePause(){ paused ? Start() : Stop(); }
 
-    bool Paused() const { return( paused ); };
+    bool Paused() const { return( paused ); }
 		
     /** Force the GUI to redraw the world, even if paused. This
 	imlementation does nothing, but can be overridden by
 	subclasses. */
-    virtual void Redraw( void ){ }; // does nothing
+    virtual void Redraw( void ){ } // does nothing
 
     std::vector<point_int_t> rt_cells;
     std::vector<point_int_t> rt_candidate_cells;
@@ -956,7 +956,7 @@ namespace Stg
     void Log( Model* mod );
 
     /** hint that the world needs to be redrawn if a GUI is attached */
-    void NeedRedraw(){ dirty = true; };
+    void NeedRedraw(){ dirty = true; }
     
     /** Special model for the floor of the world */
     Model* ground;
@@ -987,19 +987,19 @@ namespace Stg
     /** convert a distance in meters to a distance in world occupancy
 	grid pixels */
     int32_t MetersToPixels( meters_t x ) const
-    { return (int32_t)floor(x * ppm); };
+    { return (int32_t)floor(x * ppm); }
     
     /** Return the bitmap coordinates corresponding to the location in meters. */
     point_int_t MetersToPixels( const point_t& pt ) const
-    { return point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
+    { return point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); }
 		
     // dummy implementations to be overloaded by GUI subclasses
     virtual void PushColor( Color col ) 
-    { /* do nothing */  (void)col; };
+    { /* do nothing */  (void)col; }
     virtual void PushColor( double r, double g, double b, double a ) 
-    { /* do nothing */ (void)r; (void)g; (void)b; (void)a; };
+    { /* do nothing */ (void)r; (void)g; (void)b; (void)a; }
 	 
-    virtual void PopColor(){ /* do nothing */  };
+    virtual void PopColor(){ /* do nothing */  }
 		
     SuperRegion* CreateSuperRegion( point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
@@ -1084,8 +1084,8 @@ namespace Stg
 		
     /** Set of models that require energy calculations at each World::Update(). */
     std::set<Model*> active_energy;
-    void EnableEnergy( Model* m ) { active_energy.insert( m ); };
-    void DisableEnergy( Model* m ) { active_energy.erase( m ); };
+    void EnableEnergy( Model* m ) { active_energy.insert( m ); }
+    void DisableEnergy( Model* m ) { active_energy.erase( m ); }
     
     /** Set of models that require their positions to be recalculated at each World::Update(). */
     std::set<ModelPosition*> active_velocity;
@@ -1127,7 +1127,7 @@ namespace Stg
 		
     /** Returns a pointer to the currently-open worlddfile object, or
 	NULL if there is none. */
-    Worldfile* GetWorldFile()	{ return wf; };
+    Worldfile* GetWorldFile()	{ return wf; }
 		
     /** Returns true iff this World implements a GUI. The base World
 	class returns false, but subclasses can override this
@@ -1177,17 +1177,17 @@ namespace Stg
 
     /** Get the resolution in pixels-per-metre of the underlying
 	discrete raytracing model */ 
-    double Resolution() const { return ppm; };
+    double Resolution() const { return ppm; }
    
     /** Returns a pointer to the model identified by name, or NULL if
 	nonexistent */
     Model* GetModel( const std::string& name ) const;
 
     /** Returns a const reference to the set of models in the world. */
-    const std::set<Model*> GetAllModels() const { return models; };
+    const std::set<Model*> GetAllModels() const { return models; }
   
     /** Return the 3D bounding box of the world, in meters */
-    const bounds3d_t& GetExtent() const { return extent; };
+    const bounds3d_t& GetExtent() const { return extent; }
   
     /** Return the number of times the world has been updated. */
     uint64_t GetUpdateCount() const { return updates; }
@@ -1196,10 +1196,10 @@ namespace Stg
     void RegisterOption( Option* opt );	
 	 
     /// Control printing time to stdout
-    void ShowClock( bool enable ){ show_clock = enable; };
+    void ShowClock( bool enable ){ show_clock = enable; }
 
     /** Return the floor model */
-    Model* GetGround() {return ground;};
+    Model* GetGround() {return ground;}
 	
   };
   
@@ -1343,9 +1343,9 @@ namespace Stg
     BlockGroup( Model& mod );
     ~BlockGroup();
     
-    uint32_t GetCount() const { return blocks.size(); };
-    const Block& GetBlock( unsigned int index ) const { return blocks[index]; }; 
-    Block& GetBlockMutable( unsigned int index ) { return blocks[index]; }; 
+    uint32_t GetCount() const { return blocks.size(); }
+    const Block& GetBlock( unsigned int index ) const { return blocks[index]; }
+    Block& GetBlockMutable( unsigned int index ) { return blocks[index]; }
 
     /** Return the extremal points of all member blocks in all three axes. */
     bounds3d_t BoundingBox() const;
@@ -1572,7 +1572,7 @@ namespace Stg
     virtual bool Load( const std::string& filename );
     virtual void UnLoad();
     virtual bool Save( const char* filename );	
-    virtual bool IsGUI() const { return true; };	
+    virtual bool IsGUI() const { return true; }
     virtual Model* RecentlySelectedModel() const;
 
     virtual void Start();
@@ -2252,11 +2252,11 @@ namespace Stg
 	until re-enabled using Enable(). This is used for example when
 	dragging a model with the mouse pointer. The model is enabled by
 	default. */
-    void Disable(){ disabled = true; };
+    void Disable(){ disabled = true; }
 
     /** Enable the model, so that non-zero velocities will change the
 	model's pose. Models are enabled by default. */
-    void Enable(){ disabled = false; };
+    void Enable(){ disabled = false; }
   
     /** Load a control program for this model from an external
 	library */
@@ -2628,7 +2628,7 @@ namespace Stg
     void SetConfig( config_t & newcfg ){ this->cfg = newcfg; FixBlocks(); }
 	 
     /** Returns the state of the gripper .*/
-    config_t GetConfig(){ return cfg; };
+    config_t GetConfig(){ return cfg; }
 	 
     /** Set the current activity of the gripper. */
     void SetCommand( cmd_t cmd ) { this->cmd = cmd; }
@@ -3124,15 +3124,15 @@ namespace Stg
 	the goal pose */
     void GoTo( double pose );
   
-    double GetPosition() const {return pos;};
-    double GetMaxPosition() const {return max_position;};
-    double GetMinPosition() const {return min_position;};
+    double GetPosition() const {return pos;}
+    double GetMaxPosition() const {return max_position;}
+    double GetMinPosition() const {return min_position;}
 		
     ActuatorType GetType() const { return actuator_type; }
     point3_t GetAxis() const { return axis; }
   };
 
 
-}; // end namespace stg
+} // end namespace stg
 
 #endif
