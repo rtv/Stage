@@ -2189,7 +2189,7 @@ namespace Stg
     //					unsigned int* c1, unsigned int* c2 );
 
     void PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
-			   meters_t ymin, meters_t ymax );
+         meters_t ymin, meters_t ymax, size_t max_iter = 0 );
 	
     /** Return a human-readable string describing the model's pose */
     std::string PoseString()

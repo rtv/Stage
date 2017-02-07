@@ -719,11 +719,12 @@ void Model::AddToPose( const Pose& pose )
   AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
-void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
-			      meters_t ymin, meters_t ymax )
+void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax,
+            meters_t ymin, meters_t ymax, size_t max_iter)
 {
-  while( TestCollision() )
-    SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
+  size_t i = 0;
+  while( TestCollision() && (max_iter <= 0 || i++ < max_iter))
+    SetPose( Pose::Random( xmin,xmax, ymin, ymax ));
 }
 
 void Model::AppendTouchingModels( std::set<Model*>& touchers )
