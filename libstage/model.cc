@@ -1642,7 +1642,11 @@ void Model::LoadControllerModule( const char* lib )
   if(( handle = lt_dlopenext( libname ) ))
     {
       //printf( "]" );
-		
+    // Refer to:
+    // http://stackoverflow.com/questions/14543801/iso-c-forbids-casting-between-pointer-to-function-and-pointer-to-object
+    #ifdef __GNUC__
+      __extension__
+    #endif
       model_callback_t initfunc = (model_callback_t)lt_dlsym( handle, "Init" );
       if( initfunc  == NULL )
 	{

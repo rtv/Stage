@@ -1795,7 +1795,7 @@ namespace Stg
 	if( callback == other.callback )
 	  return( arg < other.arg );
 	//else
-	return ((void*)(callback)) < ((void*)(other.callback)); 
+  return callback < other.callback;
       }
 		 
       /** for searching in a sorted container */
