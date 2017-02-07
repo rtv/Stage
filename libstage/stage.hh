@@ -1506,6 +1506,8 @@ namespace Stg
 	time. If -1, Stage runs as fast as possible. */
     double speedup; 
 
+    bool confirm_on_quit; ///< if true, show save dialog on (GUI) exit (default)
+
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
     bool pause_time;

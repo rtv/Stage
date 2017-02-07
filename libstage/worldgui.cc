@@ -25,6 +25,7 @@ API: Stg::WorldGui
 @par Summary and default values
 
 speedup 1
+confirm_on_quit 1
 
 @verbatim
 window
@@ -61,7 +62,10 @@ window
  - speedup <int>\n
  Stage will attempt to run at this multiple of real time. If -1,
  Stage will run as fast as it can go, and not attempt to track real
- time at all. 
+ time at all.
+
+ - confirm_on_quit <int>\n
+ If non-zero, a dialog box will pop up when exiting Stage through the UI.
 
 - size [ <width:int> <height:int> ]\n
 size of the window in pixels
@@ -191,6 +195,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   fileMan( new FileManager() ),
   interval_log(),
   speedup(1.0), // real time
+  confirm_on_quit( true ),
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
   pause_time( false ),	
@@ -273,7 +278,8 @@ bool WorldGui::Load( const std::string& filename )
   const int world_section = 0; 
   speedup = wf->ReadFloat( world_section, "speedup", speedup );    
   paused = wf->ReadInt( world_section, "paused", paused );
-  
+  confirm_on_quit = wf->ReadInt( world_section, "confirm_on_quit", confirm_on_quit );
+
   // use the window section for the rest
   const int window_section = wf->LookupEntity( "window" );
   
@@ -328,6 +334,7 @@ bool WorldGui::Save( const char* filename )
   const int world_section = 0; 
   wf->WriteFloat( world_section, "speedup", speedup );    
   wf->WriteInt( world_section, "paused", paused );
+  wf->WriteInt( world_section, "confirm_on_quit", confirm_on_quit );
 
   // use the window section for the rest
   const int window_section = wf->LookupEntity( "window" );
@@ -824,7 +831,7 @@ bool WorldGui::closeWindowQuery()
 {
   int choice;
 	
-  if ( wf ) {
+  if ( wf && confirm_on_quit ) {
     // worldfile loaded, ask to save
     choice = fl_choice("Quitting Stage",
 		       "&Cancel", // ->0: defaults to ESC
@@ -847,7 +854,7 @@ bool WorldGui::closeWindowQuery()
     return false;
   }
   else {
-    // nothing is loaded, just quit
+    // nothing is loaded or confirmation not wanted, just quit
     return true;
   }
 }
