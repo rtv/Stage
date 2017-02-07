@@ -57,8 +57,6 @@ using namespace Stg;
 static const watts_t BUMPER_WATTS = 0.1; // bumper power consumption
 static const Color BUMPER_HIT_RGB(1, 0, 0, 1); // red
 static const Color BUMPER_NOHIT_RGB(0, 1, 0, 1);// green
-static const meters_t BUMPER_HIT_THICKNESS = 0.02;
-static const meters_t BUMPER_NOHIT_THICKNESS = 0.01;
 
 Option ModelBumper::showBumperData( "Show Bumper Data", "show_bumper", "", true, NULL );
 
