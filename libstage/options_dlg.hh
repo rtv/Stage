@@ -44,7 +44,7 @@ namespace Stg {
 		void setOptions( const std::set<Option*>& opts );
 		void clearOptions() { options.clear(); }
 		void showAllOpt( Option* opt );
-		const event_t event() const { return status; }
+    event_t event() const { return status; }
 		Option* changed() { return changedItem; }
 	};
 

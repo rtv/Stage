@@ -121,4 +121,4 @@ namespace Stg
   }; // class SuperRegion;
   
         
-}; // namespace Stg
+} // namespace Stg

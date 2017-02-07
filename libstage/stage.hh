@@ -156,7 +156,7 @@ namespace Stg
     while( a < -M_PI ) a += 2.0*M_PI;
     while( a >  M_PI ) a -= 2.0*M_PI;	 
     return a;
-  };
+  }
 	
   /** take binary sign of a, either -1, or 1 if >= 0 */
   inline int sgn( int a){ return( a<0 ? -1 : 1); }
@@ -2144,7 +2144,7 @@ namespace Stg
       
     virtual void UpdateCharge();
 		
-    static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }
+    static int UpdateWrapper( Model* mod, void*){ mod->Update(); return 0; }
 
     /** Calls CallCallback( CB_UPDATE ) */
     void CallUpdateCallbacks( void );
@@ -2571,14 +2571,14 @@ namespace Stg
       PADDLE_OPEN = 0, // default state
       PADDLE_CLOSED, 
       PADDLE_OPENING,
-      PADDLE_CLOSING,
+      PADDLE_CLOSING
     };
 	 
     enum lift_state_t {
       LIFT_DOWN = 0, // default state
       LIFT_UP, 
       LIFT_UPPING, // verbed these to match the paddle state
-      LIFT_DOWNING, 
+      LIFT_DOWNING
     };
 	 
     enum cmd_t {

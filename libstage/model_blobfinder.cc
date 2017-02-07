@@ -296,7 +296,7 @@ void ModelBlobfinder::Shutdown( void )
 //TODO make instance attempt to register an option (as customvisualizations do)
 // Option ModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true, NULL );
 
-ModelBlobfinder::Vis::Vis( World* world ) 
+ModelBlobfinder::Vis::Vis( World* )
   : Visualizer( "Blobfinder", "blobfinder_vis" )
 {
   

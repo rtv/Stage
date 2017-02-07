@@ -470,7 +470,7 @@ void WorldGui::DrawVoxels() const
 		it->second->DrawVoxels( layer );
 }
 
-void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::windowCb( Fl_Widget*, WorldGui* wg )
 {
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
@@ -486,7 +486,7 @@ void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
   exit(0);
 }
 
-void WorldGui::fileLoadCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::fileLoadCb( Fl_Widget*, WorldGui* wg )
 {
   const char* filename;
   const char* pattern = "World Files (*.world)";
@@ -523,7 +523,7 @@ void WorldGui::fileLoadCb( Fl_Widget* w, WorldGui* wg )
   }
 }
 
-void WorldGui::fileSaveCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::fileSaveCb( Fl_Widget*, WorldGui* wg )
 {
   // save to current file
   const bool success =  wg->Save( NULL );
@@ -532,12 +532,12 @@ void WorldGui::fileSaveCb( Fl_Widget* w, WorldGui* wg )
   }
 }
 
-void WorldGui::fileSaveAsCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::fileSaveAsCb( Fl_Widget*, WorldGui* wg )
 {
   wg->saveAsDialog();
 }
 
-void WorldGui::fileExitCb( Fl_Widget* w, WorldGui* wg ) 
+void WorldGui::fileExitCb( Fl_Widget*, WorldGui* wg )
 {
   const bool done = wg->closeWindowQuery();
   if (done) {
@@ -546,7 +546,7 @@ void WorldGui::fileExitCb( Fl_Widget* w, WorldGui* wg )
   }
 }
 
-void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::resetViewCb( Fl_Widget*, WorldGui* wg )
 {
   wg->canvas->current_camera->reset();
   
@@ -557,7 +557,7 @@ void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* wg )
   wg->canvas->redraw();
 }
 
-void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::slowerCb( Fl_Widget*, WorldGui* wg )
 {
   if( wg->speedup <= 0 )
 	 {
@@ -568,7 +568,7 @@ void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
 	 wg->speedup *= 0.8;  
 }
 
-void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::fasterCb( Fl_Widget*, WorldGui* wg )
 {
   if( wg->speedup <= 0 )
 	 putchar( 7 ); // bell - can go no faster
@@ -576,7 +576,7 @@ void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
 	 wg->speedup *= 1.2;
 }
 
-void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::realtimeCb( Fl_Widget*, WorldGui* wg )
 {
   //puts( "real time" );
   wg->speedup = 1.0;
@@ -585,7 +585,7 @@ void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
 	 wg->SetTimeouts();
 }
 
-void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::fasttimeCb( Fl_Widget*, WorldGui* wg )
 {
   //puts( "fast time" );
   wg->speedup = -1;
@@ -640,12 +640,12 @@ void WorldGui::Stop()
 										// drawn otherwise
 }  
 
-void WorldGui::pauseCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::pauseCb( Fl_Widget*, WorldGui* wg )
 {
   wg->TogglePause();
 }
 
-void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
+void WorldGui::onceCb( Fl_Widget*, WorldGui* wg )
 {
   //wg->paused = true;
   wg->Stop();
@@ -654,7 +654,7 @@ void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
   wg->World::Update();
 }
 
-void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg ) 
+void WorldGui::viewOptionsCb( OptionsDlg*, WorldGui* wg )
 {
   // sort the vector by option label alphabetically
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
@@ -718,7 +718,7 @@ void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg )
   }
 }
 
-void aboutOKBtnCb( Fl_Return_Button* btn, void* p ) 
+void aboutOKBtnCb( Fl_Return_Button* btn, void* )
 {
   btn->window()->do_callback();
 }
@@ -731,7 +731,7 @@ void aboutCloseCb( Fl_Window* win, Fl_Text_Display* textDisplay )
   Fl::delete_widget( win );
 }
 
-void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg ) 
+void WorldGui::helpAboutCb( Fl_Widget*, WorldGui* )
 {
   const int Width = 420;
   const int Height = 330;
@@ -775,7 +775,7 @@ void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg )
   win->show();
 }
 
-void WorldGui::moreHelptCb( Fl_Widget* w, WorldGui* wg ) 
+void WorldGui::moreHelptCb( Fl_Widget*, WorldGui* )
 {
   const int Width =  500;
   const int Height = 250;

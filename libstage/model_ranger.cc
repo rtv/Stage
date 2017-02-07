@@ -269,7 +269,8 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
   //glTranslatef( 0,0, ranger->GetGeom().size.z/2.0 ); // shoot the ranger beam out at the right height
 			
   // pack the ranger hit points into a vertex array for fast rendering
-  GLfloat pts[2*(sample_count+1)];
+  //GLfloat pts[2*(sample_count+1)];
+  GLfloat *pts = new GLfloat[2*(sample_count+1)];
   glVertexPointer( 2, GL_FLOAT, 0, pts );
 	
   pts[0] = 0.0;
@@ -401,6 +402,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
     }
   
   glPopMatrix();
+  delete [] pts;
 }
 	
 void ModelRanger::Print( char* prefix ) const

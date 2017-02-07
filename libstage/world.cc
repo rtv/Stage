@@ -120,7 +120,7 @@ std::set<World*> World::world_set;
 std::string World::ctrlargs;
 std::vector<std::string> World::args;
 
-World::World( const std::string& name, 
+World::World( const std::string&,
 	      double ppm )
   : 
   // private
@@ -706,7 +706,7 @@ bool World::Update()
   return false;
 }
 
-unsigned int World::GetEventQueue( Model* mod ) const
+unsigned int World::GetEventQueue( Model* ) const
 {
   // todo: there should be a policy that works faster than random, but
   // random should do a good core load balancing.
@@ -1010,7 +1010,7 @@ RaytraceResult World::Raytrace( const Ray& r )
   return result;
 }
 
-static int _save_cb( Model* mod, void* dummy )
+static int _save_cb( Model* mod, void* )
 {
   mod->Save();
   return 0;
@@ -1022,7 +1022,7 @@ bool World::Save( const char *filename )
   return this->wf->Save( filename ? filename : wf->filename );
 }
 
-static int _reload_cb(  Model* mod, void* dummy )
+static int _reload_cb(  Model* mod, void* )
 {
   mod->Load();
   return 0;
@@ -1183,7 +1183,7 @@ void World:: RegisterOption( Option* opt )
   option_table.insert( opt );
 }
 
-void World::Log( Model* mod )
+void World::Log( Model* )
 {
   //LogEntry( sim_time, mod);
   //printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );

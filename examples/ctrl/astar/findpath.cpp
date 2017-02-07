@@ -165,7 +165,7 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch,
 // of our map the answer is the map terrain value at this node since that is 
 // conceptually where we're moving
 
-float MapSearchNode::GetCost( MapSearchNode &successor )
+float MapSearchNode::GetCost( MapSearchNode & )
 {
 	return (float) GetMap( x, y );
 

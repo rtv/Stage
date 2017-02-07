@@ -43,7 +43,7 @@ void Option::Save( Worldfile* wf, int section )
   wf->WriteInt(section, wf_token.c_str(), value );
 }
 
-void Option::toggleCb( Fl_Widget* w, void* p ) 
+void Option::toggleCb( Fl_Widget*, void* p )
 {
 	//Fl_Menu_* menu = static_cast<Fl_Menu_*>( w );
 	Option* opt = static_cast<Option*>( p );

@@ -859,7 +859,7 @@ ModelPosition::Waypoint::Waypoint( meters_t x, meters_t y, meters_t z, radians_t
 ModelPosition::Waypoint::Waypoint()
   : pose(), color()
 { 
-};
+}
 
 
 void ModelPosition::Waypoint::Draw() const

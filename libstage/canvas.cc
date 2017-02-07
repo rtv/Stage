@@ -1143,7 +1143,7 @@ void Canvas::Screenshot()
   png_init_io(pp, fp);
 
   // need to invert the image as GL and PNG disagree on the row order
-  png_bytep rowpointers[height];
+  png_bytep *rowpointers = new png_bytep[height];
   for( int i=0; i<height; i++ )
     rowpointers[i] = &pixels[ (height-1-i) * width * depth ];
 
@@ -1164,6 +1164,7 @@ void Canvas::Screenshot()
   fclose(fp);
   
   printf( "Saved %s\n", filename );
+  delete [] rowpointers;
 }
 
 void Canvas::perspectiveCb( Fl_Widget* w, void* p ) 

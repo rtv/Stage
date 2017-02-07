@@ -325,7 +325,7 @@ void Block::DrawFootPrint()
   glEnd();
 }
 
-void Block::DrawSolid( bool topview )
+void Block::DrawSolid( bool )
 {
   DrawSides();
   DrawTop();

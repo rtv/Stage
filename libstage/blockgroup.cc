@@ -132,7 +132,7 @@ void BlockGroup::DrawSolid( const Geom & geom )
   glPopMatrix();
 }
 
-void BlockGroup::DrawFootPrint( const Geom & geom )
+void BlockGroup::DrawFootPrint( const Geom & )
 {
   FOR_EACH( it, blocks )
   it->DrawFootPrint();
@@ -149,9 +149,9 @@ static void errorCallback(GLenum errorCode)
  exit (0);
 }
 
-static void combineCallback(GLdouble coords[3], 
-  GLdouble *vertex_data[4],
-  GLfloat weight[4], 
+static void combineCallback(GLdouble coords[3],
+  GLdouble **,//GLdouble *vertex_data[4],
+  GLfloat *,//GLfloat weight[4],
   GLdouble **new_vertex )
 {
   *new_vertex = new GLdouble[3];

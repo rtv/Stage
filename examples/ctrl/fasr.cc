@@ -336,7 +336,7 @@ public:
 
 
   // inspect the laser data and decide what to do
-  static int LaserUpdate( ModelRanger* laser, Robot* robot )
+  static int LaserUpdate( ModelRanger*, Robot* robot )
   {
 	 //   if( laser->power_pack && laser->power_pack->charging )
 	 // 	 printf( "model %s power pack @%p is charging\n",
@@ -494,7 +494,7 @@ public:
 };
 
 // Stage calls this when the model starts up
-extern "C" int Init( Model* mod, CtrlArgs* args )
+extern "C" int Init( Model* mod, CtrlArgs* )
 {  
   new Robot( (ModelPosition*)mod,
 						 mod->GetWorld()->GetModel( "source" ),

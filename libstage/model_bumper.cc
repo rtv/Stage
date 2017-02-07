@@ -160,7 +160,7 @@ void ModelBumper::Load( void )
 }
 
 static bool bumper_match( Model* candidate, 
-        const Model* finder, const void* dummy )
+        const Model* finder, const void* )
 {
   // Ignore myself, my children, and my ancestors.
   return( //candidate->vis.obstacle_return && 
@@ -224,7 +224,7 @@ ModelBumper::BumperVis::~BumperVis()
 	// Nothing to do here
 }
 
-void ModelBumper::BumperVis::Visualize( Model* mod, Camera* cam )
+void ModelBumper::BumperVis::Visualize( Model* mod, Camera* )
 {
   ModelBumper* bump = dynamic_cast<ModelBumper*>(mod);
 

@@ -168,7 +168,7 @@ private:
 			: Visualizer( "graph", "vis_graph" ), graphpp(graphpp) {}
 		virtual ~GraphVis(){}
 		
-		virtual void Visualize( Model* mod, Camera* cam )
+    virtual void Visualize( Model* mod, Camera* )
 		{
 			if( *graphpp == NULL )
 				return;
@@ -756,7 +756,7 @@ public:
   }	 
   
   // static callback wrapper
-  static int UpdateCallback( ModelRanger* laser, Robot* robot )
+  static int UpdateCallback( ModelRanger*, Robot* robot )
   {  
 		return robot->Update();
   }
@@ -931,13 +931,13 @@ public:
 		return 0; // run again
   }
   
-  static int FlagIncr( Model* mod, Robot* robot )
+  static int FlagIncr( Model* mod, Robot* )
 	{
 		printf( "model %s collected flag\n", mod->Token() );
 		return 0;
   }
 
-  static int FlagDecr( Model* mod, Robot* robot )
+  static int FlagDecr( Model* mod, Robot* )
   {
 		printf( "model %s dropped flag\n", mod->Token() );
 		return 0;

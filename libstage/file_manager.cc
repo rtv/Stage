@@ -86,5 +86,5 @@ namespace Stg
 			return path.substr( 0, loc );
 	}
 
-}; // namespace Stg
+} // namespace Stg
 

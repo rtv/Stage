@@ -34,5 +34,5 @@ namespace Stg {
 		static std::string stagePath();
 	};
 
-};
+}
 #endif

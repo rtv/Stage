@@ -355,6 +355,6 @@ namespace Stg {
 	 
   };
 	
-};
+}
 
 #endif

@@ -33,7 +33,7 @@ StripPlotVis::~StripPlotVis()
 	 free( data );
 }
 
-void StripPlotVis::Visualize( Model* mod, Camera* cam )
+void StripPlotVis::Visualize( Model* mod, Camera* )
 {  
   Canvas* canvas = dynamic_cast<WorldGui*>(mod->GetWorld())->GetCanvas();
 

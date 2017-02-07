@@ -337,7 +337,7 @@ bool Worldfile::LoadTokens(FILE *file, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a comment token
-bool Worldfile::LoadTokenComment(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenComment(FILE *file, int *, int include)
 {
   char token[256];
 
@@ -541,7 +541,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a number token
-bool Worldfile::LoadTokenNum(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenNum(FILE *file, int *, int include)
 {
   char token[256];
 
@@ -610,7 +610,7 @@ bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a whitespace token
-bool Worldfile::LoadTokenSpace(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenSpace(FILE *file, int *, int include)
 {
   char token[256];
 
@@ -1543,8 +1543,8 @@ void Worldfile::WriteTuple( const int entity, const char *name,
   
   if( property->values.size() < first+count )
     {
-      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %d - tuple has length %zu\n",
-      name, first, int(first+count)-1, property->values.size() );
+      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %d - tuple has length %u\n",
+      name, first, int(first+count)-1, static_cast<unsigned int>(property->values.size()) );
       exit(-1);
     }
   

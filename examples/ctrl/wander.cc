@@ -20,7 +20,7 @@ int LaserUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
-extern "C" int Init( Model* mod, CtrlArgs* args )
+extern "C" int Init( Model* mod, CtrlArgs* )
 {
   // local arguments
   /*  printf( "\nWander controller initialised with:\n"
@@ -53,7 +53,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 
 
 // inspect the ranger data and decide what to do
-int LaserUpdate( Model* mod, robot_t* robot )
+int LaserUpdate( Model*, robot_t* robot )
 {
   // get the data
   const std::vector<meters_t>& scan = robot->laser->GetSensors()[0].ranges;
@@ -146,7 +146,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
   return 0; // run again
 }
 
-int PositionUpdate( Model* mod, robot_t* robot )
+int PositionUpdate( Model*, robot_t* robot )
 {
   Pose pose = robot->pos->GetPose();
 

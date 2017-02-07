@@ -3,11 +3,8 @@ using namespace Stg;
 
 unsigned int total = 0;
 
-int Delivery( Model* mod, void* dummy )
+int Delivery( Model*, void* )
 {
-  // satisfy the compiler
-  (void)dummy;
-  
   total++;
   
   /**

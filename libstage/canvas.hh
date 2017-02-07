@@ -35,7 +35,7 @@ namespace Stg
 		{
 		  if( colorstack.size() < 1 )
 			 PRINT_WARN1( "Attempted to ColorStack.Pop() but ColorStack %p is empty",
-							  this );
+                static_cast<void*>(this) );
 		  else
 			 {
 				Color& old = colorstack.top();
