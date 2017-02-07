@@ -2057,6 +2057,11 @@ namespace Stg
     void Rasterize( uint8_t* data, 
 		    unsigned int width, unsigned int height,
 		    meters_t cellwidth, meters_t cellheight );
+
+    /** Check to see if the current pose causes a collision with
+  obstacles.  Returns true if a collision is detected but does not
+  update the stall state, and false otherwise. */
+    bool HasCollision() { return TestCollision() != NULL; }
 	
   private: 
     /** Private copy constructor declared but not defined, to make it
