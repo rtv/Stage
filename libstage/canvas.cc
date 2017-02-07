@@ -810,10 +810,10 @@ void Canvas::renderFrame()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   if( showOccupancy )
-    ((WorldGui*)world)->DrawOccupancy();
+    world->DrawOccupancy();
   
   if( showVoxels )
-    ((WorldGui*)world)->DrawVoxels();
+    world->DrawVoxels();
   
   
   if( ! world->rt_cells.empty() )

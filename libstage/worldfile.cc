@@ -128,7 +128,7 @@ bool Worldfile::Load(const std::string& filename )
 
   // Open the file
   //FILE *file = fopen(this->filename, "r");
-  FILE *file = FileOpen(this->filename.c_str(), "r");
+  FILE *file = FileOpen(this->filename, "r");
   if (!file)
     {
       PRINT_ERR2("unable to open world file %s : %s",
@@ -243,7 +243,6 @@ bool Worldfile::WarnUnused()
 // Load tokens from a file.
 bool Worldfile::LoadTokens(FILE *file, int include)
 {
-  int ch;
   int line;
   char token[256];
 
@@ -251,7 +250,7 @@ bool Worldfile::LoadTokens(FILE *file, int include)
 
   while (true)
     {
-      ch = fgetc(file);
+      int ch = fgetc(file);
       if (ch == EOF)
 	break;
 
@@ -341,15 +340,13 @@ bool Worldfile::LoadTokens(FILE *file, int include)
 bool Worldfile::LoadTokenComment(FILE *file, int *line, int include)
 {
   char token[256];
-  int len;
-  int ch;
 
-  len = 0;
+  int len = 0;
   memset(token, 0, sizeof(token));
 
   while (true)
     {
-      ch = fgetc(file);
+      int ch = fgetc(file);
 
       if (ch == EOF)
 	{
@@ -374,15 +371,13 @@ bool Worldfile::LoadTokenComment(FILE *file, int *line, int include)
 bool Worldfile::LoadTokenWord(FILE *file, int *line, int include)
 {
   char token[256];
-  int len;
-  int ch;
 
-  len = 0;
+  int len = 0;
   memset(token, 0, sizeof(token));
 
   while (true)
     {
-      ch = fgetc(file);
+      int ch = fgetc(file);
 
       if (ch == EOF)
 	{
@@ -419,11 +414,10 @@ bool Worldfile::LoadTokenWord(FILE *file, int *line, int include)
 // Load an include token; this will load the include file.
 bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
 {
-  int ch;
   const char *filename;
   char *fullpath;
 
-  ch = fgetc(file);
+  int ch = fgetc(file);
 
   if (ch == EOF)
     {
@@ -550,15 +544,13 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
 bool Worldfile::LoadTokenNum(FILE *file, int *line, int include)
 {
   char token[256];
-  int len;
-  int ch;
 
-  len = 0;
+  int len = 0;
   memset(token, 0, sizeof(token));
 
   while (true)
     {
-      ch = fgetc(file);
+      int ch = fgetc(file);
 
       if (ch == EOF)
 	{
@@ -585,14 +577,12 @@ bool Worldfile::LoadTokenNum(FILE *file, int *line, int include)
 // Read in a string token
 bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
 {
-  int ch;
-  int len;
   char token[256];
 
-  len = 0;
+  int len = 0;
   memset(token, 0, sizeof(token));
 
-  ch = fgetc(file);
+  int ch = fgetc(file);
 
   while (true)
     {
@@ -622,16 +612,14 @@ bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
 // Read in a whitespace token
 bool Worldfile::LoadTokenSpace(FILE *file, int *line, int include)
 {
-  int ch;
-  int len;
   char token[256];
 
-  len = 0;
+  int len = 0;
   memset(token, 0, sizeof(token));
 
   while (true)
     {
-      ch = fgetc(file);
+      int ch = fgetc(file);
 
       if (ch == EOF)
 	{
@@ -658,12 +646,9 @@ bool Worldfile::LoadTokenSpace(FILE *file, int *line, int include)
 // Save tokens to a file.
 bool Worldfile::SaveTokens(FILE *file)
 {
-  unsigned int i;
-  CToken *token;
-
-  for (i = 0; i < this->tokens.size(); i++)
+  for (unsigned int i = 0; i < this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken *token = &this->tokens[i];
 
       if (token->include > 0)
 	continue;
@@ -739,10 +724,8 @@ void Worldfile::DumpTokens()
 // Parse tokens into entities and properties.
 bool Worldfile::ParseTokens()
 {
-  int i;
   int entity;
   int line;
-  CToken *token;
 
   ClearEntities();
   ClearProperties();
@@ -751,9 +734,9 @@ bool Worldfile::ParseTokens()
   entity = AddEntity(-1, "");
   line = 1;
 
-  for (i = 0; i < (int)this->tokens.size(); i++)
+  for (int i = 0; i < (int)this->tokens.size(); i++)
     {
-      token = &this->tokens[0] + i;
+      CToken * token = &this->tokens[0] + i;
 			
       switch (token->type)
 				{
@@ -794,12 +777,9 @@ bool Worldfile::ParseTokens()
 // Parse an include statement
 bool Worldfile::ParseTokenInclude(int *index, int *line)
 {
-  int i;
-  CToken *token;
-	
-  for (i = *index + 1; i < (int)this->tokens.size(); i++)
+  for (int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken *token = &this->tokens[i];
 			
       switch (token->type)
 				{
@@ -825,20 +805,16 @@ bool Worldfile::ParseTokenInclude(int *index, int *line)
 // Parse a macro definition
 bool Worldfile::ParseTokenDefine(int *index, int *line)
 {
-  int i;
-  int count;
   const char *macroname, *entityname;
   int starttoken;
-  CToken *token;
 
-  count = 0;
   macroname = NULL;
   entityname = NULL;
   starttoken = -1;
 
-  for (i = *index + 1; i < (int)this->tokens.size(); i++)
+  for (int i = *index + 1, count = 0; i < (int)this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken * token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -902,12 +878,9 @@ bool Worldfile::ParseTokenDefine(int *index, int *line)
 // Parse something starting with a word; could be a entity or an property.
 bool Worldfile::ParseTokenWord(int entity, int *index, int *line)
 {
-  int i;
-  CToken *token;
-
-  for (i = *index + 1; i < (int)this->tokens.size(); i++)
+  for (int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken *token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -938,10 +911,7 @@ bool Worldfile::ParseTokenWord(int entity, int *index, int *line)
 // Parse a entity from the token list.
 bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
 {
-  int i;
-  //int macro;
   int name;
-  CToken *token;
 
   name = *index;
   CMacro* macro = LookupMacro(GetTokenValue(name));
@@ -956,9 +926,9 @@ bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
 				return false;
       entity = nentity;
 
-      for (i = *index + 1; i < (int)this->tokens.size(); i++)
+      for (int i = *index + 1; i < (int)this->tokens.size(); i++)
 				{
-					token = &this->tokens[i];
+          CToken *token = &this->tokens[i];
 
 	  switch (token->type)
 	    {
@@ -989,9 +959,9 @@ bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
   // If the entity name is not a macro...
   else
     {
-      for (i = *index + 1; i < (int)this->tokens.size(); i++)
+      for (int i = *index + 1; i < (int)this->tokens.size(); i++)
 	{
-	  token = &this->tokens[i];
+    CToken *token = &this->tokens[i];
 
 	  switch (token->type)
 	    {
@@ -1029,11 +999,10 @@ bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 {
   CProperty* property(NULL);
   int name( *index );
-  CToken *token(NULL);
   
   for(int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken *token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -1068,14 +1037,9 @@ bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 // Parse a tuple.
 bool Worldfile::ParseTokenTuple( CProperty* property, int *index, int *line)
 {
-  unsigned int i, count;
-  CToken *token;
-
-  count = 0;
-
-  for (i = *index + 1; i < this->tokens.size(); i++)
+  for (unsigned int i = *index + 1, count = 0; i < this->tokens.size(); i++)
     {
-      token = &this->tokens[i];
+      CToken *token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -1579,8 +1543,8 @@ void Worldfile::WriteTuple( const int entity, const char *name,
   
   if( property->values.size() < first+count )
     {
-      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %d to %d - tuple has length %d\n",
-		  name, first, first+count-1, (int)property->values.size() );
+      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %d - tuple has length %zu\n",
+      name, first, int(first+count)-1, property->values.size() );
       exit(-1);
     }
   

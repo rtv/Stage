@@ -58,7 +58,7 @@ namespace Stg
 
 			ranOnce = true;
 			
-			PRINT_DEBUG1("FileManager - INIT: %d paths in search paths\n", paths.size() );
+      PRINT_DEBUG1("FileManager - INIT: %d paths in search paths\n", int(paths.size()) );
 		}
 
 		// search the path list

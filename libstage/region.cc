@@ -21,15 +21,13 @@ Stg::Region::~Region()
 
 void Stg::Region::AddBlock()
 { 
-  ++count; 
-  assert(count>0);
+  ++count;
   superregion->AddBlock();
 }
 
 void Stg::Region::RemoveBlock()
 {
-  --count; 
-  assert(count>=0); 
+  --count;
   superregion->RemoveBlock();
 	
   // if there's nothing in this region, we can garbage collect the
@@ -55,14 +53,12 @@ SuperRegion::~SuperRegion()
 
 void SuperRegion::AddBlock()
 { 
-  ++count; 
-  assert(count>0);
+  ++count;
 }
 
 void SuperRegion::RemoveBlock()
 {
-  --count; 
-  assert(count>=0); 
+  --count;
 }		
 
 

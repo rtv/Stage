@@ -443,7 +443,7 @@ void Model::DrawFlagList( void )
   
   for( std::list<Flag*>::reverse_iterator it( flag_list.rbegin()); 
        it != flag_list.rend(); 
-       it++ )
+       ++it )
     {		
       double sz = (*it)->GetSize();      
       double d = sz/2.0;

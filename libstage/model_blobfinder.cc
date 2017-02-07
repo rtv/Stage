@@ -84,7 +84,7 @@ ModelBlobfinder::ModelBlobfinder( World* world,
 				  Model* parent,
 				  const std::string& type ) : 
   Model( world, parent, type ),
-  vis( world ),
+  blob_vis( world ),
   blobs(),
   colors(),
   fov( DEFAULT_BLOBFINDERFOV ),
@@ -93,11 +93,11 @@ ModelBlobfinder::ModelBlobfinder( World* world,
   scan_height( DEFAULT_BLOBFINDERSCANHEIGHT ),
   scan_width( DEFAULT_BLOBFINDERSCANWIDTH )
 {
-  PRINT_DEBUG2( "Constructing ModelBlobfinder %d (%s)\n", 
-		id, typestr );	
+  PRINT_DEBUG2( "Constructing ModelBlobfinder %u (%s)\n",
+    id, type.c_str() );
   ClearBlocks();
   
-  AddVisualizer( &this->vis, true );
+  AddVisualizer( &this->blob_vis, true );
 }
 
 
@@ -106,7 +106,7 @@ ModelBlobfinder::~ModelBlobfinder( void )
 }
 
 static bool blob_match( Model* candidate, 
-			Model* finder,
+      const Model* finder,
 			const void* dummy )
 { 
   (void)dummy; // avoid warning about unused var

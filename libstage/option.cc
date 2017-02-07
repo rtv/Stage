@@ -16,7 +16,9 @@ Option::Option( const std::string& n,
   wf_token( tok ), 
   shortcut( key ), 
   menu( NULL ),
+  menuIndex( 0 ),
   menuCb( NULL ),
+  menuCbWidget( NULL ),
   _world( world ),
   htname( n )
 { 

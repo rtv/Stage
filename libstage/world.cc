@@ -890,7 +890,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 		    continue; 
 									
 		  // test the predicate we were passed
-		  if( (*r.func)( &block->group->mod, (Model*)r.mod, r.arg )) 
+      if( (*r.func)( &block->group->mod, r.mod, r.arg ))
 		    {
 		      // a hit!
 		      result.pose = r.origin;

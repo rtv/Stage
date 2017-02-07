@@ -102,8 +102,8 @@ ModelCamera::ModelCamera( World* world,
   _yaw_offset( 0.0 ),
   _pitch_offset( 0.0 )  
 {
-	PRINT_DEBUG2( "Constructing ModelCamera %d (%s)\n", 
-			id, typestr );
+  PRINT_DEBUG2( "Constructing ModelCamera %u (%s)\n",
+      id, type.c_str() );
 
 	WorldGui* world_gui = dynamic_cast< WorldGui* >( world );
 	
@@ -125,13 +125,13 @@ ModelCamera::ModelCamera( World* world,
 
 ModelCamera::~ModelCamera()
 {
-	if( _frame_data != NULL ) {
-		//dont forget about GetFrame() //TODO merge these together
+  if( _frame_data != NULL ) {
 		delete[] _frame_data;
 		delete[] _frame_color_data;
 		delete[] _vertexbuf_cache;
 		delete[] _camera_quads;
 		delete[] _camera_colors;
+    _frame_data = NULL;
 	}
 }
 
@@ -168,14 +168,6 @@ bool ModelCamera::GetFrame( void )
 		return false;
 	
 	if( _frame_data == NULL ) {
-		if( _frame_data != NULL ) {
-			//don't forget about destructor
-			delete[] _frame_data;
-			delete[] _frame_color_data;
-			delete[] _vertexbuf_cache;
-			delete[] _camera_quads;
-			delete[] _camera_colors;
-		}
 		_frame_data = new GLfloat[ _width * _height ]; //assumes a max of depth 4
 		_frame_color_data = new GLubyte[ 4 * _width * _height ]; //for RGBA
 

@@ -69,6 +69,8 @@ ModelActuator::ModelActuator( World* world,
   min_position(0), 
   max_position(1),
   start_position(0),
+  cosa(0.0),
+  sina(0.0),
   control_mode( CONTROL_VELOCITY ),
   actuator_type( TYPE_LINEAR ),
   axis(0,0,0)
@@ -183,10 +185,7 @@ void ModelActuator::Load( void )
 
 void ModelActuator::Update( void  )
 {
-	PRINT_DEBUG1( "[%lu] actuator update", 0 );
-
-	// stop by default
-	double velocity = 0;
+  PRINT_DEBUG1( "[%d] actuator update", 0 );
 
 	// update current position
 	Pose CurrentPose = GetPose();
@@ -215,6 +214,8 @@ void ModelActuator::Update( void  )
 
 	if( this->subs )   // no driving if noone is subscribed
 	{
+    // stop by default
+    double velocity = 0;
 		switch( control_mode )
 		{
 			case CONTROL_VELOCITY :

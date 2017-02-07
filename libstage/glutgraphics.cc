@@ -226,7 +226,7 @@ void ExampleDriver_Register(DriverTable* table)
 // pre-Setup() setup.
 	ExampleDriver::ExampleDriver(ConfigFile* cf, int section)
 : Driver(cf, section, false, PLAYER_MSGQUEUE_DEFAULT_MAXLEN, 
-		PLAYER_GRAPHICS3D_CODE)
+		PLAYER_GRAPHICS3D_CODE), foop(0)
 {
 	// Read an option from the configuration file
 	//this->foop = cf->ReadInt(section, "foo", 0);

@@ -260,7 +260,7 @@ void WorldGui::Show()
 
 bool WorldGui::Load( const std::string& filename )
 {
-  PRINT_DEBUG1( "%s.Load()", token );
+  PRINT_DEBUG1( "%s.Load()", token.c_str() );
 	
   // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
   Fl::check();
@@ -328,7 +328,7 @@ void WorldGui::UnLoad()
 
 bool WorldGui::Save( const char* filename )
 {
-  PRINT_DEBUG1( "%s.Save()", token );
+  PRINT_DEBUG1( "%s.Save()", token.c_str() );
   
   // worldgui exclusive properties live in the top-level section
   const int world_section = 0; 
@@ -829,11 +829,9 @@ bool WorldGui::saveAsDialog()
 
 bool WorldGui::closeWindowQuery()
 {
-  int choice;
-	
   if ( wf && confirm_on_quit ) {
     // worldfile loaded, ask to save
-    choice = fl_choice("Quitting Stage",
+    int choice = fl_choice("Quitting Stage",
 		       "&Cancel", // ->0: defaults to ESC
 		       "&Save, then quit", // ->1
 		       "&Quit without saving" // ->2

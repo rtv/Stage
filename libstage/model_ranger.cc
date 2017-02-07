@@ -92,10 +92,9 @@ ModelRanger::ModelRanger( World* world,
 			  Model* parent,
 			  const std::string& type ) 
   : Model( world, parent, type ),
-    vis( world ) 
+    ranger_vis( world )
 {
-  PRINT_DEBUG2( "Constructing ModelRanger %d (%s)\n", 
-		id, type );
+  PRINT_DEBUG2( "Constructing ModelRanger %u (%s)\n", id, type.c_str() );
   
   // Set up sensible defaults
   
@@ -109,7 +108,7 @@ ModelRanger::ModelRanger( World* world,
   
   this->SetGeom( Geom( Pose(), RANGER_SIZE ));  
 	
-  AddVisualizer( &vis, true );  
+  AddVisualizer( &ranger_vis, true );
 }
 
 ModelRanger::~ModelRanger()
@@ -155,7 +154,7 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
 
 
 static bool ranger_match( Model* hit, 
-			  Model* finder,
+        const Model* finder,
 			  const void* dummy )
 {
   (void)dummy; // avoid warning about unused var
@@ -271,7 +270,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 			
   // pack the ranger hit points into a vertex array for fast rendering
   GLfloat pts[2*(sample_count+1)];
-  glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
+  glVertexPointer( 2, GL_FLOAT, 0, pts );
 	
   pts[0] = 0.0;
   pts[1] = 0.0;

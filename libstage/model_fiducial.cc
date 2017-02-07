@@ -101,7 +101,7 @@ ModelFiducial::~ModelFiducial( void )
 }
 
 static bool fiducial_raytrace_match( Model* candidate, 
-												 Model* finder, 
+                         const Model* finder,
 												 const void* dummy )
 {
   (void)dummy; // avoid warning about unused var

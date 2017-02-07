@@ -66,7 +66,7 @@ ModelBumper::ModelBumper( World* world,
   : Model( world, parent, type ),
     bumpervis()
 {
-  PRINT_DEBUG2( "Constructing ModelBumper %d (%s)\n", 
+  PRINT_DEBUG2( "Constructing ModelBumper %u (%s)\n",
 		id, type.c_str() );
 
   // Set up sensible defaults
@@ -144,14 +144,14 @@ void ModelBumper::Load( void )
       // allow individual configuration of transducers
       for( unsigned int i = 0; i < bumper_count; i++)
 	{
-	  snprintf(key, sizeof(key), "bpose[%d]", i);
+    snprintf(key, sizeof(key), "bpose[%u]", i);
           wf->ReadTuple( wf_entity, key, 0, 4, "llla",
                          &bumpers[i].pose.x,
                          &bumpers[i].pose.y,
                          &bumpers[i].pose.z,
                          &bumpers[i].pose.a );
 
-	  snprintf(key, sizeof(key), "blength[%d]", i);
+    snprintf(key, sizeof(key), "blength[%u]", i);
 	  bumpers[i].length = wf->ReadLength( wf_entity, key, bumpers[i].length );
 	}
 
@@ -160,7 +160,7 @@ void ModelBumper::Load( void )
 }
 
 static bool bumper_match( Model* candidate, 
-			  Model* finder, const void* dummy )
+        const Model* finder, const void* dummy )
 {
   // Ignore myself, my children, and my ancestors.
   return( //candidate->vis.obstacle_return && 

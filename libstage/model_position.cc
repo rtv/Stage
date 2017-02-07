@@ -117,8 +117,8 @@ ModelPosition::ModelPosition( World* world,
   wpvis(),
   posevis()
 {
-  PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
-		id, typestr );
+  PRINT_DEBUG2( "Constructing ModelPosition %u (%s)\n",
+    id, type.c_str() );
   
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
@@ -406,17 +406,17 @@ void ModelPosition::Update( void  )
 	  {
 	    PRINT_DEBUG( "position control mode" );
 		 
-	    double x_error = goal.x - est_pose.x;
-	    double y_error = goal.y - est_pose.y;
-	    double a_error = normalize( goal.a - est_pose.a );
+      const double x_error = goal.x - est_pose.x;
+      const double y_error = goal.y - est_pose.y;
+      double a_error = normalize( goal.a - est_pose.a );
 		 
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 		 
 	    // speed limits for controllers
 	    // TODO - have these configurable
-	    double max_speed_x = 0.4;
-	    double max_speed_y = 0.4;
-	    double max_speed_a = 1.0;	      
+      const double max_speed_x = 0.4;
+      const double max_speed_y = 0.4;
+      const double max_speed_a = 1.0;
 		 
 	    switch( drive_mode )
 	      {

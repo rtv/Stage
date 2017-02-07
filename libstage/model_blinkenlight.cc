@@ -66,8 +66,8 @@ ModelBlinkenlight::ModelBlinkenlight( World* world,
   period( 1000 ),
   on( true )
 {
-	PRINT_DEBUG2( "Constructing ModelBlinkenlight %d (%s)\n", 
-			id, typestr );
+  PRINT_DEBUG2( "Constructing ModelBlinkenlight %u (%s)\n",
+      id, type.c_str() );
 
 	// Set up sensible defaults
 

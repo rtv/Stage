@@ -517,7 +517,7 @@ bool Model::IsRelated( const Model* that ) const
     return true;
   
   // wind up to top-level object
-  Model* candidate = (Model*)this;
+  const Model* candidate = this;
   while( candidate->parent )
     {
       // shortcut out if we found it on the way up the tree
@@ -968,7 +968,9 @@ Model::RasterVis::RasterVis()
     height(0),
     cellwidth(0),
     cellheight(0),
-    pts()
+    pts(),
+    subs(0),
+    used(0)
 {
   
 }
@@ -1635,7 +1637,7 @@ void Model::LoadControllerModule( const char* lib )
   
   // the library name is the first word in the string
   char libname[256];
-  sscanf( lib, "%s %*s", libname );
+  sscanf( lib, "%255s %*s", libname );
   
   if(( handle = lt_dlopenext( libname ) ))
     {

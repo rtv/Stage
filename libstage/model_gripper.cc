@@ -349,7 +349,7 @@ void ModelGripper::Update()
 
 	
 static bool gripper_raytrace_match( Model* hit, 
-				    Model* finder,
+            const Model* finder,
 				    const void* dummy )
 {
   (void)dummy; // avoid warning about unused var
