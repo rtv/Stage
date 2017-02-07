@@ -117,19 +117,6 @@ SET( INDENT "  * " )
 
 MESSAGE( STATUS "Checking for optional libraries..." )
 
-# Player does not have a CMake package, but does provide pkgconfig info
-
-include(FindPkgConfig)
-   
-pkg_search_module( PLAYER playercore>=2.1.0 ) 
-IF( PLAYER_FOUND )
-  MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
-  MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
-  MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
-ELSE( PLAYER_FOUND )
-  MESSAGE(STATUS ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
-ENDIF( PLAYER_FOUND )
-
 # Format the fltk libraries for inclusion in stage.pc
 SET(PC_LIBRARIES ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 SET(PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
@@ -175,9 +162,22 @@ ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
 #ADD_SUBDIRECTORY(avonstage)		 
 
-IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
-  ADD_SUBDIRECTORY(libstageplugin)
-ENDIF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )	 
+IF ( BUILD_PLAYER_PLUGIN )
+  # Player does not have a CMake package, but does provide pkgconfig info
+  include(FindPkgConfig)
+  pkg_search_module( PLAYER playercore>=2.1.0 ) 
+  IF( PLAYER_FOUND )
+    MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
+    MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
+    MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
+  ELSE( PLAYER_FOUND )
+    MESSAGE(STATUS ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
+  ENDIF( PLAYER_FOUND )
+
+  IF ( PLAYER_FOUND )
+    ADD_SUBDIRECTORY(libstageplugin)
+  ENDIF ( PLAYER_FOUND )
+ENDIF ( BUILD_PLAYER_PLUGIN )
 
 
 # generate a cpack config file used to create packaged tarballs
