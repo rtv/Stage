@@ -2262,7 +2262,10 @@ namespace Stg
     /** Enable the model, so that non-zero velocities will change the
 	model's pose. Models are enabled by default. */
     void Enable(){ disabled = false; }
-  
+
+    /** Test if the model is enabled. See also Disable() and Enable(). */
+    bool IsEnabled() const { return !disabled; }
+
     /** Load a control program for this model from an external
 	library */
     void LoadControllerModule( const char* lib );
