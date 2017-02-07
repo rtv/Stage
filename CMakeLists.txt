@@ -1,3 +1,4 @@
+cmake_minimum_required( VERSION 2.8.11 FATAL_ERROR )
 PROJECT(Stage)
 
 SET( V_MAJOR 4 )
@@ -16,8 +17,6 @@ OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
 
 # todo - this doesn't work yet. Run Stage headless with -g.
 # OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
-
-cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 	cmake_policy( SET CMP0003 NEW )
