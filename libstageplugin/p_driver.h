@@ -360,7 +360,7 @@ class StTime : public PlayerTime
 
  public:
  // Constructor
-  StTime( StgDriver* driver );
+  explicit StTime( StgDriver* driver );
 
  // Destructor
  virtual ~StTime();

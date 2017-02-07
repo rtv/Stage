@@ -240,9 +240,8 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
     {
       PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
 		  "no \"model\" value defined. You must specify a "
-		  "model name that matches one of the models in "
-		  "the worldfile.",
-		  model_name );
+      "model name that matches one of the models in "
+      "the worldfile.", "<empty>" );
       return; // error
     }
 
@@ -257,7 +256,6 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 	      " Check your world and config files.\n" );
 
       exit(-1);
-      return;
     }
   
   // install a callback to publish this model's data every time it is updated.
@@ -309,8 +307,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
 		      "no \"model\" value defined. You must specify a "
 		      "model name that matches one of the models in "
-		      "the worldfile.",
-		      worldfile_name );
+          "the worldfile.", "<empty>" );
 	  return; // error
 	}
       

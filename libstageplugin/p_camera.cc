@@ -96,7 +96,7 @@ int InterfaceCamera::ProcessMessage(QueuePointer & resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {
-  ModelCamera* mod = (ModelCamera*)this->mod;
+  //ModelCamera* mod = (ModelCamera*)this->mod;
 
   // Is it a request to set the camera's config?
   return(-1);
