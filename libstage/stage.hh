@@ -647,46 +647,46 @@ namespace Stg
   { cont.erase( std::remove( cont.begin(), cont.end(), thing ), cont.end() ); }
   
   // Error macros - output goes to stderr
-#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: " m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
 
   // Warning macros
-#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: " m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
 
   // Message macros
 #ifdef DEBUG
-#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
+#define PRINT_MSG(m) printf( "Stage: " m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_MSG1(m,a) printf( "Stage: " m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_MSG2(m,a,b) printf( "Stage: " m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: " m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: " m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: " m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
 #else
-#define PRINT_MSG(m) printf( "Stage: "m"\n" )
-#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
+#define PRINT_MSG(m) printf( "Stage: " m"\n" )
+#define PRINT_MSG1(m,a) printf( "Stage: " m"\n", a)
+#define PRINT_MSG2(m,a,b) printf( "Stage: " m"\n,", a, b )
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: " m"\n", a, b, c )
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: " m"\n", a, b, c, d )
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: " m"\n", a, b, c, d, e )
 #endif
 
   // DEBUG macros
 #ifdef DEBUG
-#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: "m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG(m) printf( "debug: " m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_DEBUG1(m,a) printf( "debug: " m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_DEBUG2(m,a,b) printf( "debug: " m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_DEBUG3(m,a,b,c) printf( "debug: " m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: " m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: " m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
 #else
 #define PRINT_DEBUG(m)
 #define PRINT_DEBUG1(m,a)
