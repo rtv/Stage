@@ -83,7 +83,9 @@
 
 //#define DEBUG
 
-#include <stdlib.h>
+#include <cmath>
+using std::abs;
+
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h>
