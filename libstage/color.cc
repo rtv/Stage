@@ -18,65 +18,65 @@ bool Color::operator!=( const Color& other ) const
 {
   double epsilon = 1e-4; // small
   return( fabs(r-other.r) > epsilon ||
-	  fabs(g-other.g) > epsilon ||
-	  fabs(b-other.b) > epsilon ||
-	  fabs(a-other.a) > epsilon );
+    fabs(g-other.g) > epsilon ||
+    fabs(b-other.b) > epsilon ||
+    fabs(a-other.a) > epsilon );
 }
 
 Color::Color( const std::string& name) :
   r(1), g(0), b(0), a(1)
 {
   if( name == "" )  // empty string?
-	return; // red
+  return; // red
 
   static FILE *file = NULL;
   static std::map<std::string,Color> table;
 
   if( file == NULL )
-	{
-	  std::string rgbFile = FileManager::findFile( "rgb.txt" );
-	  file = fopen( rgbFile.c_str(), "r" );
+  {
+    std::string rgbFile = FileManager::findFile( "rgb.txt" );
+    file = fopen( rgbFile.c_str(), "r" );
 
-	  if( file == NULL )
-		{
-		  PRINT_ERR1("unable to open color database: %s "
-					 "(try adding rgb.txt's location to your STAGEPATH)",
-					 strerror(errno));
+    if( file == NULL )
+    {
+      PRINT_ERR1("unable to open color database: %s "
+           "(try adding rgb.txt's location to your STAGEPATH)",
+           strerror(errno));
 
-		  exit(0);
-		}
+      exit(0);
+    }
 
-	  PRINT_DEBUG( "Success!" );
+    PRINT_DEBUG( "Success!" );
 
-	  // load the file into the map
-	  while(1)
-		{
-		  char line[1024];
-		  if (!fgets(line, sizeof(line), file))
-			break;
+    // load the file into the map
+    while(1)
+    {
+      char line[1024];
+      if (!fgets(line, sizeof(line), file))
+        break;
 
-			// it's a macro or comment line - ignore the line
-			// also ignore empty lines
-			if (line[0] == '!' || line[0] == '#' || line[0] == '%' || line[0] == '\0')
-				continue;
+      // it's a macro or comment line - ignore the line
+      // also ignore empty lines
+      if (line[0] == '!' || line[0] == '#' || line[0] == '%' || line[0] == '\0')
+        continue;
 
-			// Trim the trailing space
-			while (strchr(" \t\n", line[strlen(line)-1]))
-				line[strlen(line)-1] = 0;
+      // Trim the trailing space
+      while (strchr(" \t\n", line[strlen(line)-1]))
+        line[strlen(line)-1] = 0;
 
-			// Read the color
-			int r, g, b;
-			int chars_matched = 0;
-			sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
+      // Read the color
+      int r, g, b;
+      int chars_matched = 0;
+      sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
 
-			// Read the name
-			const char* colorname = line + chars_matched;
+      // Read the name
+      const char* colorname = line + chars_matched;
 
-			// map the name to the color in the table
-			table[colorname] = Color( r/255.0, g/255.0, b/255.0 );
-		}
-	  fclose(file);
-	}
+      // map the name to the color in the table
+      table[colorname] = Color( r/255.0, g/255.0, b/255.0 );
+    }
+    fclose(file);
+  }
 
   // look up the colorname in the database
   Color& found = table[name];
@@ -109,23 +109,23 @@ const Color& Color::Load( Worldfile* wf, const int section )
       const std::string& colorstr = wf->ReadString( section, "color", "" );
 
       if( colorstr != "" )
-	{
-	  if( colorstr == "random" )
-	    {
-	      r = drand48();
-	      g = drand48();
-	      b = drand48();
-	      a = 1.0;
-	    }
-	  else
-	    {
-	      Color c = Color( colorstr );
-	      r = c.r;
-	      g = c.g;
-	      b = c.b;
-	      a = c.a;
-	    }
-	}
+  {
+    if( colorstr == "random" )
+      {
+        r = drand48();
+        g = drand48();
+        b = drand48();
+        a = 1.0;
+      }
+    else
+      {
+        Color c = Color( colorstr );
+        r = c.r;
+        g = c.g;
+        b = c.b;
+        a = c.a;
+      }
+  }
     }
   else
     wf->ReadTuple( section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a );
