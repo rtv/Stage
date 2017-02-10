@@ -30,22 +30,34 @@ extern "C" int Init( Model* mod, CtrlArgs* )
       args->cmdline.c_str() );
   */
 
-  robot_t* robot = new robot_t;
+  robot_t* robot = new robot_t();
 
   robot->avoidcount = 0;
   robot->randcount = 0;
 
-  robot->pos = (ModelPosition*)mod;
+  robot->pos = dynamic_cast<ModelPosition*>(mod);
+  if ( !robot->pos )
+    {
+      PRINT_ERR("No position model given in wander controller.");
+      exit(1);
+    }
 
   if( verbose )
-    robot->pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdate, robot );
+    robot->pos->AddCallback( Model::CB_UPDATE, model_callback_t(PositionUpdate), robot );
 
   robot->pos->Subscribe(); // starts the position updates
 
-  robot->pos->GetChild( "ranger:0" )->Subscribe();
-
-  robot->laser = (ModelRanger*)mod->GetChild( "ranger:1" );
-  robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
+  ModelRanger *first_laser  = dynamic_cast<ModelRanger *>(robot->pos->GetChild( "ranger:0" )),
+              *second_laser = dynamic_cast<ModelRanger *>(mod->GetChild( "ranger:1" ));
+  if ( !first_laser || !second_laser )
+    {
+      PRINT_ERR1("Wander controller requires 2 range sensors (%u given).",
+          unsigned(bool(first_laser) + bool(second_laser)));
+      exit(2);
+    }
+  first_laser->Subscribe();
+  robot->laser = second_laser;
+  robot->laser->AddCallback( Model::CB_UPDATE, model_callback_t(LaserUpdate), robot );
   robot->laser->Subscribe(); // starts the ranger updates
 
   return 0; //ok
@@ -75,23 +87,23 @@ int LaserUpdate( Model*, robot_t* robot )
       if( verbose ) printf( "%.3f ", scan[i] );
 
       if( (i > (sample_count/3))
-	  && (i < (sample_count - (sample_count/3)))
-	  && scan[i] < minfrontdistance)
-	{
-	  if( verbose ) puts( "  obstruction!" );
-	  obstruction = true;
-	}
+    && (i < (sample_count - (sample_count/3)))
+    && scan[i] < minfrontdistance)
+  {
+    if( verbose ) puts( "  obstruction!" );
+    obstruction = true;
+  }
 
       if( scan[i] < stopdist )
-	{
-	  if( verbose ) puts( "  stopping!" );
-	  stop = true;
-	}
+  {
+    if( verbose ) puts( "  stopping!" );
+    stop = true;
+  }
 
       if( i > sample_count/2 )
-	minleft = std::min( minleft, scan[i] );
+  minleft = std::min( minleft, scan[i] );
       else
-	minright = std::min( minright, scan[i] );
+  minright = std::min( minright, scan[i] );
     }
 
   if( verbose )
@@ -108,22 +120,22 @@ int LaserUpdate( Model*, robot_t* robot )
       robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );
 
       /* once we start avoiding, select a turn direction and stick
-	 with it for a few iterations */
+   with it for a few iterations */
       if( robot->avoidcount < 1 )
         {
-	  if( verbose ) puts( "Avoid START" );
+    if( verbose ) puts( "Avoid START" );
           robot->avoidcount = random() % avoidduration + avoidduration;
 
-	  if( minleft < minright  )
-	    {
-	      robot->pos->SetTurnSpeed( -avoidturn );
-	      if( verbose ) printf( "turning right %.2f\n", -avoidturn );
-	    }
-	  else
-	    {
-	      robot->pos->SetTurnSpeed( +avoidturn );
-	      if( verbose ) printf( "turning left %2f\n", +avoidturn );
-	    }
+    if( minleft < minright  )
+      {
+        robot->pos->SetTurnSpeed( -avoidturn );
+        if( verbose ) printf( "turning right %.2f\n", -avoidturn );
+      }
+    else
+      {
+        robot->pos->SetTurnSpeed( +avoidturn );
+        if( verbose ) printf( "turning left %2f\n", +avoidturn );
+      }
         }
 
       robot->avoidcount--;
@@ -151,7 +163,7 @@ int PositionUpdate( Model*, robot_t* robot )
   Pose pose = robot->pos->GetPose();
 
   printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
-	  pose.x, pose.y, pose.z, pose.a );
+    pose.x, pose.y, pose.z, pose.a );
 
   return 0; // run again
 }
