@@ -3010,8 +3010,11 @@ namespace Stg
     void SetVelocity( const Velocity& val );
     /** get the velocity of a model in the global CS */
     Velocity GetGlobalVelocity()  const;
-    /* set the velocity of a model in the global coordinate system */
+    /** set the velocity of a model in the global coordinate system */
     void SetGlobalVelocity( const Velocity& gvel );
+
+    /** Get (a copy of) the model's odometry integration error. */
+    Velocity GetOdomError() const { return integration_error; }
 
     /** Specify a point in space. Arrays of Waypoints can be attached to
 	Models and visualized. */
