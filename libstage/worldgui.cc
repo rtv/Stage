@@ -255,7 +255,7 @@ void WorldGui::Show()
 
 bool WorldGui::Load( const std::string& filename )
 {
-  PRINT_DEBUG1( "%s.Load()", token );
+  PRINT_DEBUG1( "%s.Load()", token.c_str() );
 	
   // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
   Fl::check();
@@ -322,7 +322,7 @@ void WorldGui::UnLoad()
 
 bool WorldGui::Save( const char* filename )
 {
-  PRINT_DEBUG1( "%s.Save()", token );
+  PRINT_DEBUG1( "%s.Save()", token.c_str() );
   
   // worldgui exclusive properties live in the top-level section
   const int world_section = 0; 

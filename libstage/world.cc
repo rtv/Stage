@@ -184,7 +184,7 @@ World::World( const std::string& name,
 
 World::~World( void )
 {
-  PRINT_DEBUG2( "destroying world %d %s", id, Token() );
+  PRINT_DEBUG1( "destroying world %s", Token() );
   if( ground ) delete ground;
   if( wf ) delete wf;
   World::world_set.erase( this );
