@@ -292,7 +292,7 @@ void ModelPosition::Load( void )
 
 void ModelPosition::Update( void  )
 {
-  PRINT_DEBUG1( "[%lu] position update", this->world->sim_time );
+  PRINT_DEBUG1( "[%lu] position update", this->world->SimTimeNow() );
 
   // stop by default
   Velocity vel(0,0,0,0);

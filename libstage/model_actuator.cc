@@ -221,9 +221,7 @@ void ModelActuator::Update( void  )
 			case CONTROL_VELOCITY :
 				{
 					PRINT_DEBUG( "actuator velocity control mode" );
-					PRINT_DEBUG2( "model %s command(%.2f)",
-							this->token,
-							this->goal);
+          PRINT_DEBUG2( "model %s command(%.2f)", this->token.c_str(), this->goal);
 					if ((pos <= min_position && goal < 0) || (pos >= max_position && goal > 0))
 						velocity = 0;
 					else

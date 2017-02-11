@@ -52,9 +52,9 @@ endif( PROJECT_OS_OSX)
 # Build type cflags
 SET (OPTIMIZE "-O2")
 
-SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
-SET (CMAKE_CXX_FLAGS_PROFILE " -ggdb -pg  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL}" CACHE INTERNAL "CXX Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG" CACHE INTERNAL "CXX Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE "-ggdb -pg  ${FORCE_ARCH} ${WALL}" CACHE INTERNAL "CXX Flags for profile" FORCE)
 
 #####################################
 # Set the default build type
