@@ -2087,8 +2087,6 @@ namespace Stg
 	calls TestCollision() on all descendents. */
     Model* TestCollision();
 
-    void CommitTestedPose();
-
     void Map( unsigned int layer );
 
     /** Call Map on all layers */
