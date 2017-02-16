@@ -26,7 +26,6 @@
     update_interval 100
 
     color "red"
-    color_rgba [ 0.0 0.0 0.0 1.0 ]
     bitmap ""
     ctrl ""
 
@@ -36,7 +35,6 @@
     obstacle_return 1
     ranger_return 1.0
     blob_return 1
-    ranger_return 1.0
     gripper_return 0
 
     # GUI properties

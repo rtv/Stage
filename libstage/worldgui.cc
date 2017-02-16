@@ -52,7 +52,6 @@ window
   show_trailrise 0
   show_trailfast 0
   show_occupancy 0
-  show_tree 0
   pcam_on 0
   screenshots 0
 )
