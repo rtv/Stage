@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 2.8.11 FATAL_ERROR )
 PROJECT(Stage)
 
 SET( V_MAJOR 4 )
-SET( V_MINOR 1 )
+SET( V_MINOR 2 )
 SET( V_BUGFIX 1 )
 
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )

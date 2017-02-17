@@ -26,9 +26,11 @@
 
 /** \file stage.hh
  *  Desc: External header file for the Stage library
- *  Author: Richard Vaughan (vaughan@sfu.ca)
- *  Date: 1 June 2003
- *  SVN: $Id$
+ *  Author: Richard Vaughan (vaughan@sfu.ca),
+ *          Adrian Böckenkamp (boeckenkamp@ls7.cs.tu-dortmund.de)
+ *  Date: 1 June 2003,
+ *        17 February 2017
+ *  Git: 375c519
  */
 
 // C libs
@@ -99,11 +101,11 @@ namespace Stg
 
   /** Copyright string */
   const char COPYRIGHT[] =
-    "Copyright Richard Vaughan and contributors 2000-2009";
+    "Copyright Richard Vaughan and contributors 2000-2017";
 
   /** Author string */
   const char AUTHORS[] =
-    "Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian, Toby Collett, Jeremy Asher, Alex Couture-Beil and contributors.";
+    "Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian, Toby Collett, Jeremy Asher, Alex Couture-Beil, Adrian Böckenkamp and contributors.";
 
   /** Project website string */
   const char WEBSITE[] = "http://playerstage.org";
@@ -115,7 +117,7 @@ namespace Stg
   /** Project distribution license string */
   const char LICENSE[] =
     "Stage robot simulation library\n"					\
-    "Copyright (C) 2000-2009 Richard Vaughan and contributors\n"	\
+    "Copyright (C) 2000-2017 Richard Vaughan and contributors\n"	\
     "Part of the Player Project [http://playerstage.org]\n"		\
     "\n"								\
     "This program is free software; you can redistribute it and/or\n"	\
