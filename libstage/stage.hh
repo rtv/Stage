@@ -747,7 +747,7 @@ namespace Stg
       if( str.size() > 0 )
 	token = str;
       else
-	PRINT_ERR( "Ancestor::SetToken() called with zero length string. Ignored." );
+  PRINT_WARN( "Ancestor::SetToken() called with zero length string. Ignored." );
     }
 
     /** A key-value database for users to associate arbitrary things with this model. */
@@ -889,6 +889,9 @@ namespace Stg
     {
       EraseAll( mod, models_with_fiducials );
     }
+
+    /// Defines what all World::Load(*) methods have in common. Called after initial setup.
+    void LoadWorldPostHook();
 
     double ppm; ///< the resolution of the world model in pixels per meter
     bool quit; ///< quit this world ASAP
@@ -1140,8 +1143,22 @@ namespace Stg
 	persists, and can be retrieved later with
 	World::GetWorldFile().
 	@returns true if load was successful, false otherwise
-	*/
-    virtual bool Load( const std::string& worldfile_path );
+  */
+    virtual bool Load(const std::string& worldfile_path);
+
+    /** Read the world content from the given stream, create a Worldfile
+  object and configure the world from the contents, creating models as
+  necessary. The created object persists, and can be retrieved later with
+  World::GetWorldFile(). world_content can be any valid \c std::istream
+  object. If it's a file (\c std::ifstream), \c worldfile_path can be specified
+  to be able to resolve relative includes. If \c worldfile_path is empty,
+  relative includes are not supported (if they are encountered, loading
+  will fail), although includes (and even paths in general, e. g., for
+  "bitmap") with a absolute path are supported.
+  @returns true if load was successful, false otherwise
+  */
+    virtual bool Load(std::istream& world_content,
+                      const std::string& worldfile_path = std::string());
 
     virtual void UnLoad();
 
@@ -1552,6 +1569,9 @@ namespace Stg
 
     void SetTimeouts();
 
+    /// Defines what all WorldGUI::Load(*) in methods have in common. Called after initial setup.
+    void LoadWorldGuiPostHook(usec_t load_start_time);
+
   protected:
 
     virtual void PushColor( Color col );
@@ -1571,7 +1591,10 @@ namespace Stg
 
     virtual std::string ClockString() const;
     virtual bool Update();
-    virtual bool Load( const std::string& filename );
+    virtual bool Load( const std::string& worldfile_path );
+    virtual bool Load(std::istream& world_content,
+                      const std::string& worldfile_path = std::string());
+
     virtual void UnLoad();
     virtual bool Save( const char* filename );
     virtual bool IsGUI() const { return true; }

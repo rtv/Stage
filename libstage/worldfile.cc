@@ -121,13 +121,26 @@ FILE *Worldfile::FileOpen(const std::string& filename, const char* method)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Load world file from stream
+bool Worldfile::Load(std::istream &world_content, const std::string& filename)
+{
+  this->filename = filename; // required to resolve paths to relative-path based includes
+
+  ClearTokens();
+
+  // Read tokens from the stream
+  if (!LoadTokens(world_content, 0))
+      return false;
+
+  return LoadCommon();
+}
+
 // Load world from file
-bool Worldfile::Load(const std::string& filename )
+bool Worldfile::Load(const std::string& filename)
 {
   this->filename = filename;
 
   // Open the file
-  //FILE *file = fopen(this->filename, "r");
   FILE *file = FileOpen(this->filename, "r");
   if (!file)
     {
@@ -147,7 +160,11 @@ bool Worldfile::Load(const std::string& filename )
     }
 
   fclose(file);
+  return LoadCommon();
+}
 
+bool Worldfile::LoadCommon()
+{
   // Parse the tokens to identify entities
   if (!ParseTokens())
     {
@@ -200,7 +217,7 @@ bool Worldfile::Save(const std::string& filename )
   //FILE *file = FileOpen(filename, "w+");
   if (!file)
     {
-      PRINT_ERR2("unable to open world file %s : %s",
+      PRINT_ERR2("unable to save world file %s : %s",
 								 filename.c_str(), strerror(errno));
       return false;
     }
@@ -238,8 +255,101 @@ bool Worldfile::WarnUnused()
   return unused;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
+// Load tokens from a stream.
+bool Worldfile::LoadTokens(std::istream& content, int include)
+{
+  int line;
+  char token[256];
+
+  line = 1;
+
+  while (true)
+    {
+      int ch = content.get();
+      if (ch == EOF)
+  break;
+
+      if ((char) ch == '#')
+  {
+    content.putback(ch);
+    if (!LoadTokenComment(content, &line, include))
+      return false;
+  }
+      else if (isalpha(ch))
+  {
+    content.putback(ch);
+    if (!LoadTokenWord(content, &line, include))
+      return false;
+  }
+      else if (strchr("+-.0123456789", ch))
+  {
+    content.putback(ch);
+    if (!LoadTokenNum(content, &line, include))
+      return false;
+  }
+      else if (isblank(ch))
+  {
+    content.putback(ch);
+    if (!LoadTokenSpace(content, &line, include))
+      return false;
+  }
+      else if (ch == '"')
+  {
+    content.putback(ch);
+    if (!LoadTokenString(content, &line, include))
+      return false;
+  }
+      else if (strchr("(", ch))
+  {
+    token[0] = ch;
+    token[1] = 0;
+    AddToken(TokenOpenEntity, token, include);
+  }
+      else if (strchr(")", ch))
+  {
+    token[0] = ch;
+    token[1] = 0;
+    AddToken(TokenCloseEntity, token, include);
+  }
+      else if (strchr("[", ch))
+  {
+    token[0] = ch;
+    token[1] = 0;
+    AddToken(TokenOpenTuple, token, include);
+  }
+      else if (strchr("]", ch))
+  {
+    token[0] = ch;
+    token[1] = 0;
+    AddToken(TokenCloseTuple, token, include);
+  }
+      else if ( 0x0d == ch )
+  {
+    ch = content.get();
+    if ( 0x0a != ch )
+      content.putback(ch);
+    line++;
+    AddToken(TokenEOL, "\n", include);
+  }
+      else if ( 0x0a == ch )
+  {
+    ch = content.get();
+    if ( 0x0d != ch )
+      content.putback(ch);
+    line++;
+    AddToken(TokenEOL, "\n", include);
+  }
+      else
+  {
+    TOKEN_ERR("syntax error", line);
+    return false;
+  }
+    }
+
+  return true;
+}
+
 // Load tokens from a file.
 bool Worldfile::LoadTokens(FILE *file, int include)
 {
@@ -334,7 +444,6 @@ bool Worldfile::LoadTokens(FILE *file, int include)
   return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Read in a comment token
 bool Worldfile::LoadTokenComment(FILE *file, int *, int include)
@@ -365,7 +474,33 @@ bool Worldfile::LoadTokenComment(FILE *file, int *, int include)
   return true;
 }
 
+bool Worldfile::LoadTokenComment(std::istream &content, int *, int include)
+{
+  char token[256];
 
+  int len = 0;
+  memset(token, 0, sizeof(token));
+
+  while (true)
+    {
+      int ch = content.get();
+
+      if (ch == EOF)
+  {
+    AddToken(TokenComment, token, include);
+    return true;
+  }
+      else if ( 0x0a == ch || 0x0d == ch )
+  {
+    content.putback(ch);
+    AddToken(TokenComment, token, include);
+    return true;
+  }
+      else
+  token[len++] = ch;
+    }
+  return true;
+}
 ///////////////////////////////////////////////////////////////////////////
 // Read in a word token
 bool Worldfile::LoadTokenWord(FILE *file, int *line, int include)
@@ -409,7 +544,46 @@ bool Worldfile::LoadTokenWord(FILE *file, int *line, int include)
   return false;
 }
 
+bool Worldfile::LoadTokenWord(std::istream &content, int *line, int include)
+{
+  char token[256];
 
+  int len = 0;
+  memset(token, 0, sizeof(token));
+
+  while (true)
+    {
+      int ch = content.get();
+
+      if (ch == EOF)
+  {
+    AddToken(TokenWord, token, include);
+    return true;
+  }
+      else if (isalpha(ch) || isdigit(ch) || strchr(".-_[]", ch))
+  {
+    token[len++] = ch;
+  }
+      else
+  {
+    if (strcmp(token, "include") == 0)
+      {
+        content.putback(ch);
+        AddToken(TokenWord, token, include);
+        if (!LoadTokenInclude(content, line, include))
+    return false;
+      }
+    else
+      {
+        content.putback(ch);
+        AddToken(TokenWord, token, include);
+      }
+    return true;
+  }
+    }
+  assert(false);
+  return false;
+}
 ///////////////////////////////////////////////////////////////////////////
 // Load an include token; this will load the include file.
 bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
@@ -538,6 +712,131 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
   return true;
 }
 
+bool Worldfile::LoadTokenInclude(std::istream &content, int *line, int include)
+{
+  const char *filename;
+  char *fullpath;
+
+  int ch = content.get();
+
+  if (ch == EOF)
+    {
+      TOKEN_ERR("incomplete include statement", *line);
+      return false;
+    }
+  else if (!isblank(ch))
+    {
+      TOKEN_ERR("syntax error in include statement", *line);
+      return false;
+    }
+
+  content.putback(ch);
+  if (!LoadTokenSpace(content, line, include))
+    return false;
+
+  ch = content.get();
+
+  if (ch == EOF)
+    {
+      TOKEN_ERR("incomplete include statement", *line);
+      return false;
+    }
+  else if (ch != '"')
+    {
+      TOKEN_ERR("syntax error in include statement", *line);
+      return false;
+    }
+
+  content.putback(ch);
+  if (!LoadTokenString(content, line, include))
+    return false;
+
+  // This is the basic filename
+  filename = GetTokenValue(this->tokens.size() - 1);
+
+  // Now do some manipulation.  If its a relative path,
+  // we append the path of the world file.
+  if (filename[0] == '/' || filename[0] == '~')
+    {
+      fullpath = strdup(filename);
+    }
+  else if (this->filename[0] == '/' || this->filename[0] == '~')
+    {
+      // Note that dirname() modifies the contents, so
+      // we need to make a copy of the filename.
+      // There's no bounds-checking, but what the heck.
+      char *tmp = strdup(this->filename.c_str());
+      fullpath = new char[PATH_MAX];
+      memset(fullpath, 0, PATH_MAX);
+      strcat( fullpath, dirname(tmp));
+      strcat( fullpath, "/" );
+      strcat( fullpath, filename );
+      assert(strlen(fullpath) + 1 < PATH_MAX);
+      free(tmp);
+    }
+  else
+    {
+      // Note that dirname() modifies the contents, so
+      // we need to make a copy of the filename.
+      // There's no bounds-checking, but what the heck.
+      char *tmp = strdup(this->filename.c_str());
+      fullpath = new char[PATH_MAX];
+      char* dummy = getcwd(fullpath, PATH_MAX);
+      if (!dummy)
+      {
+       PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
+       if(tmp) free(tmp);
+       delete[] fullpath;
+       return false;
+      }
+      strcat( fullpath, "/" );
+      strcat( fullpath, dirname(tmp));
+      strcat( fullpath, "/" );
+      strcat( fullpath, filename );
+      assert(strlen(fullpath) + 1 < PATH_MAX);
+      free(tmp);
+    }
+
+  printf( "[Include %s]", filename );
+  fflush( stdout );
+
+  // Open the include file
+  FILE *infile = FileOpen(fullpath, "r");
+  if (!infile)
+    {
+      PRINT_ERR2("unable to open include file %s : %s",
+     fullpath, strerror(errno));
+      //free(fullpath);
+    delete[] fullpath;
+      return false;
+    }
+
+  // Terminate the include line
+  AddToken(TokenEOL, "\n", include);
+
+  //DumpTokens();
+
+  // Read tokens from the file
+  if (!LoadTokens(infile, include + 1))
+    {
+    fclose( infile );
+      //DumpTokens();
+      //free(fullpath);
+    delete[] fullpath;
+      return false;
+    }
+
+  // done with the include file
+  fclose( infile );
+
+  // consume the rest of the include line XX a bit of a hack - assumes
+  // that an include is the last thing on a line
+  while ( ch != '\n' )
+    ch = content.get();
+
+  delete[] fullpath;
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a number token
@@ -571,8 +870,36 @@ bool Worldfile::LoadTokenNum(FILE *file, int *, int include)
   assert(false);
   return false;
 }
+bool Worldfile::LoadTokenNum(std::istream &content, int *, int include)
+{
+  char token[256];
 
+  int len = 0;
+  memset(token, 0, sizeof(token));
 
+  while (true)
+    {
+      int ch = content.get();
+
+      if (ch == EOF)
+  {
+    AddToken(TokenNum, token, include);
+    return true;
+  }
+      else if (strchr("+-.0123456789", ch))
+  {
+    token[len++] = ch;
+  }
+      else
+  {
+    AddToken(TokenNum, token, include);
+    content.putback(ch);
+    return true;
+  }
+    }
+  assert(false);
+  return false;
+}
 ///////////////////////////////////////////////////////////////////////////
 // Read in a string token
 bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
@@ -606,8 +933,37 @@ bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
   assert(false);
   return false;
 }
+bool Worldfile::LoadTokenString(std::istream &content, int *line, int include)
+{
+  char token[256];
 
+  int len = 0;
+  memset(token, 0, sizeof(token));
 
+  int ch = content.get();
+
+  while (true)
+    {
+      ch = content.get();
+
+      if ( EOF == ch || 0x0a == ch || 0x0d == ch )
+  {
+    TOKEN_ERR("unterminated string constant", *line);
+    return false;
+  }
+      else if (ch == '"')
+  {
+    AddToken(TokenString, token, include);
+    return true;
+  }
+      else
+  {
+    token[len++] = ch;
+  }
+    }
+  assert(false);
+  return false;
+}
 ///////////////////////////////////////////////////////////////////////////
 // Read in a whitespace token
 bool Worldfile::LoadTokenSpace(FILE *file, int *, int include)
@@ -640,8 +996,36 @@ bool Worldfile::LoadTokenSpace(FILE *file, int *, int include)
   assert(false);
   return false;
 }
+bool Worldfile::LoadTokenSpace(std::istream &content, int *, int include)
+{
+  char token[256];
 
+  int len = 0;
+  memset(token, 0, sizeof(token));
 
+  while (true)
+    {
+      int ch = content.get();
+
+      if (ch == EOF)
+  {
+    AddToken(TokenSpace, token, include);
+    return true;
+  }
+      else if (isblank(ch))
+  {
+    token[len++] = ch;
+  }
+      else
+  {
+    AddToken(TokenSpace, token, include);
+    content.putback(ch);
+    return true;
+  }
+    }
+  assert(false);
+  return false;
+}
 ///////////////////////////////////////////////////////////////////////////
 // Save tokens to a file.
 bool Worldfile::SaveTokens(FILE *file)

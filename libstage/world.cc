@@ -387,6 +387,27 @@ void World::LoadModel( Worldfile* wf, int entity )
   models_by_wfentity[entity] = mod;
 }
 
+bool World::Load(std::istream &world_content, const std::string& worldfile_path)
+{
+  // note: must call Unload() before calling Load() if a world already
+  // exists TODO: unload doesn't clean up enough right now
+
+  printf(" [Loading from stream]");
+  fflush(stdout);
+
+  this->wf = new Worldfile();
+  if(!wf->Load(world_content, worldfile_path))
+    return false;
+
+  // nothing gets added if the string is empty
+  std::string tmp = wf->ReadString( 0, "name", worldfile_path );
+  if (!tmp.empty())
+    this->SetToken( tmp );
+
+  LoadWorldPostHook();
+  return true;
+}
+
 bool World::Load( const std::string& worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
@@ -398,37 +419,37 @@ bool World::Load( const std::string& worldfile_path )
   this->wf = new Worldfile();
   if(!wf->Load( worldfile_path ))
   {
-	  PRINT_ERR1(" Failed to open file %s", worldfile_path.c_str());
-	  return false;
+    PRINT_ERR1(" Failed to open file %s", worldfile_path.c_str());
+    return false;
   }
 
   PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
 
-  // end the output line of worldfile components
-  //puts("");
-
-  const int entity(0);
-
   // nothing gets added if the string is empty
-  this->SetToken( wf->ReadString( entity, "name", worldfile_path ));
+  this->SetToken( wf->ReadString( 0, "name", worldfile_path ));
+  LoadWorldPostHook();
+  return true;
+}
 
+void World::LoadWorldPostHook()
+{
   this->quit_time =
-    (usec_t)( million * wf->ReadFloat( entity, "quit_time", this->quit_time ) );
+    (usec_t)( million * wf->ReadFloat( 0, "quit_time", this->quit_time ) );
 
   this->ppm =
-    1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
+    1.0 / wf->ReadFloat( 0, "resolution", 1.0 / this->ppm );
 
   this->show_clock =
-    wf->ReadInt( entity, "show_clock", this->show_clock );
+    wf->ReadInt( 0, "show_clock", this->show_clock );
 
   this->show_clock_interval =
-    wf->ReadInt( entity, "show_clock_interval", this->show_clock_interval );
+    wf->ReadInt( 0, "show_clock_interval", this->show_clock_interval );
 
   // read msec instead of usec: easier for user
   this->sim_interval =
-    1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
+    1e3 * wf->ReadFloat( 0, "interval_sim", this->sim_interval / 1e3 );
 
-  this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );
+  this->worker_threads = wf->ReadInt( 0, "threads",  this->worker_threads );
   if( this->worker_threads < 1 )
     {
       PRINT_WARN( "threads set to <1. Forcing to 1" );
@@ -492,8 +513,6 @@ bool World::Load( const std::string& worldfile_path )
     (*it)->InitControllers();
 
   putchar( '\n' );
-
-  return true;
 }
 
 void World::UnLoad()

@@ -30,6 +30,7 @@
 
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <stdio.h> // for FILE ops
+#include <istream>
 
 namespace Stg {
 
@@ -77,7 +78,9 @@ namespace Stg {
   protected: FILE* FileOpen(const std::string& filename, const char* method);
 
 	 // Load world from file
-  public: bool Load(const std::string& filename );
+  public: bool Load(const std::string& filename);
+  protected: bool LoadCommon();
+  public: bool Load(std::istream &world_content, const std::string& filename = std::string());
 
     // Save world into named file
   public: bool Save(const std::string& filename);
@@ -143,24 +146,38 @@ namespace Stg {
 
 	 // Load tokens from a file.
   private: bool LoadTokens(FILE *file, int include);
+   // Load tokens from a stream.
+  private: bool LoadTokens(std::istream& content, int include);
 
 	 // Read in a comment token
   private: bool LoadTokenComment(FILE *file, int *line, int include);
+   // Read in a comment token (stream version)
+  private: bool LoadTokenComment(std::istream& content, int *line, int include);
 
 	 // Read in a word token
   private: bool LoadTokenWord(FILE *file, int *line, int include);
+   // Read in a word token (stream version)
+  private: bool LoadTokenWord(std::istream& content, int *line, int include);
 
 	 // Load an include token; this will load the include file.
   private: bool LoadTokenInclude(FILE *file, int *line, int include);
+   // Load an include token; this will load the include file (stream version)
+  private: bool LoadTokenInclude(std::istream& content, int *line, int include);
 
 	 // Read in a number token
   private: bool LoadTokenNum(FILE *file, int *line, int include);
+   // Read in a number token (stream version)
+  private: bool LoadTokenNum(std::istream& content, int *line, int include);
 
 	 // Read in a string token
   private: bool LoadTokenString(FILE *file, int *line, int include);
+   // Read in a string token (stream version)
+  private: bool LoadTokenString(std::istream& content, int *line, int include);
 
 	 // Read in a whitespace token
   private: bool LoadTokenSpace(FILE *file, int *line, int include);
+   // Read in a whitespace token (stream version)
+  private: bool LoadTokenSpace(std::istream& content, int *line, int include);
 
 	 // Save tokens to a file.
   private: bool SaveTokens(FILE *file);

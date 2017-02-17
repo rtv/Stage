@@ -257,21 +257,43 @@ void WorldGui::Show()
   show(); // fltk
 }
 
-bool WorldGui::Load( const std::string& filename )
+bool WorldGui::Load( std::istream& world_content, const std::string& worldfile_path )
 {
+  const usec_t load_start_time = RealTimeNow();
+  // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
+  Fl::check();
+
+  fileMan->newWorld( worldfile_path );
+
+  if(!World::Load( world_content, worldfile_path ))
+  {
+    return false;
+  }
+
+  LoadWorldGuiPostHook( load_start_time );
+  return true;
+}
+
+bool WorldGui::Load( const std::string& worldfile_path )
+{
+  const usec_t load_start_time = RealTimeNow();
   PRINT_DEBUG1( "%s.Load()", token.c_str() );
 
   // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
   Fl::check();
 
-  fileMan->newWorld( filename );
+  fileMan->newWorld( worldfile_path );
 
-  const usec_t load_start_time = RealTimeNow();
-
-  if(!World::Load( filename ))
+  if(!World::Load( worldfile_path ))
   {
 	  return false;
   }
+  LoadWorldGuiPostHook( load_start_time );
+  return true;
+}
+
+void WorldGui::LoadWorldGuiPostHook( usec_t load_start_time )
+{
 
   // worldgui exclusive properties live in the top-level section
   const int world_section = 0;
@@ -317,7 +339,6 @@ bool WorldGui::Load( const std::string& filename )
 	    (load_end_time - load_start_time) / 1e6 );
 
   Show();
-  return true;
 }
 
 void WorldGui::UnLoad()
@@ -350,10 +371,7 @@ bool WorldGui::Save( const char* filename )
 	(*it)->Save( wf, window_section );
     }
 
-	World::Save( filename );
-
-  // TODO - error checking
-  return true;
+  return World::Save( filename );
 }
 
 static void UpdateCallback( WorldGui* world )
@@ -806,7 +824,11 @@ bool WorldGui::saveAsDialog()
   bool success = false;
   const char* pattern = "World Files (*.world)";
 
-  Fl_File_Chooser fc( wf->filename.c_str(), pattern, Fl_File_Chooser::CREATE, "Save File As..." );
+  std::string default_path = wf->filename;
+  if (default_path.empty()) {
+    default_path = FileManager::homeDirectory() + std::string("/my_scene.world");
+  }
+  Fl_File_Chooser fc( default_path.c_str(), pattern, Fl_File_Chooser::CREATE, "Save File As..." );
   fc.ok_label( "Save" );
 
   fc.show();

@@ -17,8 +17,7 @@ namespace Stg {
 		/// Return the path where the current worldfile was loaded from
 		inline const std::string worldsRoot() const { return WorldsRoot; }
 		/// Update the worldfile path
-		inline void newWorld( const std::string& worldfile ) {
-			WorldsRoot = stripFilename( worldfile ); }
+    void newWorld( const std::string& worldfile );
 
 		/// Determine whether a file can be opened for reading
 		static bool readable( const std::string& path );
@@ -32,6 +31,9 @@ namespace Stg {
 
 		/// Return the STAGEPATH environment variable
 		static std::string stagePath();
+
+    /// Returns the path to the current user's home directory (or empty if not detectable):
+    static std::string homeDirectory();
 	};
 
 }

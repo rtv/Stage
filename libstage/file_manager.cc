@@ -1,11 +1,13 @@
-//#define DEBUG
-
 #include "file_manager.hh"
 #include "stage.hh" // to get PRINT_DEBUG
 #include "config.h" // to get INSTALL_PREFIX
 
 #include <sstream>
 #include <fstream>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 std::string searchDirs( const std::vector<std::string>& dirs, const std::string& filename ) {
 	for ( unsigned int i=0; i<dirs.size(); i++ ) {
@@ -64,6 +66,25 @@ namespace Stg
 		// search the path list
 		return searchDirs( paths, filename );
 	}
+
+  void FileManager::newWorld( const std::string& worldfile )
+  {
+    if (!worldfile.empty()) {
+      WorldsRoot = stripFilename( worldfile );
+    } else {
+      // Since we loaded from a stream, lets use the current user's home directory:
+      WorldsRoot = FileManager::homeDirectory();
+    }
+  }
+
+  std::string FileManager::homeDirectory()
+  {
+    const char *homedir = NULL;
+    if ((homedir = getenv("HOME")) == NULL) {
+        homedir = getpwuid(getuid())->pw_dir;
+    }
+    return homedir;
+  }
 
 	bool FileManager::readable( const std::string& path ) {
 		std::ifstream iFile;
