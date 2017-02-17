@@ -243,6 +243,7 @@ WorldGui::WorldGui(int width, int height, const char* caption) :
   callback( (Fl_Callback*)windowCb, this );
 
   show();
+  position((Fl::w() - w())/2, (Fl::h() - h())/2);
 }
 
 WorldGui::~WorldGui()
@@ -306,12 +307,19 @@ void WorldGui::LoadWorldGuiPostHook( usec_t load_start_time )
   const int window_section = wf->LookupEntity( "window" );
 
   if( window_section > 0 ) {
-      unsigned int width = w();
-      unsigned int height = h();
-      wf->ReadTuple(window_section, "size", 0, 2, "uu", &width, &height );
+      int width = w();
+      int height = h();
+      wf->ReadTuple(window_section, "size", 0, 2, "ii", &width, &height );
+      if (width < 0) {
+        width = Fl::w(); // max. window width
+      }
+      if (height < 0) {
+        height = Fl::h(); // max window height
+      }
 
 
-      size( width,height );
+      size( width, height );
+      position((Fl::w() - w())/2, (Fl::h() - h())/2); // center the window
       size_range( 100, 100 ); // set min size to 100/100, max size to screen size
 
       // configure the canvas
