@@ -14,6 +14,11 @@ const char* Stg::Version()
   return VERSION;
 }
 
+unsigned int Stg::FullVersion()
+{
+  return FULL_VERSION;
+}
+
 
 void Stg::Init( int* argc, char** argv[] )
 {

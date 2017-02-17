@@ -99,6 +99,9 @@ namespace Stg
       number. */
   const char* Version();
 
+  /** returns the full numeric version as $major$minor$patch of libstage for programmatic checks */
+  unsigned int FullVersion();
+
   /** Copyright string */
   const char COPYRIGHT[] =
     "Copyright Richard Vaughan and contributors 2000-2017";
