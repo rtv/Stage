@@ -164,10 +164,10 @@ static const char* AboutText =
 	"Part of the Player Project\n"
 	"http://playerstage.org\n"
 	"\n"
-	"Copyright 2000-2008 Richard Vaughan,\n"
+  "Copyright 2000-2017 Richard Vaughan,\n"
 	"Brian Gerkey, Andrew Howard, Reed Hedges, \n"
-	"Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
-	"and contributors\n"
+  "Toby Collett, Alex Couture-Beil, Jeremy Asher, \n"
+  "Adrian Böckenkamp and contributors\n"
 	"\n"
   "Distributed under the terms of the \n"
   "GNU General Public License v2";
