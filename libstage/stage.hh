@@ -1533,6 +1533,7 @@ namespace Stg
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
     bool pause_time;
+    std::string caption_prefix; //!< prefix of window caption (default PROJECT name constant)
 
     /** The amount of real time elapsed between $timing_interval
 	timesteps. */
@@ -1588,7 +1589,7 @@ namespace Stg
 
   public:
 
-    WorldGui(int W,int H,const char*L=0);
+    WorldGui(int width, int height, const char* caption = NULL);
     ~WorldGui();
 
     /** Forces the window to be redrawn, even if paused.*/

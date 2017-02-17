@@ -187,15 +187,15 @@ static const char* MoreHelpText =
   "in the directory \"docsrc\" to produce \"docsrc/stage/index.html\" .\n"
   "(requires Doxygen and supporting programs to be installed first).\n";
 
-WorldGui::WorldGui(int W,int H,const char* L) :
-  Fl_Window(W,H,L ),
-  canvas( new Canvas( this,0,30,W,H-30 ) ),
+WorldGui::WorldGui(int width, int height, const char* caption) :
+  Fl_Window(width, height, NULL),
+  canvas( new Canvas( this, 0, 30, width, height - 30 ) ),
   drawOptions(),
   fileMan( new FileManager() ),
   interval_log(),
   speedup(1.0), // real time
   confirm_on_quit( true ),
-  mbar( new Fl_Menu_Bar(0,0, W, 30)),
+  mbar( new Fl_Menu_Bar(0, 0, width, 30)),
   oDlg( NULL ),
   pause_time( false ),
   real_time_interval( sim_interval ),
@@ -205,7 +205,8 @@ WorldGui::WorldGui(int W,int H,const char* L) :
 {
   Fl::scheme( "" );
   resizable(canvas);
-  label( PROJECT );
+  caption_prefix = caption ? std::string(caption) : std::string(PROJECT) + " v" + Stg::Version();
+  label(caption_prefix.c_str());
 
   end();
 
@@ -304,8 +305,7 @@ void WorldGui::LoadWorldGuiPostHook( usec_t load_start_time )
   // use the window section for the rest
   const int window_section = wf->LookupEntity( "window" );
 
-  if( window_section > 0 )
-    {
+  if( window_section > 0 ) {
       unsigned int width = w();
       unsigned int height = h();
       wf->ReadTuple(window_section, "size", 0, 2, "uu", &width, &height );
@@ -317,16 +317,14 @@ void WorldGui::LoadWorldGuiPostHook( usec_t load_start_time )
       // configure the canvas
       canvas->Load(  wf, window_section );
 
-      std::string title = PROJECT;
       if ( wf->filename.size() ) {
-	// improve the title bar to say "Stage: <worldfile name>"
-	title += ": ";
-	title += wf->filename;
+        // improve the title bar to say "Stage: <worldfile name>"
+        label((caption_prefix + ": " + wf->filename).c_str());
       }
-      label( title.c_str() );
 
-      FOR_EACH( it, option_table )
-	(*it)->Load( wf, window_section );
+      FOR_EACH( it, option_table ) {
+          (*it)->Load( wf, window_section );
+      }
 
       // warn about unused WF lines
       wf->WarnUnused();
