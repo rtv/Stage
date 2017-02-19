@@ -2217,8 +2217,26 @@ namespace Stg
     //void RecordRenderPoint( GSList** head, GSList* link,
     //					unsigned int* c1, unsigned int* c2 );
 
-    void PlaceInFreeSpace( meters_t xmin, meters_t xmax,
-         meters_t ymin, meters_t ymax, size_t max_iter = 0 );
+    /**
+     * Ensures that the model is placed in free space (w/o collisions). The pose is not altered if
+     * the model is already in free space. Since this is implemented in a set-and-test manner, you
+     * can provide a maximum number of tries to prevent running indefinitely.
+     * \param xmin minimum x position for the model
+     * \param xmax maximum x position for the model
+     * \param ymin minimum y position for the model
+     * \param ymax maximum x position for the model
+     * \param max_iter maximum number of iterations, 0 to possibly run/try indefinitely
+     * \return \c true on success, \c false otherwise (no pose found within \c max_iter)
+     */
+    bool PlaceInFreeSpace( meters_t xmin, meters_t xmax, meters_t ymin, meters_t ymax,
+                           size_t max_iter = 0 );
+
+    /**
+     * Behaves much like PlaceInFreeSpace() but always changes the pose to a random one.
+     * \copydoc PlaceInFreeSpace()
+     */
+    bool RandomPoseInFreeSpace( meters_t xmin, meters_t xmax, meters_t ymin, meters_t ymax,
+                                size_t max_iter = 0 );
 
     /** Return a human-readable string describing the model's pose */
     std::string PoseString()
