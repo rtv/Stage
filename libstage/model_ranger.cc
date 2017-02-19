@@ -264,17 +264,36 @@ std::string ModelRanger::Sensor::String() const
 
 void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) const
 {
-  size_t sample_count( this->sample_count );
-
   //glTranslatef( 0,0, ranger->GetGeom().size.z/2.0 ); // shoot the ranger beam out at the right height
 
-  // pack the ranger hit points into a vertex array for fast rendering
-  //GLfloat pts[2*(sample_count+1)];
-  GLfloat *pts = new GLfloat[2*(sample_count+1)];
-  glVertexPointer( 2, GL_FLOAT, 0, pts );
+  size_t alloc_count;
+  if (sample_count == 1) {
+    alloc_count = 6; // to fake some data, see below
+  } else {
+    alloc_count = (2 * sample_count + 3) + 1;
+  }
 
-  pts[0] = 0.0;
-  pts[1] = 0.0;
+  // Unfortunately, it was not possible (=> strange crashes during the raytracing that have / should
+  // have obviously nothing to do with this here) to have the following buffer as a class member and
+  // update it only when this->sample_count changes (in ctor and Load()). So we'll do it this way:
+  static struct VertexBufferData {
+    VertexBufferData() : size(0), buf(NULL) { }
+    ~VertexBufferData() { delete [] buf; buf = NULL; }
+    size_t size;
+    GLfloat *buf;
+  } data;
+  if (!data.buf || data.size != alloc_count) { // never allocated or buffer size changed?
+    // This should happen rarely.
+    delete [] data.buf;
+    data.buf = NULL;
+    data.buf = new GLfloat[alloc_count];
+    data.size = alloc_count;
+    data.buf[0] = 0.0f;
+    data.buf[1] = 0.0f;
+  }
+
+  // Pack the ranger hit points into a vertex array for fast rendering:
+  glVertexPointer( 2, GL_FLOAT, 0, data.buf );
 
   glDepthMask( GL_FALSE );
   glPointSize( 2 );
@@ -283,126 +302,110 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 
   Gl::pose_shift( pose );
 
-  if( vis->showTransducers )
-    {
-      // draw the sensor body as a rectangle in a darker version of the body color
-      // Color col( rgr->color );
-      // col.r /= 3.0;
-      // col.g /= 3.0;
-      // col.b /= 3.0;
-      rgr->PushColor( color );
+  if( vis->showTransducers ) {
+    // draw the sensor body as a rectangle in a darker version of the body color
+    // Color col( rgr->color );
+    // col.r /= 3.0;
+    // col.g /= 3.0;
+    // col.b /= 3.0;
+    rgr->PushColor( color );
 
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      glRectf( -size.x/2.0, -size.y/2.0, size.x/2.0, size.y/2.0 );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glRectf( -size.x/2.0, -size.y/2.0, size.x/2.0, size.y/2.0 );
+    rgr->PopColor();
+  }
+
+  if( vis->showFov ) {
+    for( size_t s(0); s<sample_count; s++ ) {
+      double ray_angle((s * (fov / (sample_count-1))) - fov/2.0);
+      data.buf[2*s+2] = (float)(range.max * cos(ray_angle) );
+      data.buf[2*s+3] = (float)(range.max * sin(ray_angle) );
+    }
+
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+    Color c = color;
+    c.a = 0.5;
+    rgr->PushColor( c );
+    glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+    rgr->PopColor();
+  }
+
+  if( ranges.size() ) { // if we have some data
+    rgr->PushColor( color );
+    glPolygonMode( GL_FRONT, GL_FILL );
+
+    if( sample_count == 1 ) {
+      // only one sample, so we fake up some beam width for beauty
+      const double sidelen = ranges[0];
+      const double da = fov/2.0;
+
+      data.buf[2] = sidelen*cos(-da );
+      data.buf[3] = sidelen*sin(-da );
+      data.buf[4] = sidelen*cos(+da );
+      data.buf[5] = sidelen*sin(+da );
+    } else {
+      for( size_t s(0); s<sample_count+1; s++ ) {
+        double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+        data.buf[2*s+2] = (float)(ranges[s] * cos(ray_angle) );
+        data.buf[2*s+3] = (float)(ranges[s] * sin(ray_angle) );
+      }
+    }
+
+    if( vis->showArea ) {
+      if( sample_count > 1 ) {
+        // draw the filled polygon in transparent blue
+        glDrawArrays( GL_POLYGON, 0, sample_count );
+      }
+    }
+
+    glDepthMask( GL_TRUE );
+
+    if( vis->showStrikes ) {
+      // TODO - paint the stike point in a color based on intensity
+      // 			// if the sample is unusually bright, draw a little blob
+      // 			if( intensities[s] > 0.0 )
+      // 				{
+      // 					// this happens rarely so we can do it in immediate mode
+      // 					glBegin( GL_POINTS );
+      // 					glVertex2f( pts[2*s+2], pts[2*s+3] );
+      // 					glEnd();
+      // 				}
+
+      // draw the beam strike points
+      //c.a = 0.8;
+      rgr->PushColor( Color::blue );
+      glDrawArrays( GL_POINTS, 0, sample_count+1 );
       rgr->PopColor();
     }
 
-  if( vis->showFov )
-    {
-      for( size_t s(0); s<sample_count; s++ )
-	{
-	  double ray_angle((s * (fov / (sample_count-1))) - fov/2.0);
-	  pts[2*s+2] = (float)(range.max * cos(ray_angle) );
-	  pts[2*s+3] = (float)(range.max * sin(ray_angle) );
-	}
+    // if( vis->showBeams ) {
+    // 	  Color c = color;
 
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    // 	  // darker version of the same color
+    // 	  c.r /= 2.0;
+    // 	  c.g /= 2.0;
+    // 	  c.b /= 2.0;
+    // 	  c.a = 1.0;
 
-      Color c = color;
-      c.a = 0.5;
-      rgr->PushColor( c );
-      glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-      rgr->PopColor();
-    }
+    // 	  rgr->PushColor( c );
+    // 	  glBegin( GL_LINES );
 
-  if( ranges.size()  ) // if we have some data
-    {
-      rgr->PushColor( color );
-      glPolygonMode( GL_FRONT, GL_FILL );
+    // 	  for( size_t s(0); s<sample_count; s++ ) {
+    // 	    glVertex2f( 0,0 );
+    // 	    double ray_angle( sample_count == 1 ? 0 : (s * (fov / (sample_count-1))) - fov/2.0 );
+    // 	    glVertex2f( ranges[s] * cos(ray_angle),
+    // 		  ranges[s] * sin(ray_angle) );
+    // 	  }
+    // 	  glEnd();
 
-      if( sample_count == 1 )
-	{
-	  // only one sample, so we fake up some beam width for beauty
-	  const double sidelen = ranges[0];
-	  const double da = fov/2.0;
+    // 	  rgr->PopColor();
+    // 	}
 
-	  sample_count = 3;
-
-	  pts[2] = sidelen*cos(-da );
-	  pts[3] = sidelen*sin(-da );
-
-	  pts[4] = sidelen*cos(+da );
-	  pts[5] = sidelen*sin(+da );
-	}
-      else
-	{
-	  for( size_t s(0); s<sample_count+1; s++ )
-	    {
-	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-	      pts[2*s+2] = (float)(ranges[s] * cos(ray_angle) );
-	      pts[2*s+3] = (float)(ranges[s] * sin(ray_angle) );
-	    }
-	}
-
-      if( vis->showArea )
-	{
-	  if( sample_count > 1 )
-	    // draw the filled polygon in transparent blue
-	    glDrawArrays( GL_POLYGON, 0, sample_count );
-	}
-
-      glDepthMask( GL_TRUE );
-
-      if( vis->showStrikes )
-	{
-	  // TODO - paint the stike point in a color based on intensity
-	  // 			// if the sample is unusually bright, draw a little blob
-	  // 			if( intensities[s] > 0.0 )
-	  // 				{
-	  // 					// this happens rarely so we can do it in immediate mode
-	  // 					glBegin( GL_POINTS );
-	  // 					glVertex2f( pts[2*s+2], pts[2*s+3] );
-	  // 					glEnd();
-	  // 				}
-
-	  // draw the beam strike points
-	  //c.a = 0.8;
-	  rgr->PushColor( Color::blue );
-	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
-	  rgr->PopColor();
-	}
-
-      // if( vis->showBeams )
-      // 	{
-      // 	  Color c = color;
-
-      // 	  // darker version of the same color
-      // 	  c.r /= 2.0;
-      // 	  c.g /= 2.0;
-      // 	  c.b /= 2.0;
-      // 	  c.a = 1.0;
-
-      // 	  rgr->PushColor( c );
-      // 	  glBegin( GL_LINES );
-
-      // 	  for( size_t s(0); s<sample_count; s++ )
-      // 	    {
-      // 	      glVertex2f( 0,0 );
-      // 	      double ray_angle( sample_count == 1 ? 0 : (s * (fov / (sample_count-1))) - fov/2.0 );
-      // 	      glVertex2f( ranges[s] * cos(ray_angle),
-      // 			  ranges[s] * sin(ray_angle) );
-
-      // 	    }
-      // 	  glEnd();
-
-      // 	  rgr->PopColor();
-      // 	}
-
-      rgr->PopColor();
-    }
+    rgr->PopColor();
+  }
 
   glPopMatrix();
-  delete [] pts;
 }
 
 void ModelRanger::Print( char* prefix ) const

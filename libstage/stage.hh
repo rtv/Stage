@@ -2848,7 +2848,7 @@ namespace Stg
       radians_t fov;
       double angle_noise;			//< variance for ranger angle
       double range_noise;			//< variance for range readings
-      double range_noise_const;		//< fariance for constant noise (not depending on range)
+      double range_noise_const;		//< variance for constant noise (not depending on range)
       unsigned int sample_count;
       Color color;
 
