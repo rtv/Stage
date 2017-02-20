@@ -16,6 +16,7 @@ terms of the GNU General Public License version 2 or later:
 - Geoff Biggs (git@killbots.net)
 - Rich Mattes (jpgr87@github.com)
 - Abbas Sadat (abbas.sadat@gmail.com)
+- Adrian Böckenkamp (boeckenkamp@ls7.cs.tu-dortmund.de)
 
 Many patches and bug reports have been contributed by users around the
 world.  Stage is part of the Player Project (http://playerstage.org), 
