@@ -4,8 +4,8 @@
 
   #include <libgen.h> // for dirname(3)
   #include <limits.h> // for _POSIX_PATH_MAX
-
-  #undef DEBUG
+  #include <limits>
+  #include <cmath>
 
 using namespace Stg;
 using namespace std;
@@ -83,9 +83,13 @@ Model* BlockGroup::TestCollision()
   {
     const bounds3d_t b = BoundingBox();
 
-    const Size size( b.x.max - b.x.min,
-     b.y.max - b.y.min,
-     b.z.max - b.z.min );
+    // Prevents creating (-)NaNs when dividing by size.{x,y,z}:
+    #define ENSURE_NOT_ZERO(x) \
+      ((std::fabs(x) >= std::numeric_limits<double>::epsilon()) ? (x) : \
+       std::numeric_limits<double>::epsilon())
+    const Size size( ENSURE_NOT_ZERO(b.x.max - b.x.min),
+     ENSURE_NOT_ZERO(b.y.max - b.y.min),
+     ENSURE_NOT_ZERO(b.z.max - b.z.min) );
 
     const Size offset( b.x.min + size.x/2.0, b.y.min + size.y/2.0,  0 );
 
@@ -318,17 +322,17 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
   std::vector<std::vector<point_t> > polys;
 
   if( polys_from_image_file( full,
-			     polys ) )
+           polys ) )
     {
       PRINT_ERR1( "failed to load polys from image file \"%s\"",
-		  full.c_str() );
+      full.c_str() );
       return;
     }
 
   FOR_EACH( it, polys )
     AppendBlock( Block( this,
-			*it,
-			Bounds(0,1) ));
+      *it,
+      Bounds(0,1) ));
 
   CalcSize();
 
@@ -337,10 +341,10 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
 
 
 void BlockGroup::Rasterize( uint8_t* data,
-			    unsigned int width,
-			    unsigned int height,
-			    meters_t cellwidth,
-			    meters_t cellheight )
+          unsigned int width,
+          unsigned int height,
+          meters_t cellwidth,
+          meters_t cellheight )
 {
   FOR_EACH( it, blocks )
     it->Rasterize( data, width, height, cellwidth, cellheight );
