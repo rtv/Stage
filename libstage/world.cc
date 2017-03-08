@@ -222,7 +222,13 @@ void World::Run()
 
     if(found_gui)
     {
-        Fl::run();
+      // roughly equals Fl::run() (see also
+      // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world, FLTK
+      // is a piece of crap):
+      while (Fl::first_window() && !World::quit_all)
+      {
+        Fl::wait();
+      }
     }
     else
     {
@@ -658,7 +664,7 @@ bool World::Update()
   //puts( "World::Update()" );
 
   // if we've run long enough, exit
-  if( PastQuitTime() )
+  if( PastQuitTime() || World::quit_all || this->quit)
     return true;
 
   if( show_clock && ((this->updates % show_clock_interval) == 0) )

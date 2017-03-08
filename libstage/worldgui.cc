@@ -506,7 +506,7 @@ void WorldGui::windowCb( Fl_Widget*, WorldGui* wg )
   }
 
   puts( "Stage: User closed window" );
-  exit(0);
+  wg->QuitAll();
 }
 
 void WorldGui::fileLoadCb( Fl_Widget*, WorldGui* wg )
