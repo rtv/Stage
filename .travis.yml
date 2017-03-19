@@ -1,0 +1,12 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_PLAYER_PLUGIN=OFF -DCMAKE_INSTALL_PREFIX=$(pwd)/install ..
+  - make
+  - make install
+  
