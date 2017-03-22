@@ -3,10 +3,12 @@ compiler:
   - gcc
   - clang
 
-before_install:
+# Install all of the dependencies:
+install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libfltk1.1-dev
 
+# Execute all of the commands which should make the build pass or fail
 script:
   - mkdir build
   - cd build
