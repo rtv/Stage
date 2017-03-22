@@ -29,8 +29,10 @@
 
 
 #include <stdint.h> // for portable int types eg. uint32_t
-#include <stdio.h> // for FILE ops
+#include <cstdio> // for FILE ops
 #include <istream>
+#include <vector>
+#include <map>
 
 namespace Stg {
 
