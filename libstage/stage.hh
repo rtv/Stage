@@ -295,7 +295,7 @@ namespace Stg
       return std::string(buf);
     }
 
-    /* returns true iff all components of the velocity are zero. */
+    /** Returns true iff all components of the velocity are zero. */
     bool IsZero() const
     { return( !(x || y || z || a )); }
 
@@ -317,7 +317,7 @@ namespace Stg
 		   normalize(a + p.a) );
     }
 
-    // a < b iff a is closer to the origin than b
+    /// a < b iff a is closer to the origin than b
     bool operator<( const Pose& p ) const
     {
 	  //return( hypot( y, x ) < hypot( otHer.y, other.x ));
@@ -459,7 +459,7 @@ namespace Stg
 
     Bounds& Load( Worldfile* wf, int section, const char* keyword );
 
-    // returns value, but no smaller than min and no larger than max.
+    /// returns value, but no smaller than min and no larger than max.
     double Constrain( double value );
   };
 
@@ -600,7 +600,7 @@ namespace Stg
 
   typedef int(*world_callback_t)(World* world, void* user );
 
-  // return val, or minval if val < minval, or maxval if val > maxval
+  /// return val, or minval if val < minval, or maxval if val > maxval
   double constrain( double val, double minval, double maxval );
 
   typedef struct
@@ -619,7 +619,7 @@ namespace Stg
   {
     Pose pose;
     Size size;
-  } rotrect_t; // rotated rectangle
+  } rotrect_t; /// rotated rectangle
 
   /** load the image file [filename] and convert it to a vector of polygons
    */
@@ -634,8 +634,8 @@ namespace Stg
           const Model* finder,
 				  const void* arg );
 
-  // STL container iterator macros - __typeof is a gcc extension, so
-  // this could be an issue one day.
+  /// STL container iterator macros - __typeof is a gcc extension, so
+  /// this could be an issue one day.
 #define VAR(V,init) __typeof(init) V=(init)
 
   //#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I)
@@ -950,7 +950,7 @@ namespace Stg
     std::vector<point_int_t> rt_cells;
     std::vector<point_int_t> rt_candidate_cells;
 
-    static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
+    static const int DEFAULT_PPM = 50;  //<! default resolution in pixels per meter
 
     /** Attach a callback function, to be called with the argument at
 	the end of a complete update step */
@@ -1001,7 +1001,7 @@ namespace Stg
     point_int_t MetersToPixels( const point_t& pt ) const
     { return point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); }
 
-    // dummy implementations to be overloaded by GUI subclasses
+    /// dummy implementations to be overloaded by GUI subclasses
     virtual void PushColor( Color col )
     { /* do nothing */  (void)col; }
     virtual void PushColor( double r, double g, double b, double a )
@@ -1101,9 +1101,9 @@ namespace Stg
     /** The amount of simulated time to run for each call to Update() */
     usec_t sim_interval;
 
-    // debug instrumentation - making sure the number of update callbacks
-    // in each thread is consistent with the number that have been
-    // registered globally
+    /// debug instrumentation - making sure the number of update callbacks
+    /// in each thread is consistent with the number that have been
+    /// registered globally
     int update_cb_count;
 
     /** consume events from the queue up to and including the current sim_time */
@@ -1868,7 +1868,7 @@ namespace Stg
       CB_UPDATE,
       CB_VELOCITY,
       //CB_POSTUPDATE,
-      __CB_TYPE_COUNT // must be the last entry: counts the number of types
+      __CB_TYPE_COUNT //!< must be the last entry: counts the number of types
     } callback_type_t;
 
   protected:
@@ -2034,8 +2034,8 @@ namespace Stg
 
     Worldfile* wf;
     int wf_entity;
-    World* world; // pointer to the world in which this model exists
-    WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
+    World* world; //!< Pointer to the world in which this model exists
+    WorldGui* world_gui; //!< Pointer to the GUI world - NULL if running in non-gui mode
 
   public:
 
@@ -2071,7 +2071,7 @@ namespace Stg
       int fiducial_return;
       bool gripper_return;
       bool obstacle_return;
-      double ranger_return; // 0 - 1
+      double ranger_return; //!< 0 - 1
 
       Visibility();
 
@@ -2129,7 +2129,7 @@ namespace Stg
     void MapWithChildren( unsigned int layer );
     void UnMapWithChildren( unsigned int layer );
 
-    // Find the root model, and map/unmap the whole tree.
+    /// Find the root model, and map/unmap the whole tree.
     void MapFromRoot( unsigned int layer );
     void UnMapFromRoot( unsigned int layer );
 
@@ -2439,7 +2439,7 @@ namespace Stg
 
     bool DataIsFresh() const { return this->data_fresh; }
 
-    /* attach callback functions to data members. The function gets
+    /** attach callback functions to data members. The function gets
        called when the member is changed using SetX() accessor method */
 
     /** Add a callback. The specified function is called whenever the
@@ -2540,7 +2540,7 @@ namespace Stg
 	to add and remove colors at run time.*/
     std::vector<Color> colors;
 
-    // predicate for ray tracing
+    /// Predicate for ray tracing
     static bool BlockMatcher( Block* testblock, Model* finder );
 
   public:
@@ -2550,11 +2550,11 @@ namespace Stg
     unsigned int scan_height; ///< Height of the input image in pixels.
     unsigned int scan_width; ///< Width of the input image in pixels.
 
-    // constructor
+    /// Constructor
     explicit ModelBlobfinder( World* world,
 		     Model* parent,
 		     const std::string& type );
-    // destructor
+    /// Destructor
     ~ModelBlobfinder();
 
     virtual void Startup();
@@ -2613,21 +2613,21 @@ namespace Stg
   public:
 
     enum paddle_state_t {
-      PADDLE_OPEN = 0, // default state
+      PADDLE_OPEN = 0, //!< Default state
       PADDLE_CLOSED,
       PADDLE_OPENING,
       PADDLE_CLOSING
     };
 
     enum lift_state_t {
-      LIFT_DOWN = 0, // default state
+      LIFT_DOWN = 0, //!< Default state
       LIFT_UP,
-      LIFT_UPPING, // verbed these to match the paddle state
+      LIFT_UPPING, //!< Verbed these to match the paddle state
       LIFT_DOWNING
     };
 
     enum cmd_t {
-      CMD_NOOP = 0, // default state
+      CMD_NOOP = 0, //!< Default state
       CMD_OPEN,
       CMD_CLOSE,
       CMD_UP,
@@ -2645,7 +2645,7 @@ namespace Stg
       double paddle_position; ///< 0.0 = full open, 1.0 full closed
       double lift_position; ///< 0.0 = full down, 1.0 full up
       Model* gripped;
-      bool paddles_stalled; // true iff some solid object stopped the paddles closing or opening
+      bool paddles_stalled; //!< true iff some solid object stopped the paddles closing or opening
       double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
       bool autosnatch; ///< if true, cycle the gripper through open-close-up-down automatically
       double break_beam_inset[2]; ///< distance from the end of the paddle
@@ -2673,11 +2673,11 @@ namespace Stg
   public:
     static const Size size;
 
-    // constructor
+    /// constructor
     ModelGripper( World* world,
 		  Model* parent,
 		  const std::string& type );
-    // destructor
+    /// destructor
     virtual ~ModelGripper();
 
     virtual void Load();
@@ -2773,7 +2773,7 @@ namespace Stg
     };
 
   private:
-    // if neighbor is visible, add him to the fiducial scan
+    /// if neighbor is visible, add him to the fiducial scan
     void AddModelIfVisible( Model* him );
 
     virtual void Update();
@@ -2857,7 +2857,7 @@ namespace Stg
       std::vector<double> bearings;
 
       Sensor() : pose( 0,0,0,0 ),
-		 size( 0.02, 0.02, 0.02 ), // teeny transducer
+     size( 0.02, 0.02, 0.02 ), // teeny transducer
 		 range( 0.0, 5.0 ),
 		 fov( 0.1 ),
 		 angle_noise(0.0),
@@ -3042,11 +3042,11 @@ namespace Stg
     /** Set the min and max velocity in all 4 DOF */
     Bounds velocity_bounds[4];
 
-    // constructor
+    /// Constructor
     ModelPosition( World* world,
 		   Model* parent,
 		   const std::string& type );
-    // destructor
+    /// Destructor
     ~ModelPosition();
 
     /** Get (a copy of) the model's velocity in its local reference
@@ -3118,9 +3118,9 @@ namespace Stg
     void SetAcceleration( double x, double y, double a );
 
     // localization state
-    Pose est_pose; ///< position estimate in local coordinates
-    Pose est_pose_error; ///< estimated error in position estimate
-    Pose est_origin; ///< global origin of the local coordinate system
+    Pose est_pose; //<! position estimate in local coordinates
+    Pose est_pose_error; //<! estimated error in position estimate
+    Pose est_origin; //<! global origin of the local coordinate system
 
   protected:
     virtual void Move();
@@ -3164,11 +3164,11 @@ namespace Stg
 
     Pose InitialPose;
   public:
-    // constructor
+    /// Constructor
     ModelActuator( World* world,
 		   Model* parent,
 		   const std::string& type );
-    // destructor
+    /// Destructor
     ~ModelActuator();
 
     virtual void Startup();
