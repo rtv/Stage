@@ -38,95 +38,83 @@
 #include "p_driver.h"
 using namespace Stg;
 
-InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
-				StgDriver* driver,
-				ConfigFile* cf,
-				int section )
-  : InterfaceModel( addr, driver, cf, section, "blobfinder" )
+InterfaceBlobfinder::InterfaceBlobfinder(player_devaddr_t addr, StgDriver *driver, ConfigFile *cf,
+                                         int section)
+    : InterfaceModel(addr, driver, cf, section, "blobfinder")
 {
   // nothing to do for now
 }
 
-
-void InterfaceBlobfinder::Publish( void )
+void InterfaceBlobfinder::Publish(void)
 {
   player_blobfinder_data_t bfd;
-  bzero( &bfd, sizeof(bfd) );
+  bzero(&bfd, sizeof(bfd));
 
-  ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
+  ModelBlobfinder *blobmod = (ModelBlobfinder *)this->mod;
 
-  const std::vector<Stg::ModelBlobfinder::Blob>& blobs = blobmod->GetBlobs();
+  const std::vector<Stg::ModelBlobfinder::Blob> &blobs = blobmod->GetBlobs();
 
-  if ( blobs.size() > 0 )
-  {
-	  // and set the image width * height
-	  bfd.width = blobmod->scan_width;
-	  bfd.height = blobmod->scan_height;
-	  bfd.blobs_count = blobs.size();
+  if (blobs.size() > 0) {
+    // and set the image width * height
+    bfd.width = blobmod->scan_width;
+    bfd.height = blobmod->scan_height;
+    bfd.blobs_count = blobs.size();
 
-	  bfd.blobs = new player_blobfinder_blob_t[ blobs.size() ];
+    bfd.blobs = new player_blobfinder_blob_t[blobs.size()];
 
-	  // now run through the blobs, packing them into the player buffer
-	  // counting the number of blobs in each channel and making entries
-	  // in the acts header
-	  unsigned int b;
-	  for( b=0; b<blobs.size(); b++ )
-		{
-		  // useful debug - leave in
-		/*
-		cout << "blob "
-		<< " left: " <<  blobs[b].left
-		<< " right: " <<  blobs[b].right
-		<< " top: " <<  blobs[b].top
-		<< " bottom: " <<  blobs[b].bottom
-		<< " color: " << hex << blobs[b].color << dec
-		<< endl;
-		  */
+    // now run through the blobs, packing them into the player buffer
+    // counting the number of blobs in each channel and making entries
+    // in the acts header
+    unsigned int b;
+    for (b = 0; b < blobs.size(); b++) {
+      // useful debug - leave in
+      /*
+      cout << "blob "
+      << " left: " <<  blobs[b].left
+      << " right: " <<  blobs[b].right
+      << " top: " <<  blobs[b].top
+      << " bottom: " <<  blobs[b].bottom
+      << " color: " << hex << blobs[b].color << dec
+      << endl;
+        */
 
-		  int dx = blobs[b].right - blobs[b].left;
-		  int dy = blobs[b].top - blobs[b].bottom;
+      int dx = blobs[b].right - blobs[b].left;
+      int dy = blobs[b].top - blobs[b].bottom;
 
-		  bfd.blobs[b].x      = blobs[b].left + dx/2;
-		  bfd.blobs[b].y      = blobs[b].bottom + dy/2;
+      bfd.blobs[b].x = blobs[b].left + dx / 2;
+      bfd.blobs[b].y = blobs[b].bottom + dy / 2;
 
-		  bfd.blobs[b].left   = blobs[b].left;
-		  bfd.blobs[b].right  = blobs[b].right;
-		  bfd.blobs[b].top    = blobs[b].top;
-		  bfd.blobs[b].bottom = blobs[b].bottom;
+      bfd.blobs[b].left = blobs[b].left;
+      bfd.blobs[b].right = blobs[b].right;
+      bfd.blobs[b].top = blobs[b].top;
+      bfd.blobs[b].bottom = blobs[b].bottom;
 
-		  bfd.blobs[b].color =
-		    ((uint8_t)(blobs[b].color.r*255.0) << 16) +
-		    ((uint8_t)(blobs[b].color.g*255.0) << 8) +
-		    ((uint8_t)(blobs[b].color.b*255.0));
+      bfd.blobs[b].color = ((uint8_t)(blobs[b].color.r * 255.0) << 16)
+                           + ((uint8_t)(blobs[b].color.g * 255.0) << 8)
+                           + ((uint8_t)(blobs[b].color.b * 255.0));
 
-		  bfd.blobs[b].area  = dx * dy;
-		  bfd.blobs[b].range = blobs[b].range;
-		}
+      bfd.blobs[b].area = dx * dy;
+      bfd.blobs[b].range = blobs[b].range;
+    }
   }
 
   // should change player interface to support variable-lenght blob data
   // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);
 
-  this->driver->Publish( this->addr,
-								 PLAYER_MSGTYPE_DATA,
-								 PLAYER_BLOBFINDER_DATA_BLOBS,
-								 &bfd, sizeof(bfd), NULL);
-  if ( bfd.blobs )
-	  delete [] bfd.blobs;
+  this->driver->Publish(this->addr, PLAYER_MSGTYPE_DATA, PLAYER_BLOBFINDER_DATA_BLOBS, &bfd,
+                        sizeof(bfd), NULL);
+  if (bfd.blobs)
+    delete[] bfd.blobs;
 }
 
-int InterfaceBlobfinder::ProcessMessage( QueuePointer& resp_queue,
-													  player_msghdr_t* hdr,
-													  void* data )
+int InterfaceBlobfinder::ProcessMessage(QueuePointer &resp_queue, player_msghdr_t *hdr, void *data)
 {
   // todo: handle configuration requests
 
-  //else
+  // else
   {
     // Don't know how to handle this message.
-    PRINT_WARN2( "blobfinder doesn't support msg with type/subtype %d/%d",
-		 hdr->type, hdr->subtype);
-    return(-1);
+    PRINT_WARN2("blobfinder doesn't support msg with type/subtype %d/%d", hdr->type, hdr->subtype);
+    return (-1);
   }
 }
-

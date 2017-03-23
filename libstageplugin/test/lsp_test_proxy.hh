@@ -5,19 +5,18 @@
 #include <libplayerc/playerc.h>
 
 namespace lspTest {
-	class Proxy : public CppUnit::TestFixture
-	{
-		CPPUNIT_TEST_SUITE( Proxy );
-		CPPUNIT_TEST_SUITE_END_ABSTRACT();
+class Proxy : public CppUnit::TestFixture {
+  CPPUNIT_TEST_SUITE(Proxy);
+  CPPUNIT_TEST_SUITE_END_ABSTRACT();
 
-	protected:
-		playerc_client_t* client;
+protected:
+  playerc_client_t *client;
 
-		void connect();
-		void disconnect();
+  void connect();
+  void disconnect();
 
-		static const double Delta;
-	};
+  static const double Delta;
+};
 };
 
 #endif

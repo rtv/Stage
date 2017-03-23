@@ -6,35 +6,35 @@
 
 namespace Stg {
 
-	class FileManager {
-	private:
-		std::string WorldsRoot;
+class FileManager {
+private:
+  std::string WorldsRoot;
 
-		std::string stripFilename( const std::string& path );
-	public:
-		FileManager();
+  std::string stripFilename(const std::string &path);
 
-		/// Return the path where the current worldfile was loaded from
-		inline const std::string worldsRoot() const { return WorldsRoot; }
-		/// Update the worldfile path
-    void newWorld( const std::string& worldfile );
+public:
+  FileManager();
 
-		/// Determine whether a file can be opened for reading
-		static bool readable( const std::string& path );
+  /// Return the path where the current worldfile was loaded from
+  inline const std::string worldsRoot() const { return WorldsRoot; }
+  /// Update the worldfile path
+  void newWorld(const std::string &worldfile);
 
-		/** Search for a file in the current directory, in the
-		 *  prefix/share/stage location, and in the locations specified by
-		 *  the STAGEPATH environment variable.  Returns the first match or
-		 *  the original filename if not found.
-		**/
-		static std::string findFile( const std::string& filename );
+  /// Determine whether a file can be opened for reading
+  static bool readable(const std::string &path);
 
-		/// Return the STAGEPATH environment variable
-		static std::string stagePath();
+  /** Search for a file in the current directory, in the
+   *  prefix/share/stage location, and in the locations specified by
+   *  the STAGEPATH environment variable.  Returns the first match or
+   *  the original filename if not found.
+  **/
+  static std::string findFile(const std::string &filename);
 
-    /// Returns the path to the current user's home directory (or empty if not detectable):
-    static std::string homeDirectory();
-	};
+  /// Return the STAGEPATH environment variable
+  static std::string stagePath();
 
+  /// Returns the path to the current user's home directory (or empty if not detectable):
+  static std::string homeDirectory();
+};
 }
 #endif

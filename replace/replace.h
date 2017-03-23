@@ -6,9 +6,8 @@
 #ifndef _REPLACE_H
 #define _REPLACE_H
 
-
 #if HAVE_CONFIG_H
-  #include <config.h>
+#include <config.h>
 #endif
 
 /* Compatibility definitions for System V `poll' interface.
@@ -38,70 +37,67 @@ extern "C" {
 /* Event types that can be polled for.  These bits may be set in `events'
    to indicate the interesting event types; they will appear in `revents'
    to indicate the status of the file descriptor.  */
-#define POLLIN          01              /* There is data to read.  */
-#define POLLPRI         02              /* There is urgent data to read.  */
-#define POLLOUT         04              /* Writing now will not block.  */
+#define POLLIN 01 /* There is data to read.  */
+#define POLLPRI 02 /* There is urgent data to read.  */
+#define POLLOUT 04 /* Writing now will not block.  */
 
 /* Some aliases.  */
-#define POLLWRNORM      POLLOUT
-#define POLLRDNORM      POLLIN
-#define POLLRDBAND      POLLPRI
+#define POLLWRNORM POLLOUT
+#define POLLRDNORM POLLIN
+#define POLLRDBAND POLLPRI
 
 /* Event types always implicitly polled for.  These bits need not be set in
    `events', but they will appear in `revents' to indicate the status of
    the file descriptor.  */
-#define POLLERR         010             /* Error condition.  */
-#define POLLHUP         020             /* Hung up.  */
-#define POLLNVAL        040             /* Invalid polling request.  */
+#define POLLERR 010 /* Error condition.  */
+#define POLLHUP 020 /* Hung up.  */
+#define POLLNVAL 040 /* Invalid polling request.  */
 
 /* Canonical number of polling requests to read in at a time in poll.  */
-#define NPOLLFILE       30
+#define NPOLLFILE 30
 
 /* Data structure describing a polling request.  */
-struct pollfd
-  {
-    int fd;			/* File descriptor to poll.  */
-    short int events;		/* Types of events poller cares about.  */
-    short int revents;		/* Types of events that actually occurred.  */
-  };
-
+struct pollfd {
+  int fd; /* File descriptor to poll.  */
+  short int events; /* Types of events poller cares about.  */
+  short int revents; /* Types of events that actually occurred.  */
+};
 
 /* Poll the file descriptors described by the NFDS structures starting at
    FDS.  If TIMEOUT is nonzero and not -1, allow TIMEOUT milliseconds for
    an event to occur; if TIMEOUT is -1, block until an event occurs.
    Returns the number of file descriptors with events, zero if timed out,
    or -1 for errors.  */
-int poll (struct pollfd *fds, unsigned long int nfds, int timeout);
+int poll(struct pollfd *fds, unsigned long int nfds, int timeout);
 #else
-#include <sys/poll.h>  /* for poll(2) */
+#include <sys/poll.h> /* for poll(2) */
 #endif // !HAVE_POLL
 
-  //#if !HAVE_SCANDIR
-  //#include <sys/types.h>
-  //#include <dirent.h>
-  //int scandir(const char *dir, struct dirent ***namelist,
-  //        int (*select)(const struct dirent *),
-  //        int (*compar)(const struct dirent **, const struct dirent **));
-  //#endif //!HAVE_SCANDIR
+//#if !HAVE_SCANDIR
+//#include <sys/types.h>
+//#include <dirent.h>
+// int scandir(const char *dir, struct dirent ***namelist,
+//        int (*select)(const struct dirent *),
+//        int (*compar)(const struct dirent **, const struct dirent **));
+//#endif //!HAVE_SCANDIR
 
-  /*
+/*
 
 #if !HAVE_DIRNAME
-  char * dirname (char *path);
+char * dirname (char *path);
 #else
-  #include <libgen.h> // for dirname(3)
+#include <libgen.h> // for dirname(3)
 #endif // !HAVE_DIRNAME
 
 #if !HAVE_BASENAME
-  const char * basename (const char* filename);
+const char * basename (const char* filename);
 #else
-  #include <libgen.h> // for basename(3)
+#include <libgen.h> // for basename(3)
 #endif // !HAVE_BASENAME
-  */
+*/
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

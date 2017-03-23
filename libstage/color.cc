@@ -6,51 +6,45 @@ using namespace Stg;
 
 #include <errno.h>
 
-Color::Color( double r, double g, double b, double a )
-  : r(r),g(g),b(b),a(a)
-{}
-
-Color::Color() :
-  r(1.0), g(0.0), b(0.0), a(1.0)
-{}
-
-bool Color::operator!=( const Color& other ) const
+Color::Color(double r, double g, double b, double a) : r(r), g(g), b(b), a(a)
 {
-  double epsilon = 1e-4; // small
-  return( fabs(r-other.r) > epsilon ||
-    fabs(g-other.g) > epsilon ||
-    fabs(b-other.b) > epsilon ||
-    fabs(a-other.a) > epsilon );
 }
 
-Color::Color( const std::string& name) :
-  r(1), g(0), b(0), a(1)
+Color::Color() : r(1.0), g(0.0), b(0.0), a(1.0)
 {
-  if( name == "" )  // empty string?
-  return; // red
+}
+
+bool Color::operator!=(const Color &other) const
+{
+  double epsilon = 1e-4; // small
+  return (fabs(r - other.r) > epsilon || fabs(g - other.g) > epsilon || fabs(b - other.b) > epsilon
+          || fabs(a - other.a) > epsilon);
+}
+
+Color::Color(const std::string &name) : r(1), g(0), b(0), a(1)
+{
+  if (name == "") // empty string?
+    return; // red
 
   static FILE *file = NULL;
-  static std::map<std::string,Color> table;
+  static std::map<std::string, Color> table;
 
-  if( file == NULL )
-  {
-    std::string rgbFile = FileManager::findFile( "rgb.txt" );
-    file = fopen( rgbFile.c_str(), "r" );
+  if (file == NULL) {
+    std::string rgbFile = FileManager::findFile("rgb.txt");
+    file = fopen(rgbFile.c_str(), "r");
 
-    if( file == NULL )
-    {
+    if (file == NULL) {
       PRINT_ERR1("unable to open color database: %s "
-           "(try adding rgb.txt's location to your STAGEPATH)",
-           strerror(errno));
+                 "(try adding rgb.txt's location to your STAGEPATH)",
+                 strerror(errno));
 
       exit(0);
     }
 
-    PRINT_DEBUG( "Success!" );
+    PRINT_DEBUG("Success!");
 
     // load the file into the map
-    while(1)
-    {
+    while (1) {
       char line[1024];
       if (!fgets(line, sizeof(line), file))
         break;
@@ -61,25 +55,25 @@ Color::Color( const std::string& name) :
         continue;
 
       // Trim the trailing space
-      while (strchr(" \t\n", line[strlen(line)-1]))
-        line[strlen(line)-1] = 0;
+      while (strchr(" \t\n", line[strlen(line) - 1]))
+        line[strlen(line) - 1] = 0;
 
       // Read the color
       int r, g, b;
       int chars_matched = 0;
-      sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
+      sscanf(line, "%d %d %d %n", &r, &g, &b, &chars_matched);
 
       // Read the name
-      const char* colorname = line + chars_matched;
+      const char *colorname = line + chars_matched;
 
       // map the name to the color in the table
-      table[colorname] = Color( r/255.0, g/255.0, b/255.0 );
+      table[colorname] = Color(r / 255.0, g / 255.0, b / 255.0);
     }
     fclose(file);
   }
 
   // look up the colorname in the database
-  Color& found = table[name];
+  Color &found = table[name];
 
   this->r = found.r;
   this->g = found.g;
@@ -87,49 +81,42 @@ Color::Color( const std::string& name) :
   this->a = found.a;
 }
 
-bool Color::operator==( const Color& other ) const
+bool Color::operator==(const Color &other) const
 {
-  return( ! ((*this) != other) );
+  return (!((*this) != other));
 }
 
 Color Color::RandomColor()
 {
-  return Color(  drand48(), drand48(), drand48() );
+  return Color(drand48(), drand48(), drand48());
 }
 
-void Color::Print( const char* prefix ) const
+void Color::Print(const char *prefix) const
 {
-  printf( "%s [%.2f %.2f %.2f %.2f]\n", prefix, r,g,b,a );
+  printf("%s [%.2f %.2f %.2f %.2f]\n", prefix, r, g, b, a);
 }
 
-const Color& Color::Load( Worldfile* wf, const int section )
+const Color &Color::Load(Worldfile *wf, const int section)
 {
-  if( wf->PropertyExists( section, "color" ))
-    {
-      const std::string& colorstr = wf->ReadString( section, "color", "" );
+  if (wf->PropertyExists(section, "color")) {
+    const std::string &colorstr = wf->ReadString(section, "color", "");
 
-      if( colorstr != "" )
-  {
-    if( colorstr == "random" )
-      {
+    if (colorstr != "") {
+      if (colorstr == "random") {
         r = drand48();
         g = drand48();
         b = drand48();
         a = 1.0;
-      }
-    else
-      {
-        Color c = Color( colorstr );
+      } else {
+        Color c = Color(colorstr);
         r = c.r;
         g = c.g;
         b = c.b;
         a = c.a;
       }
-  }
     }
-  else
-    wf->ReadTuple( section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a );
+  } else
+    wf->ReadTuple(section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a);
 
   return *this;
 }
-

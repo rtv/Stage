@@ -32,7 +32,7 @@
 using namespace Stg;
 
 // Constructor
-StTime::StTime( StgDriver* driver )
+StTime::StTime(StgDriver *driver)
 {
   assert(driver);
   this->driver = driver;
@@ -46,34 +46,34 @@ StTime::~StTime()
 }
 
 // Get the simulator time
-int StTime::GetTime(struct timeval* time)
+int StTime::GetTime(struct timeval *time)
 {
-  PRINT_DEBUG( "get time" );
+  PRINT_DEBUG("get time");
 
-  assert( this->driver );
+  assert(this->driver);
 
-  World* world = driver->world;
+  World *world = driver->world;
 
   usec_t usec = world->SimTimeNow();
-  time->tv_sec  = (int)floor(usec/million);
-  time->tv_usec = (int)rint(fmod(usec,million) * million);
+  time->tv_sec = (int)floor(usec / million);
+  time->tv_usec = (int)rint(fmod(usec, million) * million);
 
-  PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
+  PRINT_DEBUG2("time now %ld sec %ld usec", time->tv_sec, time->tv_usec);
 
   return 0;
 }
 
-int StTime::GetTimeDouble(double* time)
+int StTime::GetTimeDouble(double *time)
 {
-  PRINT_DEBUG( "get time (double)" );
+  PRINT_DEBUG("get time (double)");
 
-  assert( this->driver );
+  assert(this->driver);
 
-  World* world = driver->world;
+  World *world = driver->world;
 
   *time = world->SimTimeNow() / million;
 
-  PRINT_DEBUG1( "time now %f sec ", *time);
+  PRINT_DEBUG1("time now %f sec ", *time);
 
   return 0;
 }
