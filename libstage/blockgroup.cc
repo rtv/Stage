@@ -293,7 +293,7 @@ void BlockGroup::LoadBlock( Worldfile* wf, int entity )
 
 void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
 {
-  PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
+  PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile.c_str() );
 
   std::string full;
 
@@ -311,7 +311,7 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
   fputs( buf, stdout );
   fflush( stdout );
   
-  PRINT_DEBUG1( "attempting to load image %s", full );
+  PRINT_DEBUG1( "attempting to load image %s", full.c_str() );
     
   Color col( 1.0, 0.0, 1.0, 1.0 );
   

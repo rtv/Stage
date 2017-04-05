@@ -183,7 +183,7 @@ void ModelActuator::Load( void )
 
 void ModelActuator::Update( void  )
 {
-	PRINT_DEBUG1( "[%lu] actuator update", 0 );
+	PRINT_DEBUG1( "[%lu] actuator update", 0L );
 
 	// stop by default
 	double velocity = 0;
@@ -221,7 +221,7 @@ void ModelActuator::Update( void  )
 				{
 					PRINT_DEBUG( "actuator velocity control mode" );
 					PRINT_DEBUG2( "model %s command(%.2f)",
-							this->token,
+							this->token.c_str(),
 							this->goal);
 					if ((pos <= min_position && goal < 0) || (pos >= max_position && goal > 0))
 						velocity = 0;

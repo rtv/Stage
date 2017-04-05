@@ -95,7 +95,7 @@ ModelRanger::ModelRanger( World* world,
     vis( world ) 
 {
   PRINT_DEBUG2( "Constructing ModelRanger %d (%s)\n", 
-		id, type );
+		id, type.c_str() );
   
   // Set up sensible defaults
   
