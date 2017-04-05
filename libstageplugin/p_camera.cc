@@ -37,69 +37,61 @@
 #include "p_driver.h"
 using namespace Stg;
 
-InterfaceCamera::InterfaceCamera( player_devaddr_t addr,
-				StgDriver* driver,
-				ConfigFile* cf,
-				int section )
-  : InterfaceModel( addr, driver, cf, section, "camera" )
+InterfaceCamera::InterfaceCamera(player_devaddr_t addr, StgDriver *driver, ConfigFile *cf,
+                                 int section)
+    : InterfaceModel(addr, driver, cf, section, "camera")
 {
 }
 
-void InterfaceCamera::Publish( void )
+void InterfaceCamera::Publish(void)
 {
-  ModelCamera* mod = (ModelCamera*)this->mod;
+  ModelCamera *mod = (ModelCamera *)this->mod;
 
   // don't publish anything until we have some real data
-  if( ! mod->FrameColor() )
+  if (!mod->FrameColor())
     return;
 
   player_camera_data_t pdata;
-  memset( &pdata, 0, sizeof(pdata) );
-  
+  memset(&pdata, 0, sizeof(pdata));
+
   pdata.width = mod->getWidth();
   pdata.height = mod->getHeight();
-  pdata.bpp = 8*3;
+  pdata.bpp = 8 * 3;
   pdata.format = PLAYER_CAMERA_FORMAT_RGB888;
   pdata.image_count = 3 * pdata.width * pdata.height;
-  pdata.image = new uint8_t [ pdata.image_count ];
+  pdata.image = new uint8_t[pdata.image_count];
 
   /* Image from Stage is stored as R G B A R G B A ...
    * With the row fartherest from the camera as row 0 (opposite of Player).
-   * 
+   *
    * Here we dump the Alpha data (so just R G B R G B and also flip the image
    */
-  uint8_t *ptr = (uint8_t *) mod->FrameColor();
+  uint8_t *ptr = (uint8_t *)mod->FrameColor();
   const int RGB_SIZE = 3;
 
-  for (int row = pdata.height-1; row >= 0; row--) {
+  for (int row = pdata.height - 1; row >= 0; row--) {
     for (int col = 0; col < pdata.width; col++) {
       for (int color = 0; color < 4; color++) {
         if (color < 3) /* is red green or blue */
-          pdata.image[color + RGB_SIZE*col + row*pdata.width*RGB_SIZE] =
-                  *(ptr++);
+          pdata.image[color + RGB_SIZE * col + row * pdata.width * RGB_SIZE] = *(ptr++);
         else
-           ptr++; /* throw out the alpha */
+          ptr++; /* throw out the alpha */
       }
     }
   }
   // Write camera data
-  this->driver->Publish(this->addr,
-			PLAYER_MSGTYPE_DATA,
-			PLAYER_CAMERA_DATA_STATE,
-			(void *)(&pdata), sizeof(pdata), NULL);
+  this->driver->Publish(this->addr, PLAYER_MSGTYPE_DATA, PLAYER_CAMERA_DATA_STATE, (void *)(&pdata),
+                        sizeof(pdata), NULL);
 
-  delete [] pdata.image;
-
+  delete[] pdata.image;
 }
 
-int InterfaceCamera::ProcessMessage(QueuePointer & resp_queue,
-				   player_msghdr_t* hdr,
-				   void* data)
+int InterfaceCamera::ProcessMessage(QueuePointer &resp_queue, player_msghdr_t *hdr, void *data)
 {
-  ModelCamera* mod = (ModelCamera*)this->mod;
+  // ModelCamera* mod = (ModelCamera*)this->mod;
 
   // Is it a request to set the camera's config?
-  return(-1);
+  return (-1);
 }
 
 /*

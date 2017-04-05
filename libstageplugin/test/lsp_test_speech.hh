@@ -7,23 +7,22 @@
 #include "lsp_test_proxy.hh"
 
 namespace lspTest {
-	class Speech : public Proxy
-	{
-		CPPUNIT_TEST_SUB_SUITE( Speech, Proxy );
-		CPPUNIT_TEST( testSay1 );
-		CPPUNIT_TEST_SUITE_END();
-		
-	protected:
-		playerc_speech_t* speechProxy;
-		
-		void testSay1();
-		
-	public:
-		void setUp();
-		void tearDown();
-	};
+class Speech : public Proxy {
+  CPPUNIT_TEST_SUB_SUITE(Speech, Proxy);
+  CPPUNIT_TEST(testSay1);
+  CPPUNIT_TEST_SUITE_END();
+
+protected:
+  playerc_speech_t *speechProxy;
+
+  void testSay1();
+
+public:
+  void setUp();
+  void tearDown();
+};
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Speech );
+CPPUNIT_TEST_SUITE_REGISTRATION(lspTest::Speech);
 
 #endif

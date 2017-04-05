@@ -1,7 +1,8 @@
+cmake_minimum_required( VERSION 2.8.7 FATAL_ERROR )
 PROJECT(Stage)
 
 SET( V_MAJOR 4 )
-SET( V_MINOR 1 )
+SET( V_MINOR 2 )
 SET( V_BUGFIX 1 )
 
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
@@ -16,8 +17,6 @@ OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
 
 # todo - this doesn't work yet. Run Stage headless with -g.
 # OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
-
-cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 	cmake_policy( SET CMP0003 NEW )
@@ -53,9 +52,9 @@ endif( PROJECT_OS_OSX)
 # Build type cflags
 SET (OPTIMIZE "-O2")
 
-SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG" CACHE INTERNAL "C Flags for debug" FORCE)
-SET (CMAKE_CXX_FLAGS_PROFILE " -ggdb -pg  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL}" CACHE INTERNAL "CXX Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG" CACHE INTERNAL "CXX Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE "-ggdb -pg  ${FORCE_ARCH} ${WALL}" CACHE INTERNAL "CXX Flags for profile" FORCE)
 
 #####################################
 # Set the default build type
@@ -118,19 +117,6 @@ SET( INDENT "  * " )
 
 MESSAGE( STATUS "Checking for optional libraries..." )
 
-# Player does not have a CMake package, but does provide pkgconfig info
-
-include(FindPkgConfig)
-   
-pkg_search_module( PLAYER playercore>=2.1.0 ) 
-IF( PLAYER_FOUND )
-  MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
-  MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
-  MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
-ELSE( PLAYER_FOUND )
-  MESSAGE(STATUS ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
-ENDIF( PLAYER_FOUND )
-
 # Format the fltk libraries for inclusion in stage.pc
 SET(PC_LIBRARIES ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 SET(PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
@@ -176,9 +162,22 @@ ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
 #ADD_SUBDIRECTORY(avonstage)		 
 
-IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
-  ADD_SUBDIRECTORY(libstageplugin)
-ENDIF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )	 
+IF ( BUILD_PLAYER_PLUGIN )
+  # Player does not have a CMake package, but does provide pkgconfig info
+  include(FindPkgConfig)
+  pkg_search_module( PLAYER playercore>=2.1.0 ) 
+  IF( PLAYER_FOUND )
+    MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
+    MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
+    MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
+  ELSE( PLAYER_FOUND )
+    MESSAGE(STATUS ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
+  ENDIF( PLAYER_FOUND )
+
+  IF ( PLAYER_FOUND )
+    ADD_SUBDIRECTORY(libstageplugin)
+  ENDIF ( PLAYER_FOUND )
+ENDIF ( BUILD_PLAYER_PLUGIN )
 
 
 # generate a cpack config file used to create packaged tarballs
@@ -186,8 +185,8 @@ IF ( CPACK_CFG )
   INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME}: A Multiple Robot Simulator")
   SET(CPACK_PACKAGE_VENDOR "The Player Project")
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
-  SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
+  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+  SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
   SET(CPACK_PACKAGE_VERSION_MAJOR "${V_MAJOR}")
   SET(CPACK_PACKAGE_VERSION_MINOR "${V_MINOR}")

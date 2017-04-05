@@ -1,0 +1,17 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+
+# Install all of the dependencies:
+install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libfltk1.1-dev
+
+# Execute all of the commands which should make the build pass or fail
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_PLAYER_PLUGIN=OFF -DCMAKE_INSTALL_PREFIX=$(pwd)/install ..
+  - make
+  - make install

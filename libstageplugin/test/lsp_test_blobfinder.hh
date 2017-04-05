@@ -7,25 +7,24 @@
 #include "lsp_test_proxy.hh"
 
 namespace lspTest {
-	class Blobfinder : public Proxy
-		{
-			CPPUNIT_TEST_SUITE( Blobfinder );
-			CPPUNIT_TEST( testData );
-			CPPUNIT_TEST_SUITE_END();
-			
-		protected:
-			playerc_blobfinder_t* blobProxy;
-			
-			void testConfig();
-			void testGeom();
-			void testData();
-			
-		public:
-			void setUp();
-			void tearDown();
-		};
+class Blobfinder : public Proxy {
+  CPPUNIT_TEST_SUITE(Blobfinder);
+  CPPUNIT_TEST(testData);
+  CPPUNIT_TEST_SUITE_END();
+
+protected:
+  playerc_blobfinder_t *blobProxy;
+
+  void testConfig();
+  void testGeom();
+  void testData();
+
+public:
+  void setUp();
+  void tearDown();
+};
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Blobfinder );
+CPPUNIT_TEST_SUITE_REGISTRATION(lspTest::Blobfinder);
 
 #endif
