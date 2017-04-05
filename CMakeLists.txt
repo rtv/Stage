@@ -40,7 +40,7 @@ IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 
 if( PROJECT_OS_OSX )
-
+  set(CMAKE_MACOSX_RPATH 1)
   # uncomment this to force 32bit on OS X, for example if you can't build FLTK 64bit
   #SET( FORCE_ARCH "-arch i386" )
 
