@@ -1,7 +1,6 @@
 #include "stage.hh"
 using namespace Stg;
 
-
 /* Create named wrappers for model constructors */
 template <class T>
 Model* Creator( World* world, Model* parent, const std::string& type )

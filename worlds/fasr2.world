@@ -47,7 +47,7 @@ floorplan
 zone( color "red"
   pose [ 18.000 43.000 0 0 ]
   name "red_source"
-  ctrl "source 100 10"
+  ctrl "source 10 10"
 )
 
 zone( color "DarkRed"

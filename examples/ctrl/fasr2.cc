@@ -203,7 +203,8 @@ private:
 
   Model* fuel_zone;
   //Model* pool_zone;
-  int avoidcount, randcount;
+  int avoidcount;
+  // int randcount;
   // int work_get, work_put;
   bool charger_ahoy;
   double charger_bearing;

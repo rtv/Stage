@@ -32,7 +32,7 @@ floorplan
   name "cave"
   size [1000.000 700.000 0.600]
   pose [0 0 0 0]
-  bitmap "bitmaps/SFU_800x600.png"
+  bitmap "bitmaps/SFU_1200x615.png"
 )
 
 
