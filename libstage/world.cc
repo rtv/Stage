@@ -716,8 +716,12 @@ void World::ClearRays()
 
 // Perform multiple raytraces evenly spaced over an angular field of view
 void World::Raytrace(const Pose &gpose, // global pose
-                     const meters_t range, const radians_t fov, const ray_test_func_t func,
-                     const Model *mod, const void *arg, const bool ztest,
+                     const meters_t range,
+		     const radians_t fov,
+		     const ray_test_func_t func,
+                     const Model *mod,
+		     const void *arg,
+		     const bool ztest,
                      std::vector<RaytraceResult> &results)
 {
   // find the direction of the first ray
@@ -736,8 +740,12 @@ void World::Raytrace(const Pose &gpose, // global pose
   }
 }
 
-RaytraceResult World::Raytrace(const Pose &gpose, const meters_t range, const ray_test_func_t func,
-                               const Model *mod, const void *arg, const bool ztest)
+RaytraceResult World::Raytrace(const Pose &gpose,
+			       const meters_t range,
+			       const ray_test_func_t func,
+                               const Model *mod,
+			       const void *arg,
+			       const bool ztest)
 {
   return Raytrace(Ray(mod, gpose, range, func, arg, ztest));
 }

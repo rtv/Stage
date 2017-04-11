@@ -100,7 +100,7 @@ Option ModelRanger::Vis::showFov("Ranger FOV", "show_ranger_fov", "", false, NUL
 // false, NULL );
 
 ModelRanger::ModelRanger(World *world, Model *parent, const std::string &type)
-    : Model(world, parent, type), ranger_vis(world)
+    : Model(world, parent, type), vis(world)
 {
  PRINT_DEBUG2("Constructing ModelRanger %u (%s)\n", id, type.c_str());
 
@@ -114,7 +114,7 @@ ModelRanger::ModelRanger(World *world, Model *parent, const std::string &type)
 
   this->SetGeom(Geom(Pose(), RANGER_SIZE));
 
-  AddVisualizer(&ranger_vis, true);
+  AddVisualizer(&vis, true);
 }
 
 ModelRanger::~ModelRanger()

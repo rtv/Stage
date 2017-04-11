@@ -288,6 +288,9 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
     gui.move = true;
   }
 
+  //static size_t count=0;
+  //printf( "basic %lu\n", ++count );
+
   // now we can add the basic square shape
   AddBlockRect(-0.5, -0.5, 1.0, 1.0, 1.0);
 
@@ -376,8 +379,13 @@ void Model::LoadBlock(Worldfile *wf, int entity)
 
 void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meters_t dz)
 {
-  UnMap();
+  static size_t count=0;
+  printf( "abr %lu\n", ++count );
 
+  puts( "unmap start" );
+  UnMap();
+  puts( "unmap done" );
+  
   std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -390,7 +398,9 @@ void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meter
 
   blockgroup.AppendBlock(Block(&blockgroup, pts, Bounds(0, dz)));
 
+  puts( "map start" );
   Map();
+  puts( "map done\n" );
 }
 
 // convert a global pose into the model's local coordinate system
@@ -639,20 +649,17 @@ void Model::AddToPose(const Pose &pose)
   AddToPose(pose.x, pose.y, pose.z, pose.a);
 }
 
-bool Model::PlaceInFreeSpace(meters_t xmin, meters_t xmax, meters_t ymin, meters_t ymax,
-                             size_t max_iter)
+
+bool Model::RandomPoseInFreeSpace(meters_t xmin, meters_t xmax,
+				  meters_t ymin, meters_t ymax,
+                                  size_t max_iter)
 {
+  SetPose(Pose::Random(xmin, xmax, ymin, ymax));
+
   size_t i = 0;
   while (TestCollision() && (max_iter <= 0 || i++ < max_iter))
     SetPose(Pose::Random(xmin, xmax, ymin, ymax));
   return i <= max_iter; // return true if a free pose was found within max iterations
-}
-
-bool Model::RandomPoseInFreeSpace(meters_t xmin, meters_t xmax, meters_t ymin, meters_t ymax,
-                                  size_t max_iter)
-{
-  SetPose(Pose::Random(xmin, xmax, ymin, ymax));
-  return PlaceInFreeSpace(xmin, xmax, ymin, ymax, max_iter);
 }
 
 void Model::AppendTouchingModels(std::set<Model *> &touchers)
@@ -1363,6 +1370,8 @@ void Model::Load()
 
       const Size size(b.x.max - b.x.min, b.y.max - b.y.min, b.z.max - b.z.min);
 
+      //static size_t count=0;
+      //printf( "boundaries %lu\n", ++count );
       AddBlockRect(b.x.min, b.y.min, epsilon, size.y, size.z);
       AddBlockRect(b.x.min, b.y.min, size.x, epsilon, size.z);
       AddBlockRect(b.x.min, b.y.max - epsilon, size.x, epsilon, size.z);

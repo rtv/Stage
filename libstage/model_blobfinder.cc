@@ -84,7 +84,7 @@ static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 */
 
 ModelBlobfinder::ModelBlobfinder(World *world, Model *parent, const std::string &type)
-    : Model(world, parent, type), blob_vis(world), blobs(), colors(), fov(DEFAULT_BLOBFINDERFOV),
+    : Model(world, parent, type), vis(world), blobs(), colors(), fov(DEFAULT_BLOBFINDERFOV),
       pan(DEFAULT_BLOBFINDERPAN), range(DEFAULT_BLOBFINDERRANGE),
       scan_height(DEFAULT_BLOBFINDERSCANHEIGHT), scan_width(DEFAULT_BLOBFINDERSCANWIDTH)
 {
@@ -92,7 +92,7 @@ ModelBlobfinder::ModelBlobfinder(World *world, Model *parent, const std::string 
 
   ClearBlocks();
 
-  AddVisualizer(&this->blob_vis, true);
+  AddVisualizer(&this->vis, true);
 }
 
 ModelBlobfinder::~ModelBlobfinder(void)
