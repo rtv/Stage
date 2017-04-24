@@ -379,13 +379,8 @@ void Model::LoadBlock(Worldfile *wf, int entity)
 
 void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meters_t dz)
 {
-  static size_t count=0;
-  printf( "abr %lu\n", ++count );
-
-  puts( "unmap start" );
   UnMap();
-  puts( "unmap done" );
-  
+    
   std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -398,9 +393,7 @@ void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meter
 
   blockgroup.AppendBlock(Block(&blockgroup, pts, Bounds(0, dz)));
 
-  puts( "map start" );
   Map();
-  puts( "map done\n" );
 }
 
 // convert a global pose into the model's local coordinate system

@@ -82,6 +82,8 @@ Canvas::Canvas(WorldGui *world, int x, int y, int width, int height)
   // configuring GL
   // but that line causes a segfault in Linux/X11! TODO: test in OS X
 
+  mode(  FL_RGB|FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE );
+  
   perspective_camera.setPose(0.0, -4.0, 3.0);
   current_camera = &camera;
   setDirtyBuffer();
@@ -691,11 +693,11 @@ void Canvas::DrawBoundingBoxes()
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glLineWidth(2.0);
   glPointSize(5.0);
-  glDisable(GL_CULL_FACE);
+  //glDisable(GL_CULL_FACE);
 
   world->DrawBoundingBoxTree();
 
-  glEnable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
   glLineWidth(1.0);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

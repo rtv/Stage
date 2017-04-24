@@ -113,8 +113,8 @@ void BlockGroup::CalcSize()
 
 void BlockGroup::Map(unsigned int layer)
 {
- static size_t count = 0;
- printf( "BlockGroup::Map %lu (%lu)\n", ++count, blocks.size() );
+  //static size_t count = 0;
+ //printf( "BlockGroup::Map %lu (%lu)\n", ++count, blocks.size() );
     
   FOR_EACH (it, blocks)
       it->Map(layer);
@@ -122,8 +122,8 @@ void BlockGroup::Map(unsigned int layer)
 
 void BlockGroup::UnMap(unsigned int layer)
 {
- static size_t count = 0;
- printf( "BlockGroup::UnMap %lu (%lu)\n", ++count, blocks.size() );
+  //static size_t count = 0;
+  //printf( "BlockGroup::UnMap %lu (%lu)\n", ++count, blocks.size() );
   
   FOR_EACH (it, blocks)
     it->UnMap(layer);
