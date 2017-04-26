@@ -186,7 +186,7 @@ void World::DestroySuperRegion(SuperRegion *sr)
 
 void World::Run()
 {
-  // first check wheter there is a single gui world
+  // first check whether there is a single gui world
   bool found_gui = false;
   FOR_EACH (world_it, world_set) {
     found_gui |= (*world_it)->IsGUI();
@@ -1110,7 +1110,7 @@ void World::RemovePowerPack(PowerPack *pp)
 
 /// Register an Option for pickup by the GUI
 void World::RegisterOption(Option *opt)
-{
+{  
   assert(opt);
   option_table.insert(opt);
 }

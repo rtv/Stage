@@ -1004,15 +1004,15 @@ void Canvas::renderFrame()
     colorstack.Pop();
 
     // ENERGY BOX
-    if (PowerPack::global_capacity > 0) {
-      colorstack.Push(0.8, 1.0, 0.8, 0.85); // pale green
-      glRectf(0, height, width, 90);
-      colorstack.Push(0, 0, 0); // black
-      Gl::draw_string_multiline(margin, height + margin, width, 50, world->EnergyString().c_str(),
-                                (Fl_Align)(FL_ALIGN_LEFT | FL_ALIGN_BOTTOM));
-      colorstack.Pop();
-      colorstack.Pop();
-    }
+    // if (PowerPack::global_capacity > 0) {
+    //   colorstack.Push(0.8, 1.0, 0.8, 0.85); // pale green
+    //   glRectf(0, height, width, 90);
+    //   colorstack.Push(0, 0, 0); // black
+    //   Gl::draw_string_multiline(margin, height + margin, width, 50, world->EnergyString().c_str(),
+    //                             (Fl_Align)(FL_ALIGN_LEFT | FL_ALIGN_BOTTOM));
+    //   colorstack.Pop();
+    //   colorstack.Pop();
+    // }
 
     glEnable(GL_DEPTH_TEST);
     glPopMatrix();

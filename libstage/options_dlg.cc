@@ -55,7 +55,10 @@ void OptionsDlg::updateChecks()
   scroll->begin();
   for (unsigned int i = 0; i < options.size(); i++) {
     Fl_Check_Button *check =
-        new Fl_Check_Button(0, boxH * (i + 1) + vm, scroll->w(), boxH, options[i]->name().c_str());
+      new Fl_Check_Button(0, boxH * (i + 1) + vm, scroll->w(), boxH, "foo" );//options[i]->name().c_str());
+
+    // must copy the text for the label! fixes yukky bug.
+    check->copy_label( options[i]->name().c_str() );
     if (options[i]->val())
       check->set();
     check->callback(checkChanged, this);
@@ -74,7 +77,7 @@ void OptionsDlg::setOptions(const std::set<Option *> &opts)
 void OptionsDlg::showAllOpt(Option *opt)
 {
   showAll = opt;
-  showAllCheck->label(opt->name().c_str());
+  showAllCheck->copy_label(opt->name().c_str());
   showAllCheck->value(opt->val());
 }
 

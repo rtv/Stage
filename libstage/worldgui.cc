@@ -195,6 +195,8 @@ WorldGui::WorldGui(int width, int height, const char *caption)
       real_time_interval(sim_interval), real_time_now(RealTimeNow()),
       real_time_recorded(real_time_now), timing_interval(20)
 {
+  Fl::lock(); // start FLTK's thread safe behaviour
+
   Fl::scheme("");
   resizable(canvas);
   caption_prefix = caption ? std::string(caption) : std::string(PROJECT) + " v" + Stg::Version();
@@ -416,8 +418,8 @@ std::string WorldGui::ClockString() const
 
   const double localratio = (double)sim_interval / (double)(real_time_interval / timing_interval);
 
-  char buf[32];
-  snprintf(buf, 32, " [%.1f]", localratio);
+  char buf[64];
+  snprintf(buf, 64, " [%.1f]", localratio);
   str += buf;
 
   if (paused == true)
@@ -443,12 +445,13 @@ void WorldGui::RemoveChild(Model *mod)
 std::string WorldGui::EnergyString() const
 {
   char str[512];
-  snprintf(str, 255, "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f "
-                     "KJ\n  output:   %.0f KJ at %.2f KW\n",
+  snprintf(str, 512,
+	   "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f "
+	   "KJ\n  output:   %.0f KJ at %.2f KW\n",
            PowerPack::global_stored / 1e3, PowerPack::global_capacity / 1e3,
            PowerPack::global_input / 1e3, PowerPack::global_dissipated / 1e3,
            (PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3);
-
+  
   return std::string(str);
 }
 
