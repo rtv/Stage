@@ -289,30 +289,42 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     rgr->PopColor();
   }
   
-  if (vis->showFov) {
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    Color c = color;
-    c.a = 0.5;
-    rgr->PushColor(c);
-    glBegin( GL_POLYGON );
-
-    glVertex2f( 0,0 );
-    
-    for (size_t s(0); s < sample_count; s++) {
-      const double ray_angle = s * sample_fov - fov / 2.0;      
-      const GLfloat x = range.max * cos(ray_angle);
-      const GLfloat y = range.max * sin(ray_angle);
-      
-      glVertex2f( x, y );
+  if (vis->showFov)
+    {
+      if (sample_count == 1)
+	{
+	  rgr->PushColor(color);
+	  glBegin( GL_LINES );
+	  glVertex2f( 0,0 );
+	  glVertex2f( range.max, 0 );
+	  glEnd();
+	  rgr->PopColor();
+	}
+      else
+	{    
+	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	  Color c = color;
+	  c.a = 0.5;
+	  rgr->PushColor(c);
+	  glBegin( GL_POLYGON );
+	  
+	  glVertex2f( 0,0 );
+	  
+	  for (size_t s(0); s < sample_count; s++) {
+	    const double ray_angle = (((double)s)-0.5) * sample_fov - fov / 2.0;      
+	    const GLfloat x = range.max * cos(ray_angle);
+	    const GLfloat y = range.max * sin(ray_angle);
+	    
+	    glVertex2f( x, y );
+	  }
+	  
+	  glVertex2f( 0,0 );
+	  
+	  glEnd();
+	  
+	  rgr->PopColor();
+	}
     }
-
-    glVertex2f( 0,0 );
-
-    glEnd();
-    
-    rgr->PopColor();
-  }
   
   std::vector<glpoint_t> verts( sample_count );
   
@@ -330,7 +342,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     verts[2].y = sidelen * sin(+da);
   } else {
     for (size_t s(0); s < sample_count; s++) {
-      const double ray_angle = s * sample_fov - fov / 2.0;
+      const double ray_angle = (((double)s)-0.5) * sample_fov - fov / 2.0;
       verts[s].x = (float)(ranges[s] * cos(ray_angle));
       verts[s].y = (float)(ranges[s] * sin(ray_angle));
     }

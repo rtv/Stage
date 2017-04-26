@@ -82,7 +82,7 @@ Canvas::Canvas(WorldGui *world, int x, int y, int width, int height)
   // configuring GL
   // but that line causes a segfault in Linux/X11! TODO: test in OS X
 
-  mode(  FL_RGB|FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE );
+  mode( FL_RGB |FL_DOUBLE|FL_DEPTH| FL_MULTISAMPLE | FL_ALPHA );
   
   perspective_camera.setPose(0.0, -4.0, 3.0);
   current_camera = &camera;
