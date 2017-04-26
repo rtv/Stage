@@ -400,8 +400,8 @@ bool WorldGui::Update()
   // inherit
   const bool done = World::Update();
 
-  if (Model::trail_length > 0 && updates % Model::trail_interval == 0)
     FOR_EACH (it, active_velocity)
+      if ((*it)->trail.size() > 0 && updates % (*it)->trail_interval == 0)
       (*it)->UpdateTrail();
 
   if (done) {

@@ -1868,13 +1868,13 @@ allow parallel Updates(). */
   /** current position in the ring buffer */
   unsigned int trail_index;
 
-  /** The maxiumum length of the trail drawn. Default is 20, but can
-be set in the world file using the trail_length model
-property. */
-  static unsigned int trail_length;
+//   /** The maxiumum length of the trail drawn. Default is 20, but can
+// be set in the world file using the trail_length model
+// property. */
+//   unsigned int trail_length;
 
   /** Number of world updates between trail records. */
-  static uint64_t trail_interval;
+  uint64_t trail_interval;
 
   /** Record the current pose in our trail. Delete the trail head if it is full. */
   void UpdateTrail();

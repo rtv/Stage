@@ -55,6 +55,9 @@ pioneer2dx
   # report error-free position in world coordinates
   localization "gps"
   localization_origin [ 0 0 0 0 ]
+
+  trail_length 400
+    
 )
 
 pioneer2dx

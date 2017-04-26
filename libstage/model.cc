@@ -144,8 +144,6 @@ using namespace Stg;
 
 // static members
 uint32_t Model::count(0);
-uint32_t Model::trail_length(50);
-uint64_t Model::trail_interval(5);
 std::map<Stg::id_t, Model *> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
 
@@ -238,8 +236,8 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
       interval_energy((usec_t)1e5), // 100msec
       last_update(0), log_state(false), map_resolution(0.1), mass(0), parent(parent), pose(),
       power_pack(NULL), pps_charging(), rastervis(), rebuild_displaylist(true), say_string(),
-      stack_children(true), stall(false), subs(0), thread_safe(false), trail(trail_length),
-      trail_index(0), type(type), event_queue_num(0), used(false), watts(0.0), watts_give(0.0),
+      stack_children(true), stall(false), subs(0), thread_safe(false), trail(20),
+      trail_index(0),  trail_interval(10), type(type), event_queue_num(0), used(false), watts(0.0), watts_give(0.0),
       watts_take(0.0), wf(NULL), wf_entity(0), world(world),
       world_gui(dynamic_cast<WorldGui *>(world))
 {
@@ -735,7 +733,7 @@ void Model::UpdateTrail()
   item->color = color;
 
   // wrap around ring buffer
-  trail_index %= trail_length;
+  trail_index %= trail.size();
 }
 
 Model *Model::GetUnsubscribedModelOfType(const std::string &type) const
@@ -1407,9 +1405,8 @@ void Model::Load()
 
   Say(wf->ReadString(wf_entity, "say", ""));
 
-  trail_length = wf->ReadInt(wf_entity, "trail_length", trail_length);
+  int trail_length = wf->ReadInt(wf_entity, "trail_length", (int)trail.size() );
   trail.resize(trail_length);
-
   trail_interval = wf->ReadInt(wf_entity, "trail_interval", trail_interval);
 
   this->alwayson = wf->ReadInt(wf_entity, "alwayson", alwayson);

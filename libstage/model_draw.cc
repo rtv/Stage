@@ -49,25 +49,27 @@ void Model::DrawSelected()
 void Model::DrawTrailFootprint()
 {
   double darkness = 0;
-  double fade = 0.5 / (double)(trail_length + 1);
+  double fade = 0.5 / (double)(trail.size() + 1);
 
   PushColor(0, 0, 0, 1); // dummy push just saving the color
 
   // this loop could be faster, but optimzing vis is not a priority
-  for (unsigned int i = 0; i < trail_length; i++) {
+  
+  for (unsigned int i = 0; i < trail.size(); i++) {
+    
     // find correct offset inside ring buffer
-    TrailItem &checkpoint = trail[(i + trail_index) % trail_length];
-
+    TrailItem &checkpoint = trail[(i + trail_index) % trail.size()];
+    
     // ignore invalid items
     if (checkpoint.time == 0)
       continue;
-
+    
     glPushMatrix();
     Pose pz = checkpoint.pose;
-
+    
     Gl::pose_shift(pz);
     Gl::pose_shift(geom.pose);
-
+    
     darkness += fade;
     Color c = checkpoint.color;
     c.a = darkness;

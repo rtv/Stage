@@ -999,7 +999,11 @@ void Canvas::renderFrame()
     colorstack.Push(0.8, 0.8, 1.0); // pale blue
     glRectf(0, 0, width, height);
     colorstack.Push(0, 0, 0); // black
-    Gl::draw_string(margin, margin, 0, clockstr.c_str());
+
+    //char buf[ clockstr.size() ];
+    //strcpy( buf, clockstr.c_str() );
+
+    Gl::draw_string(margin, margin, 0, clockstr.c_str() );
     colorstack.Pop();
     colorstack.Pop();
 
