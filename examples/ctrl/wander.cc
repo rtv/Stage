@@ -45,15 +45,34 @@ extern "C" int Init(Model *mod, CtrlArgs *)
 
   robot->pos->Subscribe(); // starts the position updates
 
-  ModelRanger *first_laser = dynamic_cast<ModelRanger *>(robot->pos->GetChild("ranger:0")),
-              *second_laser = dynamic_cast<ModelRanger *>(mod->GetChild("ranger:1"));
-  if (!first_laser || !second_laser) {
-    PRINT_ERR1("Wander controller requires 2 range sensors (%u given).",
-               unsigned(bool(first_laser) + bool(second_laser)));
+  // find a range finder
+  
+  ModelRanger *laser = NULL;
+
+  printf( "\nWander ctrl for robot %s:\n",  robot->pos->Token() );
+  for( int i=0; i<16; i++ )
+    {
+      char name[32];
+      snprintf( name, 32, "ranger:%d", i ); // generate sequence of model names
+
+      printf( "  looking for a suitable ranger at \"%s:%s\" ... ", robot->pos->Token(), name );      
+      laser = dynamic_cast<ModelRanger *>(robot->pos->GetChild( name ));
+      
+      if( laser && laser->GetSensors()[0].sample_count > 8 )
+	{
+	  puts( "yes." );
+	  break;
+	}
+
+      puts( "no." );
+    }
+  
+  if( !laser ) {
+    PRINT_ERR("  Failed to find a ranger with more than 8 samples. Exit.");
     exit(2);
   }
-  first_laser->Subscribe();
-  robot->laser = second_laser;
+  
+  robot->laser = laser;
   robot->laser->AddCallback(Model::CB_UPDATE, model_callback_t(LaserUpdate), robot);
   robot->laser->Subscribe(); // starts the ranger updates
 
