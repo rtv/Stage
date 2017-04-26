@@ -277,13 +277,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
   const double sample_fov = fov / sample_count;
   
   if (vis->showTransducers) {
-    // draw the sensor body as a rectangle in a darker version of the body color
-    //Color col( rgr->color );
-    // col.r /= 3.0;
-    // col.g /= 3.0;
-    // col.b /= 3.0;
-    rgr->PushColor(color);
-    
+    rgr->PushColor(color);    
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glRectf(-size.x / 2.0, -size.y / 2.0, size.x / 2.0, size.y / 2.0);
     rgr->PopColor();
@@ -356,7 +350,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     glDepthMask(GL_FALSE);
     glPolygonMode(GL_FRONT, GL_FILL);
     Color c = color;
-    c.a = 0.35; // some alpha
+    c.a = 0.1; // some alpha
     rgr->PushColor(c);
     
     glBegin( GL_POLYGON );
@@ -373,23 +367,6 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
   }
       
   if (vis->showStrikes) {
-    // TODO - paint the stike point in a color based on intensity
-    // 			// if the sample is unusually bright, draw a
-    // little blob
-    // 			if( intensities[s] > 0.0 )
-    // 				{
-      // 					// this happens rarely so we can
-      // do
-      // it in immediate mode
-      // 					glBegin( GL_POINTS );
-      // 					glVertex2f( pts[2*s+2],
-      // pts[2*s+3]
-      // );
-      // 					glEnd();
-      // 				}
-
-      // draw the beam strike points
-      // c.a = 0.8;
     rgr->PushColor(Color::blue); // solid color
     glPointSize(2);
 
@@ -400,32 +377,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
       
     rgr->PopColor();
   }
-  
-  // if( vis->showBeams ) {
-    // 	  Color c = color;
-
-    // 	  // darker version of the same color
-    // 	  c.r /= 2.0;
-    // 	  c.g /= 2.0;
-    // 	  c.b /= 2.0;
-    // 	  c.a = 1.0;
-
-    // 	  rgr->PushColor( c );
-    // 	  glBegin( GL_LINES );
-
-    // 	  for( size_t s(0); s<sample_count; s++ ) {
-    // 	    glVertex2f( 0,0 );
-    // 	    double ray_angle( sample_count == 1 ? 0 : (s * (fov /
-    // (sample_count-1))) - fov/2.0 );
-    // 	    glVertex2f( ranges[s] * cos(ray_angle),
-    // 		  ranges[s] * sin(ray_angle) );
-    // 	  }
-    // 	  glEnd();
-
-    // 	  rgr->PopColor();
-    // 	}
-  
-    //rgr->PopColor();
+ 
   glPopMatrix();
 }
 
