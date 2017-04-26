@@ -93,7 +93,7 @@ void InterfaceBlobfinder::Publish(void)
                            + ((uint8_t)(blobs[b].color.g * 255.0) << 8)
                            + ((uint8_t)(blobs[b].color.b * 255.0));
 
-      bfd.blobs[b].area = dx * dy;
+      bfd.blobs[b].area = fabs( dx * dy );
       bfd.blobs[b].range = blobs[b].range;
     }
   }
