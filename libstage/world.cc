@@ -86,6 +86,9 @@
 #include <cmath>
 using std::abs;
 
+#include <cstdlib>
+
+#include <stdlib.h>
 #include <assert.h>
 #include <libgen.h> // for dirname(3)
 #include <limits.h>
