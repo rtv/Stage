@@ -6,6 +6,14 @@ These are the Stage release notes.
 For introduction and license see README.txt
 For installation notes see INSTALL.txt
 
+Version 4.3.0
+-------------
+* gratefully merged Adrian Böckenkamp's (CodeFinder2) fork upstream into rtv/Stage.
+* fixed corrupted strings in GUI bug
+* fixed ranger visualizations bug (only showed up on some platform/driver combos)
+* build/install changes to play nicely with ROS (for the Lunar release of stage_ros)
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2017.4.27
 
 Version 4.2.1
 -------------
