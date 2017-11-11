@@ -31,33 +31,33 @@ set( stageSrcs
 	stage.cc
 	stage.hh
 	texture_manager.cc
-	typetable.cc		
-	world.cc			
-	worldfile.cc		
-	canvas.cc 
-	options_dlg.cc
-	options_dlg.hh
-	vis_strip.cc			
-	worldgui.cc 
+	typetable.cc
+	world.cc
+	worldfile.cc
+	canvas.cc
+	vis_strip.cc
 	ancestor.cc
+	image.cc
 )
-
-#	model_getset.cc
-#	model_load.cc
+#	worldgui.cc 
 
 #set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS" )
  
 add_library(stage SHARED ${stageSrcs})
 
+# GUI part of the stage
+add_library(stage_gui SHARED canvas_fltk.cc options_dlg.cc worldgui.cc)
+
 # if fltk-config didn't bring along the OpenGL dependencies (eg. on
 # Debian/Ubuntu), add them explicity 
 IF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
-  target_link_libraries( stage ${OPENGL_LIBRARIES}) 
+  target_link_libraries( stage ${OPENGL_LIBRARIES})
+  #target_link_libraries( stage_gui ${OPENGL_LIBRARIES}) 
 ENDIF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
 
 
 # causes the shared library to have a version number
-set_target_properties( stage PROPERTIES
+set_target_properties( stage_gui PROPERTIES
 		       VERSION ${VERSION}
 #           LINK_FLAGS "${FLTK_LDFLAGS}"  
 )
@@ -66,8 +66,9 @@ target_link_libraries( stage
                        ${LTDL_LIB} 
                        ${JPEG_LIBRARIES} 
                        ${PNG_LIBRARIES}
-                       ${FLTK_LIBRARIES}
 )
+
+target_link_libraries( stage_gui stage ${FLTK_LIBRARIES})
 
 set( stagebinarySrcs main.cc )
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
@@ -83,21 +84,23 @@ set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK
 # add_executable( stagebinary MACOSX_BUNDLE ${stagebinarySrcs} )
 
 add_executable( stagebinary ${stagebinarySrcs} )
-
-
 set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
 # to explicitly link on Linux
+target_link_libraries( stagebinary stage stage_gui )
 
-target_link_libraries( stagebinary stage )
+# Headless version
+add_executable( stagebinary_headless main_headless.cc )
+set_target_properties( stagebinary_headless PROPERTIES OUTPUT_NAME stage_headless )
+target_link_libraries( stagebinary_headless stage )
 
 IF(PROJECT_OS_LINUX)
   target_link_libraries( stagebinary stage pthread )
 ENDIF(PROJECT_OS_LINUX)
 
-INSTALL(TARGETS stagebinary stage
+INSTALL(TARGETS stagebinary stagebinary_headless stage stage_gui 
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION ${PROJECT_LIB_DIR}
 )

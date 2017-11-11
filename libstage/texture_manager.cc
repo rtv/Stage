@@ -8,6 +8,8 @@
 
 #include "texture_manager.hh"
 #include "file_manager.hh"
+#include "image.hh"
+
 #include <sstream>
 using namespace Stg;
 

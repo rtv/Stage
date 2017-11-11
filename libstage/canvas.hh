@@ -1,3 +1,5 @@
+#ifndef _CANVAS_HH_
+#define _CANVAS_HH_
 
 #include "option.hh"
 #include "stage.hh"
@@ -6,7 +8,8 @@
 #include <stack>
 
 namespace Stg {
-class Canvas : public Fl_Gl_Window {
+
+class Canvas {
   friend class WorldGui; // allow access to private members
   friend class Model;
 
@@ -72,11 +75,11 @@ private:
       showVoxels, pCamOn, visualizeAll;
 
 public:
-  Canvas(WorldGui *world, int x, int y, int width, int height);
-  ~Canvas();
+  Canvas(World *world, int x, int y, int width, int height);
+  virtual ~Canvas();
 
   bool graphics;
-  WorldGui *world;
+  World *world;
   unsigned long frames_rendered_count;
   int screenshot_frame_skip;
 
@@ -85,7 +88,6 @@ public:
   void Screenshot();
   void InitGl();
   void InitTextures();
-  void createMenuItems(Fl_Menu_Bar *menu, std::string path);
 
   void FixViewport(int W, int H);
   void DrawFloor(); // simpler floor compared to grid
@@ -94,8 +96,12 @@ public:
   void resetCamera();
   virtual void renderFrame();
   virtual void draw();
-  virtual int handle(int event);
-  void resize(int X, int Y, int W, int H);
+
+  virtual bool isValid() {return false;}
+  virtual void doRedraw() {}
+  virtual int getWidth() const {return 1;}
+  virtual int getHeight() const {return 1;}
+  virtual void setInvalidate() {}
 
   void CanvasToWorld(int px, int py, double *wx, double *wy, double *wz);
 
@@ -114,7 +120,7 @@ public:
 
   bool VisualizeAll() { return !visualizeAll; }
   static void TimerCallback(Canvas *canvas);
-  static void perspectiveCb(Fl_Widget *w, void *p);
+  //static void perspectiveCb(Fl_Widget *w, void *p);
 
   void EnterScreenCS();
   void LeaveScreenCS();
@@ -126,3 +132,5 @@ public:
 };
 
 } // namespace Stg
+
+#endif

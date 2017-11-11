@@ -87,13 +87,14 @@ void cross(float &x1, float &y1, float &z1, float x2, float y2, float z2)
 }
 
 ModelCamera::ModelCamera(World *world, Model *parent, const std::string &type)
-    : Model(world, parent, type), _canvas(NULL), _frame_data(NULL), _frame_color_data(NULL),
+    : Model(world, parent, type), _frame_data(NULL), _frame_color_data(NULL),
       _valid_vertexbuf_cache(false), _vertexbuf_cache(NULL), _width(32), _height(32),
       _camera_quads_size(0), _camera_quads(NULL), _camera_colors(NULL), _camera(), _yaw_offset(0.0),
       _pitch_offset(0.0)
 {
 PRINT_DEBUG2("Constructing ModelCamera %u (%s)\n", id, type.c_str());
 
+/*
   WorldGui *world_gui = dynamic_cast<WorldGui *>(world);
 
   if (world_gui == NULL) {
@@ -101,7 +102,7 @@ PRINT_DEBUG2("Constructing ModelCamera %u (%s)\n", id, type.c_str());
     assert(0);
   }
   _canvas = world_gui->GetCanvas();
-
+*/
   _camera.setPitch(90.0);
 
   this->SetGeom(Geom(Pose(), DEFAULT_SIZE));
@@ -146,11 +147,12 @@ void ModelCamera::Load(void)
 
 void ModelCamera::Update(void)
 {
-  GetFrame();
+	// TODO: Get some rendering canvas here
+  //GetFrame();
   Model::Update();
 }
 
-bool ModelCamera::GetFrame(void)
+bool ModelCamera::GetFrame(Canvas * canvas)
 {
   if (_width == 0 || _height == 0)
     return false;
@@ -169,10 +171,10 @@ bool ModelCamera::GetFrame(void)
   // TODO overcome issue when glviewport is set LARGER than the window side
   // currently it just clips and draws outside areas black - resulting in bad
   // glreadpixel data
-  if (_width > _canvas->w())
-    _width = _canvas->w();
-  if (_height > _canvas->h())
-    _height = _canvas->h();
+  if (_width > canvas->getWidth())
+    _width = canvas->getWidth();
+  if (_height > canvas->getHeight())
+    _height = canvas->getHeight();
 
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
@@ -193,8 +195,8 @@ bool ModelCamera::GetFrame(void)
   _camera.Draw();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  _canvas->DrawFloor();
-  _canvas->DrawBlocks();
+  canvas->DrawFloor();
+  canvas->DrawBlocks();
 
   // read depth buffer
   glReadPixels(0, 0, _width, _height,
@@ -211,8 +213,8 @@ bool ModelCamera::GetFrame(void)
   glReadPixels(0, 0, _width, _height, GL_RGBA, GL_UNSIGNED_BYTE, _frame_color_data);
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-  _canvas->invalidate();
-  _canvas->setDirtyBuffer();
+  canvas->setInvalidate();
+  canvas->setDirtyBuffer();
   return true;
 }
 

@@ -27,8 +27,10 @@ private:
   std::string shortcut;
   Fl_Menu_ *menu;
   int menuIndex;
-  Fl_Callback *menuCb;
-  Fl_Widget *menuCbWidget;
+  /** Callback type for menu events*/
+  typedef void (*Callback)(Option *opt, void * data);
+  Callback menuCb;
+  void *callbackData;
   World *_world;
 
 public:
@@ -53,9 +55,7 @@ public:
   // 				{ return a->optName < b->optName; }
   // 		};
 
-  void createMenuItem(Fl_Menu_Bar *menu, std::string path);
-  void menuCallback(Fl_Callback *cb, Fl_Widget *w);
-  static void toggleCb(Fl_Widget *w, void *p);
+  void setOptionCallback(Callback cb, void *w);
   void Load(Worldfile *wf, int section);
   void Save(Worldfile *wf, int section);
 

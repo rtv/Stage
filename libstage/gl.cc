@@ -1,6 +1,10 @@
-
 #include "stage.hh"
+
 using namespace Stg;
+
+float view_height();
+void gl_draw(const char * text, float x, float y, float w, float h, int align);
+void gl_draw(const char * text);
 
 // transform the current coordinate frame by the given pose
 void Stg::Gl::coord_shift(double x, double y, double z, double a)
@@ -41,7 +45,7 @@ void Stg::Gl::draw_array(float x, float y, float w, float h, float *data, size_t
   snprintf(buf, 63, "%.2f", min);
   Gl::draw_string(x, y, 0, buf);
   snprintf(buf, 63, "%.2f", max);
-  Gl::draw_string(x, y + h - fl_height(), 0, buf);
+  Gl::draw_string(x, y + h - view_height(), 0, buf);
 }
 
 void Stg::Gl::draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset)
@@ -72,8 +76,7 @@ void Stg::Gl::draw_string(float x, float y, float z, const char *str)
     gl_draw(str); // fltk function
 }
 
-void Stg::Gl::draw_string_multiline(float x, float y, float w, float h, const char *str,
-                                    Fl_Align align)
+void Stg::Gl::draw_string_multiline(float x, float y, float w, float h, const char *str, int align)
 {
   // printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str),
   // str );

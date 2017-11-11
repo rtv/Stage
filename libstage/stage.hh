@@ -55,14 +55,6 @@
 #include <set>
 #include <vector>
 
-// FLTK Gui includes
-#include <FL/Fl.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Window.H>
-#include <FL/fl_draw.H>
-#include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
 // except GLU
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
@@ -494,13 +486,19 @@ point_t *unit_square_points_create();
 /** Convenient OpenGL drawing routines, used by visualization
       code. */
 namespace Gl {
+
+/** Calculate scaled width of the string for current font*/
+float gl_width(const char * string);
+/** Calculate font height */
+float gl_height();
+
 void pose_shift(const Pose &pose);
 void pose_inverse_shift(const Pose &pose);
 void coord_shift(double x, double y, double z, double a);
 void draw_grid(bounds3d_t vol);
 /** Render a string at [x,y,z] in the current color */
 void draw_string(float x, float y, float z, const char *string);
-void draw_string_multiline(float x, float y, float w, float h, const char *string, Fl_Align align);
+void draw_string_multiline(float x, float y, float w, float h, const char *string, int align);
 void draw_speech_bubble(float x, float y, float z, const char *str);
 void draw_octagon(float w, float h, float m);
 void draw_octagon(float x, float y, float w, float h, float m);
@@ -870,6 +868,10 @@ public:
 imlementation does nothing, but can be overridden by
 subclasses. */
   virtual void Redraw(void) {} // does nothing
+
+  void DrawOccupancy() const;
+  void DrawVoxels() const;
+
   std::vector<point_int_t> rt_cells;
   std::vector<point_int_t> rt_candidate_cells;
 
@@ -1123,6 +1125,8 @@ nonexistent */
   void ShowClock(bool enable) { show_clock = enable; }
   /** Return the floor model */
   Model *GetGround() { return ground; }
+
+  Canvas * GetCanvas() {return NULL; }
 };
 
 class Block {
@@ -1288,6 +1292,8 @@ public:
   virtual void reset() = 0;
   virtual void Load(Worldfile *wf, int sec) = 0;
 
+  Canvas * GetCanvas();
+
   // TODO data should be passed in somehow else. (at least min/max stuff)
   // virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
   // const = 0;
@@ -1413,118 +1419,6 @@ public:
   double scale() const { return _scale; }
   void Load(Worldfile *wf, int sec);
   void Save(Worldfile *wf, int sec);
-};
-
-/** Extends World to implement an FLTK / OpenGL graphical user
-      interface.
-  */
-class WorldGui : public World, public Fl_Window {
-  friend class Canvas;
-  friend class ModelCamera;
-  friend class Model;
-  friend class Option;
-
-private:
-  Canvas *canvas;
-  std::vector<Option *> drawOptions;
-  FileManager *fileMan; ///< Used to load and save worldfiles
-  std::vector<usec_t> interval_log;
-
-  /** Stage attempts to run this many times faster than real
-time. If -1, Stage runs as fast as possible. */
-  double speedup;
-
-  bool confirm_on_quit; ///< if true, show save dialog on (GUI) exit (default)
-
-  Fl_Menu_Bar *mbar;
-  OptionsDlg *oDlg;
-  bool pause_time;
-  std::string caption_prefix; //!< prefix of window caption (default PROJECT name constant)
-
-  /** The amount of real time elapsed between $timing_interval
-timesteps. */
-  usec_t real_time_interval;
-
-  /** The current real time in microseconds. */
-  usec_t real_time_now;
-
-  /** The last recorded real time, sampled every $timing_interval
-updates. */
-  usec_t real_time_recorded;
-
-  /** Number of updates between measuring elapsed real time. */
-  uint64_t timing_interval;
-
-  // static callback functions
-  static void windowCb(Fl_Widget *w, WorldGui *wg);
-  static void fileLoadCb(Fl_Widget *w, WorldGui *wg);
-  static void fileSaveCb(Fl_Widget *w, WorldGui *wg);
-  static void fileSaveAsCb(Fl_Widget *w, WorldGui *wg);
-  static void fileExitCb(Fl_Widget *w, WorldGui *wg);
-  static void viewOptionsCb(OptionsDlg *oDlg, WorldGui *wg);
-  static void optionsDlgCb(OptionsDlg *oDlg, WorldGui *wg);
-  static void helpAboutCb(Fl_Widget *w, WorldGui *wg);
-  static void pauseCb(Fl_Widget *w, WorldGui *wg);
-  static void onceCb(Fl_Widget *w, WorldGui *wg);
-  static void fasterCb(Fl_Widget *w, WorldGui *wg);
-  static void slowerCb(Fl_Widget *w, WorldGui *wg);
-  static void realtimeCb(Fl_Widget *w, WorldGui *wg);
-  static void fasttimeCb(Fl_Widget *w, WorldGui *wg);
-  static void resetViewCb(Fl_Widget *w, WorldGui *wg);
-  static void moreHelptCb(Fl_Widget *w, WorldGui *wg);
-
-  // GUI functions
-  bool saveAsDialog();
-  bool closeWindowQuery();
-
-  virtual void AddModel(Model *mod);
-
-  void SetTimeouts();
-
-  /// Defines what all WorldGUI::Load(*) in methods have in common. Called after initial setup.
-  void LoadWorldGuiPostHook(usec_t load_start_time);
-
-protected:
-  virtual void PushColor(Color col);
-  virtual void PushColor(double r, double g, double b, double a);
-  virtual void PopColor();
-
-  void DrawOccupancy() const;
-  void DrawVoxels() const;
-
-public:
-  WorldGui(int width, int height, const char *caption = NULL);
-  ~WorldGui();
-
-  /** Forces the window to be redrawn, even if paused.*/
-  virtual void Redraw(void);
-
-  virtual std::string ClockString() const;
-  virtual bool Update();
-  virtual bool Load(const std::string &worldfile_path);
-  virtual bool Load(std::istream &world_content, const std::string &worldfile_path = std::string());
-
-  virtual void UnLoad();
-  virtual bool Save(const char *filename);
-  virtual bool IsGUI() const { return true; }
-  virtual Model *RecentlySelectedModel() const;
-
-  virtual void Start();
-  virtual void Stop();
-
-  usec_t RealTimeNow(void) const;
-
-  void DrawBoundingBoxTree();
-
-  Canvas *GetCanvas(void) const { return canvas; }
-  /** show the window - need to call this if you don't Load(). */
-  void Show();
-
-  /** Get human readable string that describes the current global energy state. */
-  std::string EnergyString(void) const;
-  virtual void RemoveChild(Model *mod);
-
-  bool IsTopView();
 };
 
 class StripPlotVis : public Visualizer {
@@ -1899,7 +1793,7 @@ watts_give >0 */
   Worldfile *wf;
   int wf_entity;
   World *world; //!< Pointer to the world in which this model exists
-  WorldGui *world_gui; //!< Pointer to the GUI world - NULL if running in non-gui mode
+  //WorldGui *world_gui; //!< Pointer to the GUI world - NULL if running in non-gui mode
 
 public:
   virtual void SetToken(const std::string &str)
@@ -2103,7 +1997,8 @@ public:
         interval_energy(0), last_update(0), log_state(false), map_resolution(0), mass(0),
         parent(NULL), power_pack(NULL), rebuild_displaylist(false), stack_children(true),
         stall(false), subs(0), thread_safe(false), trail_index(0), event_queue_num(0), used(false),
-        watts(0), watts_give(0), watts_take(0), wf(NULL), wf_entity(0), world(NULL), world_gui(NULL)
+        watts(0), watts_give(0), watts_take(0), wf(NULL), wf_entity(0), world(NULL)
+  //, world_gui(NULL)
   {
   }
 
@@ -2117,6 +2012,8 @@ public:
   void RemoveVisualizer(Visualizer *custom_visual);
 
   void BecomeParentOf(Model *child);
+
+  Canvas * GetCanvas();
 
   void Load(Worldfile *wf, int wf_entity)
   {
@@ -2703,7 +2600,7 @@ public:
   } ColoredVertex;
 
 private:
-  Canvas *_canvas;
+  //Canvas *_canvas;
 
   GLfloat *_frame_data; // opengl read buffer
   GLubyte *_frame_color_data; // opengl read buffer
@@ -2728,7 +2625,7 @@ private:
 
   /// Take a screenshot from the camera's perspective. return: true for sucess, and data is
   /// available via FrameDepth() / FrameColor()
-  bool GetFrame();
+  bool GetFrame(Canvas * canvas);
 
 public:
   ModelCamera(World *world, Model *parent, const std::string &type);

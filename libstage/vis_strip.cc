@@ -21,9 +21,10 @@ StripPlotVis::~StripPlotVis()
     free(data);
 }
 
-void StripPlotVis::Visualize(Model *mod, Camera *)
+void StripPlotVis::Visualize(Model *mod, Camera *camera)
 {
-  Canvas *canvas = dynamic_cast<WorldGui *>(mod->GetWorld())->GetCanvas();
+  //Canvas *canvas = dynamic_cast<WorldGui *>(mod->GetWorld())->GetCanvas();
+	Canvas *canvas = camera->GetCanvas();
 
   if (!canvas->selected(mod)) // == canvas->SelectedVisualizeAll() )
     return;

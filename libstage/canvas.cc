@@ -39,19 +39,8 @@ static bool texture_load_done = false;
 // GLuint glowTex;
 GLuint checkTex;
 
-void Canvas::TimerCallback(Canvas *c)
-{
-  if (c->world->dirty) {
-    // puts( "timer redraw" );
-    c->redraw();
-    c->world->dirty = false;
-  }
-
-  Fl::repeat_timeout(c->interval / 1000.0, (Fl_Timeout_Handler)Canvas::TimerCallback, c);
-}
-
-Canvas::Canvas(WorldGui *world, int x, int y, int width, int height)
-    : Fl_Gl_Window(x, y, width, height), colorstack(), models_sorted(), current_camera(NULL),
+Canvas::Canvas(World *world, int x, int y, int width, int height)
+    : colorstack(), models_sorted(), current_camera(NULL),
       camera(), perspective_camera(), dirty_buffer(false), wf(NULL), startx(-1), starty(-1),
       selected_models(), last_selection(NULL), interval(40), // msec between redraws
       // initialize Option objects
@@ -77,13 +66,6 @@ Canvas::Canvas(WorldGui *world, int x, int y, int width, int height)
       // and the rest
       graphics(true), world(world), frames_rendered_count(0), screenshot_frame_skip(1)
 {
-  end();
-  // show(); // must do this so that the GL context is created before
-  // configuring GL
-  // but that line causes a segfault in Linux/X11! TODO: test in OS X
-
-  mode( FL_RGB |FL_DOUBLE|FL_DEPTH| FL_MULTISAMPLE | FL_ALPHA );
-  
   perspective_camera.setPose(0.0, -4.0, 3.0);
   current_camera = &camera;
   setDirtyBuffer();
@@ -95,8 +77,8 @@ Canvas::Canvas(WorldGui *world, int x, int y, int width, int height)
 
 void Canvas::InitGl()
 {
-  valid(1);
-  FixViewport(w(), h());
+  //valid(1);
+  FixViewport(getWidth(), getHeight());
 
   // set gl state that won't change every redraw
   glClearColor(0.7, 0.7, 0.8, 1.0);
@@ -117,7 +99,9 @@ void Canvas::InitGl()
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // install a font
+#ifdef FIX_LATER
   gl_font(FL_HELVETICA, 12);
+#endif
 
   blur = false;
 
@@ -203,7 +187,8 @@ Canvas::~Canvas()
 Model *Canvas::getModel(int x, int y)
 {
   // render all models in a unique color
-  make_current(); // make sure the GL context is current
+	// Why we are calling make_current here? This should be done on upper level
+  //make_current(); // make sure the GL context is current
   glClearColor(1, 1, 1, 1); // white
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
@@ -285,7 +270,7 @@ void Canvas::select(Model *mod)
     selected_models.push_front(mod);
 
     //		mod->Disable();
-    redraw();
+    doRedraw();
   }
 }
 
@@ -293,7 +278,7 @@ void Canvas::unSelect(Model *mod)
 {
   if (mod) {
     EraseAll(mod, selected_models);
-    redraw();
+    doRedraw();
   }
 }
 
@@ -307,12 +292,12 @@ void Canvas::CanvasToWorld(int px, int py, double *wx, double *wy, double *wz)
 {
   if (px <= 0)
     px = 1;
-  else if (px >= w())
-    px = w() - 1;
+  else if (px >= getWidth())
+    px = getWidth() - 1;
   if (py <= 0)
     py = 1;
-  else if (py >= h())
-    py = h() - 1;
+  else if (py >= getHeight())
+    py = getHeight() - 1;
 
   // redraw the screen only if the camera model isn't active.
   // TODO new selection technique will simply use drawfloor to result in z = 0
@@ -338,240 +323,8 @@ void Canvas::CanvasToWorld(int px, int py, double *wx, double *wy, double *wz)
   glGetDoublev(GL_PROJECTION_MATRIX, projection);
 
   GLfloat pz;
-  glReadPixels(px, h() - py, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
-  gluUnProject(px, w() - py, pz, modelview, projection, viewport, wx, wy, wz);
-}
-
-int Canvas::handle(int event)
-{
-  // printf( "cam %.2f %.2f\n", camera.yaw(), camera.pitch() );
-
-  switch (event) {
-  case FL_MOUSEWHEEL:
-    if (pCamOn == true) {
-      perspective_camera.scroll(Fl::event_dy() / 10.0);
-    } else {
-      camera.scale(Fl::event_dy(), Fl::event_x(), w(), Fl::event_y(), h());
-    }
-    invalidate();
-    redraw();
-    return 1;
-
-  case FL_MOVE: // moused moved while no button was pressed
-    if (Fl::event_state(FL_META)) {
-      puts("TODO: HANDLE HISTORY");
-      // world->paused = ! world->paused;
-      return 1;
-    }
-
-    if (startx >= 0) {
-      // mouse pointing to valid value
-
-      if (Fl::event_state(FL_CTRL)) // rotate the camera view
-      {
-        int dx = Fl::event_x() - startx;
-        int dy = Fl::event_y() - starty;
-
-        if (pCamOn == true) {
-          perspective_camera.addYaw(-dx);
-          perspective_camera.addPitch(-dy);
-        } else {
-          camera.addPitch(-0.5 * static_cast<double>(dy));
-          camera.addYaw(-0.5 * static_cast<double>(dx));
-        }
-        invalidate();
-        redraw();
-      } else if (Fl::event_state(FL_ALT)) {
-        int dx = Fl::event_x() - startx;
-        int dy = Fl::event_y() - starty;
-
-        if (pCamOn == true) {
-          perspective_camera.move(-dx, dy, 0.0);
-        } else {
-          camera.move(-dx, dy);
-        }
-        invalidate();
-      }
-    }
-    startx = Fl::event_x();
-    starty = Fl::event_y();
-    return 1;
-  case FL_PUSH: // button pressed
-  {
-    // else
-    {
-      Model *mod = getModel(startx, starty);
-      startx = Fl::event_x();
-      starty = Fl::event_y();
-      selectedModel = false;
-      switch (Fl::event_button()) {
-      case 1:
-        clicked_empty_space = (mod == NULL);
-        empty_space_startx = startx;
-        empty_space_starty = starty;
-        if (mod) {
-          // clicked a model
-          if (Fl::event_state(FL_SHIFT)) {
-            // holding shift, toggle selection
-            if (selected(mod))
-              unSelect(mod);
-            else {
-              select(mod);
-              selectedModel = true; // selected a model
-            }
-          } else {
-            if (!selected(mod)) {
-              // clicked on an unselected model while
-              //  not holding shift, this is the new
-              //  selection
-              unSelectAll();
-              select(mod);
-            }
-            selectedModel = true; // selected a model
-          }
-        }
-
-        redraw(); // probably required
-        return 1;
-      case 3: {
-        // leave selections alone
-        // rotating handled within FL_DRAG
-        return 1;
-      }
-      default: return 0;
-      }
-    }
-  }
-
-  case FL_DRAG: // mouse moved while button was pressed
-  {
-    int dx = Fl::event_x() - startx;
-    int dy = Fl::event_y() - starty;
-
-    if (Fl::event_state(FL_BUTTON1) && Fl::event_state(FL_CTRL) == false) {
-      // Left mouse button drag
-      if (selectedModel) {
-        // started dragging on a selected model
-
-        double sx, sy, sz;
-        CanvasToWorld(startx, starty, &sx, &sy, &sz);
-        double x, y, z;
-        CanvasToWorld(Fl::event_x(), Fl::event_y(), &x, &y, &z);
-        // move all selected models to the mouse pointer
-        FOR_EACH (it, selected_models) {
-          Model *mod = *it;
-          mod->AddToPose(x - sx, y - sy, 0, 0);
-        }
-      } else {
-        // started dragging on empty space or an
-        //  unselected model, move the canvas
-        if (pCamOn == true) {
-          perspective_camera.move(-dx, dy, 0.0);
-        } else {
-          camera.move(-dx, dy);
-        }
-        invalidate(); // so the projection gets updated
-      }
-    } else if (Fl::event_state(FL_BUTTON3)
-               || (Fl::event_state(FL_BUTTON1) && Fl::event_state(FL_CTRL))) {
-      // rotate all selected models
-
-      if (selected_models.size()) {
-        FOR_EACH (it, selected_models) {
-          Model *mod = *it;
-          mod->AddToPose(0, 0, 0, 0.05 * (dx + dy));
-        }
-      } else {
-        // printf( "button 2\n" );
-
-        int dx = Fl::event_x() - startx;
-        int dy = Fl::event_y() - starty;
-
-        if (pCamOn == true) {
-          perspective_camera.addYaw(-dx);
-          perspective_camera.addPitch(-dy);
-        } else {
-          camera.addPitch(-0.5 * static_cast<double>(dy));
-          camera.addYaw(-0.5 * static_cast<double>(dx));
-        }
-      }
-      invalidate();
-      redraw();
-    }
-
-    startx = Fl::event_x();
-    starty = Fl::event_y();
-
-    redraw();
-    return 1;
-  } // end case FL_DRAG
-
-  case FL_RELEASE: // mouse button released
-    if (empty_space_startx == Fl::event_x() && empty_space_starty == Fl::event_y()
-        && clicked_empty_space == true) {
-      // clicked on empty space, unselect all
-      unSelectAll();
-      redraw();
-    }
-    return 1;
-
-  case FL_FOCUS:
-  case FL_UNFOCUS:
-    //.... Return 1 if you want keyboard events, 0 otherwise
-    return 1;
-
-  case FL_KEYBOARD:
-    switch (Fl::event_key()) {
-    case FL_Left:
-      if (pCamOn == false) {
-        camera.move(-10, 0);
-      } else {
-        perspective_camera.strafe(-0.5);
-      }
-      break;
-    case FL_Right:
-      if (pCamOn == false) {
-        camera.move(10, 0);
-      } else {
-        perspective_camera.strafe(0.5);
-      }
-      break;
-    case FL_Down:
-      if (pCamOn == false) {
-        camera.move(0, -10);
-      } else {
-        perspective_camera.forward(-0.5);
-      }
-      break;
-    case FL_Up:
-      if (pCamOn == false) {
-        camera.move(0, 10);
-      } else {
-        perspective_camera.forward(0.5);
-      }
-      break;
-    default:
-      redraw(); // we probably set a display config - so need this
-      return 0; // keypress unhandled
-    }
-
-    invalidate(); // update projection
-    return 1;
-
-  //	case FL_SHORTCUT:
-  //		//... shortcut, key is in Fl::event_key(), ascii in
-  // Fl::event_text()
-  //		//... Return 1 if you understand/use the shortcut event, 0
-  // otherwise...
-  //		return 1;
-  default:
-    // pass other events to the base class...
-    // printf( "EVENT %d\n", event );
-    return Fl_Gl_Window::handle(event);
-
-  } // end switch( event )
-
-  return 0;
+  glReadPixels(px, getHeight() - py, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
+  gluUnProject(px, getWidth() - py, pz, modelview, projection, viewport, wx, wy, wz);
 }
 
 void Canvas::FixViewport(int W, int H)
@@ -583,7 +336,7 @@ void Canvas::FixViewport(int W, int H)
 void Canvas::AddModel(Model *mod)
 {
   models_sorted.push_back(mod);
-  redraw();
+  doRedraw();
 }
 
 void Canvas::RemoveModel(Model *mod)
@@ -694,8 +447,9 @@ void Canvas::DrawBoundingBoxes()
   glLineWidth(2.0);
   glPointSize(5.0);
   //glDisable(GL_CULL_FACE);
-
-  world->DrawBoundingBoxTree();
+  const std::vector<Model *> & children = world->GetChildren();
+  FOR_EACH (it, children)
+      (*it)->DrawBoundingBoxTree();
 
   //glEnable(GL_CULL_FACE);
   glLineWidth(1.0);
@@ -731,8 +485,8 @@ void Canvas::resetCamera()
   float x = (min_x + max_x) / 2.0;
   float y = (min_y + max_y) / 2.0;
   camera.setPose(x, y);
-  float scale_x = w() / (max_x - min_x) * 0.9;
-  float scale_y = h() / (max_y - min_y) * 0.9;
+  float scale_x = getWidth() / (max_x - min_x) * 0.9;
+  float scale_y = getHeight() / (max_y - min_y) * 0.9;
   camera.setScale(scale_x < scale_y ? scale_x : scale_y);
 
   // TODO reset perspective cam
@@ -974,7 +728,7 @@ void Canvas::renderFrame()
     glMatrixMode(GL_PROJECTION);
     glPushMatrix(); // save old projection
     glLoadIdentity();
-    glOrtho(0, w(), 0, h(), -100, 100);
+    glOrtho(0, getWidth(), 0, getHeight(), -100, 100);
     glMatrixMode(GL_MODELVIEW);
 
     glPushMatrix();
@@ -985,10 +739,10 @@ void Canvas::renderFrame()
     if (showFollow == true && last_selection)
       clockstr.append(" [FOLLOW MODE]");
 
-    float txtWidth = gl_width(clockstr.c_str());
+    float txtWidth = Gl::gl_width(clockstr.c_str());
     if (txtWidth < 200)
       txtWidth = 200;
-    int txtHeight = gl_height();
+    int txtHeight = Gl::gl_height();
 
     const int margin = 5;
     int width, height;
@@ -1039,7 +793,7 @@ void Canvas::EnterScreenCS()
   glMatrixMode(GL_PROJECTION);
   glPushMatrix(); // save old projection
   glLoadIdentity();
-  glOrtho(0, w(), 0, h(), -100, 100);
+  glOrtho(0, getWidth(), 0, getHeight(), -100, 100);
   glMatrixMode(GL_MODELVIEW);
 
   glPushMatrix();
@@ -1058,8 +812,8 @@ void Canvas::LeaveScreenCS()
 
 void Canvas::Screenshot()
 {
-  int width = w();
-  int height = h();
+  int width = getWidth();
+  int height = getHeight();
   int depth = 4; // RGBA
 
   // we use RGBA throughout, though we only need RGB, as the 4-byte
@@ -1113,43 +867,6 @@ void Canvas::Screenshot()
   delete[] rowpointers;
 }
 
-void Canvas::perspectiveCb(Fl_Widget *w, void *p)
-{
-  Canvas *canvas = static_cast<Canvas *>(w);
-  Option *opt = static_cast<Option *>(p); // pCamOn
-  if (opt) {
-    // Perspective mode is on, change camera
-    canvas->current_camera = &canvas->perspective_camera;
-  } else {
-    canvas->current_camera = &canvas->camera;
-  }
-
-  canvas->invalidate();
-}
-
-void Canvas::createMenuItems(Fl_Menu_Bar *menu, std::string path)
-{
-  showData.createMenuItem(menu, path);
-  //  visualizeAll.createMenuItem( menu, path );
-  showBlocks.createMenuItem(menu, path);
-  showFlags.createMenuItem(menu, path);
-  showClock.createMenuItem(menu, path);
-  showFlags.createMenuItem(menu, path);
-  showFollow.createMenuItem(menu, path);
-  showFootprints.createMenuItem(menu, path);
-  showGrid.createMenuItem(menu, path);
-  showStatus.createMenuItem(menu, path);
-  pCamOn.createMenuItem(menu, path);
-  pCamOn.menuCallback(perspectiveCb, this);
-  showOccupancy.createMenuItem(menu, path);
-  showTrailArrows.createMenuItem(menu, path);
-  showTrails.createMenuItem(menu, path);
-  showTrailRise.createMenuItem(menu, path); // broken
-  showBBoxes.createMenuItem(menu, path);
-  // showVoxels.createMenuItem( menu, path );
-  showScreenshots.createMenuItem(menu, path);
-}
-
 void Canvas::Load(Worldfile *wf, int sec)
 {
   this->wf = wf;
@@ -1178,12 +895,6 @@ void Canvas::Load(Worldfile *wf, int sec)
   // showVoxels.Load( wf, sec );
   showScreenshots.Load(wf, sec);
   pCamOn.Load(wf, sec);
-
-  if (!world->paused)
-    // // start the timer that causes regular redraws
-    Fl::add_timeout(((double)interval / 1000), (Fl_Timeout_Handler)Canvas::TimerCallback, this);
-
-  invalidate(); // we probably changed something
 }
 
 void Canvas::Save(Worldfile *wf, int sec)
@@ -1217,19 +928,19 @@ void Canvas::draw()
   //	if( loaded_texture == true && pCamOn == true )
   //		return;
 
-  if (!valid()) {
+  if (!isValid()) {
     if (!init_done)
       InitGl();
     if (!texture_load_done)
       InitTextures();
 
     if (pCamOn == true) {
-      perspective_camera.setAspect(static_cast<float>(w()) / static_cast<float>(h()));
+      perspective_camera.setAspect(static_cast<float>(getWidth()) / static_cast<float>(getHeight()));
       perspective_camera.SetProjection();
       current_camera = &perspective_camera;
     } else {
       bounds3d_t extent = world->GetExtent();
-      camera.SetProjection(w(), h(), extent.y.min, extent.y.max);
+      camera.SetProjection(getWidth(), getHeight(), extent.y.min, extent.y.max);
       current_camera = &camera;
     }
 
@@ -1251,14 +962,3 @@ void Canvas::draw()
   renderFrame();
 }
 
-void Canvas::resize(int X, int Y, int W, int H)
-{
-  Fl_Gl_Window::resize(X, Y, W, H);
-
-  if (!init_done) // hack - should capture a create event to do this rather
-    // thann have it in multiple places
-    InitGl();
-
-  FixViewport(W, H);
-  invalidate();
-}

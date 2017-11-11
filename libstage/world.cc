@@ -204,9 +204,11 @@ void World::Run()
     // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world,
     // FLTK
     // is a piece of crap):
-    while (Fl::first_window() && !World::quit_all) {
-      Fl::wait();
-    }
+  	assert(false);
+  	// Dirty replacement here
+    //while (Fl::first_window() && !World::quit_all) {
+    //  Fl::wait();
+    //}
   } else {
     while (!UpdateAll())
       ;
@@ -1111,6 +1113,35 @@ void World::RemovePowerPack(PowerPack *pp)
   EraseAll(pp, powerpack_list);
 }
 
+void World::DrawOccupancy() const
+{
+  // 	int count=0;
+  //   FOR_EACH( it, superregions )
+  // 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x,
+  // it->first.y,
+  // it->second );
+  // 	printf( "done\n" );
+
+  //  unsigned int layer( updates % 2 );
+
+  FOR_EACH (it, superregions)
+    it->second->DrawOccupancy();
+
+  // 	 {
+
+  // it->second->DrawOccupancy(0);
+  //    it->second->DrawOccupancy(1);
+
+  //	 }
+}
+
+void World::DrawVoxels() const
+{
+  unsigned int layer(updates % 2);
+
+  FOR_EACH (it, superregions)
+    it->second->DrawVoxels(layer);
+}
 /// Register an Option for pickup by the GUI
 void World::RegisterOption(Option *opt)
 {  

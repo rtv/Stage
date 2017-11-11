@@ -244,18 +244,19 @@ void Model::AddVisualizer(Visualizer *cv, bool on_by_default)
   assert(cv);
 
   // If there's no GUI, ignore this request
-  if (!world_gui)
-    return;
+  //if (!world_gui)
+  //  return;
 
   // save visualizer instance
   cv_list.push_back(cv);
 
   // register option for all instances which share the same name
-  Canvas *canvas = world_gui->GetCanvas();
+  Canvas *canvas = this->GetCanvas();
+
   std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
   if (i == canvas->_custom_options.end()) {
     Option *op =
-        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default, world_gui);
+        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default, world);
     canvas->_custom_options[cv->GetMenuName()] = op;
     RegisterOption(op);
   }
@@ -313,8 +314,8 @@ void Model::DrawStatus(Camera *cam)
 
       if (valid) {
         // fl_font( FL_HELVETICA, 12 );
-        float w = gl_width(this->say_string.c_str()); // scaled text width
-        float h = gl_height(); // scaled text height
+        float w = Gl::gl_width(this->say_string.c_str()); // scaled text width
+        float h = Gl::gl_height(); // scaled text height
 
         GLdouble wx, wy, wz;
         GLint viewport[4];
@@ -530,12 +531,14 @@ void Model::DataVisualizeTree(Camera *cam)
 {
   PushLocalCoords();
 
-  if (subs > 0) {
+  Canvas * canvas = GetCanvas();
+
+  if (subs > 0 && canvas != NULL) {
     DataVisualize(cam); // virtual function overridden by some model types
 
     FOR_EACH (it, cv_list) {
       Visualizer *vis = *it;
-      if (world_gui->GetCanvas()->_custom_options[vis->GetMenuName()]->isEnabled())
+      if (canvas->_custom_options[vis->GetMenuName()]->isEnabled())
         vis->Visualize(this, cam);
     }
   }

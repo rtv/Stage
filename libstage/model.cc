@@ -238,8 +238,7 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
       power_pack(NULL), pps_charging(), rastervis(), rebuild_displaylist(true), say_string(),
       stack_children(true), stall(false), subs(0), thread_safe(false), trail(20),
       trail_index(0),  trail_interval(10), type(type), event_queue_num(0), used(false), watts(0.0), watts_give(0.0),
-      watts_take(0.0), wf(NULL), wf_entity(0), world(world),
-      world_gui(dynamic_cast<WorldGui *>(world))
+      watts_take(0.0), wf(NULL), wf_entity(0), world(world)	//,world_gui(dynamic_cast<WorldGui *>(world))
 {
   assert(world);
 
@@ -1533,4 +1532,9 @@ void Model::LoadControllerModule(const char *lib)
   }
 
   fflush(stdout);
+}
+
+Canvas * Model::GetCanvas()
+{
+	return world != NULL ? world->GetCanvas() : NULL;
 }
