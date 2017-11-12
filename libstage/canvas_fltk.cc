@@ -44,7 +44,6 @@ void CanvasFLTK::createMenuItems(Fl_Menu_Bar *menu, std::string path)
 	mm->createMenuItem(showBlocks, path);
 	mm->createMenuItem(showFlags, path);
 	mm->createMenuItem(showClock, path);
-	mm->createMenuItem(showFlags, path);
 	mm->createMenuItem(showFollow, path);
 	mm->createMenuItem(showFootprints, path);
 	mm->createMenuItem(showGrid, path);

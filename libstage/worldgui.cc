@@ -858,7 +858,7 @@ bool WorldGui::IsTopView()
   return canvas->IsTopView();
 }
 
-Canvas *WorldGui::GetCanvas(void) const
+Canvas *WorldGui::GetCanvas(void)
 {
 	return canvas;
 }

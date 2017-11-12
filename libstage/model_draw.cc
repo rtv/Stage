@@ -253,12 +253,15 @@ void Model::AddVisualizer(Visualizer *cv, bool on_by_default)
   // register option for all instances which share the same name
   Canvas *canvas = this->GetCanvas();
 
-  std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
-  if (i == canvas->_custom_options.end()) {
-    Option *op =
-        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default);
-    canvas->_custom_options[cv->GetMenuName()] = op;
-    RegisterOption(op);
+  if(canvas != NULL)
+  {
+		std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
+		if (i == canvas->_custom_options.end()) {
+			Option *op =
+					new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default);
+			canvas->_custom_options[cv->GetMenuName()] = op;
+			RegisterOption(op);
+		}
   }
 }
 

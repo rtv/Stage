@@ -116,7 +116,7 @@ public:
 
   usec_t RealTimeNow(void) const;
 
-  Canvas *GetCanvas(void) const;
+  Canvas *GetCanvas(void);
   /** show the window - need to call this if you don't Load(). */
   void Show();
 

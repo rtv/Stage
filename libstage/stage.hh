@@ -1126,7 +1126,7 @@ nonexistent */
   /** Return the floor model */
   Model *GetGround() { return ground; }
 
-  Canvas * GetCanvas() {return NULL; }
+  virtual Canvas * GetCanvas() {return NULL; }
 };
 
 class Block {
