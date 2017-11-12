@@ -41,7 +41,6 @@ uint8_t * Image::getData()
 
 bool Image::load(const char * file_name)
 {
-	assert(false);
 	/* open file and test for it being a png */
 	FILE *fp = fopen(file_name, "rb");
 
@@ -95,7 +94,30 @@ bool Image::load(const char * file_name)
 		//number_of_passes = png_set_interlace_handling(png_ptr);
 		png_read_update_info(png_ptr, info_ptr);
 
+		if(bit_depth != 8)
+		{
+			printf("We support channels of 8 bit\n");
+			break;
+		}
 
+		switch(color_type)
+		{
+		case PNG_COLOR_TYPE_GRAY:
+			bpp = bit_depth / 8;
+			break;
+		case PNG_COLOR_TYPE_RGB:
+			bpp = 3 * bit_depth / 8;
+			break;
+		case PNG_COLOR_TYPE_RGB_ALPHA:
+			bpp = 4 * bit_depth / 8;
+			break;
+		default:
+			bpp = 0;
+			printf("Unsupported color type: %d\n", color_type);
+			break;
+		}
+
+		//bpp = bit_depth / 8;
 		/* read file */
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{

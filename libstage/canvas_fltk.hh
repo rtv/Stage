@@ -22,9 +22,9 @@ protected:
 	/** Toggle callback from FLTK */
 	static void toggleCb(Fl_Widget *w, void *p);
 	CanvasFLTK * GetCanvas();
-
-	Fl_Menu_ *menu;
+private:
 	CanvasFLTK * canvas;
+	Fl_Menu_ *menu;
 };
 
 class CanvasFLTK : public Canvas, public Fl_Gl_Window {
@@ -47,7 +47,6 @@ public:
   int screenshot_frame_skip;
 
   void Screenshot();
-  void InitTextures();
   void createMenuItems(Fl_Menu_Bar *menu, std::string path);
 
   virtual void renderFrame();
@@ -73,6 +72,9 @@ public:
 
   void Load(Worldfile *wf, int sec);
   void Save(Worldfile *wf, int section);
+
+  /** Overriding draw method from Fl_Gl_Window*/
+  virtual void draw();
 };
 } //namespace Stg
 

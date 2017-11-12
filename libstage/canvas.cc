@@ -32,8 +32,6 @@ static const int checkImageHeight = 2;
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static bool blur = true;
 
-static bool texture_load_done = false;
-
 // GLuint glowTex;
 GLuint checkTex;
 
@@ -41,7 +39,7 @@ Canvas::Canvas(World *world, int x, int y, int width, int height)
     : colorstack(), models_sorted(), current_camera(NULL),
       camera(), perspective_camera(), dirty_buffer(false), wf(NULL),
       selected_models(), last_selection(NULL), interval(40), // msec between redraws
-      init_done(false),
+      init_done(false), texture_load_done(false),
       // initialize Option objects
       //  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ),
       showBBoxes("Debug/Bounding boxes", "show_boundingboxes", "^b", false),
@@ -96,16 +94,9 @@ void Canvas::InitGl()
   glEnableClientState(GL_VERTEX_ARRAY);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  // install a font
-#ifdef FIX_LATER
-  gl_font(FL_HELVETICA, 12);
-#endif
-
   blur = false;
 
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-  init_done = true;
 }
 
 void Canvas::InitTextures()
@@ -173,8 +164,6 @@ void Canvas::InitTextures()
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, checkImage);
-
-  texture_load_done = true;
 }
 
 Canvas::~Canvas()
@@ -864,46 +853,6 @@ void Canvas::Save(Worldfile *wf, int sec)
   showTrails.Save(wf, sec);
   showVoxels.Save(wf, sec);
   pCamOn.Save(wf, sec);
-}
-
-void Canvas::draw()
-{
-  // Enable the following to debug camera model
-  //	if( loaded_texture == true && pCamOn == true )
-  //		return;
-
-  if (!isValid()) {
-    if (!init_done)
-      InitGl();
-    if (!texture_load_done)
-      InitTextures();
-
-    if (pCamOn == true) {
-      perspective_camera.setAspect(static_cast<float>(getWidth()) / static_cast<float>(getHeight()));
-      perspective_camera.SetProjection();
-      current_camera = &perspective_camera;
-    } else {
-      bounds3d_t extent = world->GetExtent();
-      camera.SetProjection(getWidth(), getHeight(), extent.y.min, extent.y.max);
-      current_camera = &camera;
-    }
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  }
-
-  // Follow the selected robot
-  if (showFollow && last_selection) {
-    Pose gpose = last_selection->GetGlobalPose();
-    if (pCamOn == true) {
-      perspective_camera.setPose(gpose.x, gpose.y, 0.2);
-      perspective_camera.setYaw(rtod(gpose.a) - 90.0);
-    } else {
-      camera.setPose(gpose.x, gpose.y);
-    }
-  }
-
-  current_camera->Draw();
-  renderFrame();
 }
 
 void Canvas::draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset,

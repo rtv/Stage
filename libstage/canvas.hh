@@ -56,6 +56,7 @@ protected:
 
   msec_t interval; // window refresh interval in ms
   bool init_done;
+  bool texture_load_done;
 
 
   void RecordRay(double x1, double y1, double x2, double y2);
@@ -91,8 +92,6 @@ public:
   void DrawBoundingBoxes();
   void resetCamera();
   virtual void renderFrame();
-  virtual void draw();
-
   /** Switch between camera modes
    * @param mode - camera mode:
    *  - true: perspective camera

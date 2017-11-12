@@ -6,59 +6,6 @@
 namespace Stg
 {
 
-//Fl_Gl_Window(x, y, width, height),
-
-CanvasFLTK::CanvasFLTK(WorldGui *world, int x, int y, int width, int height)
-:Canvas(world, x, y, width, height)
-,Fl_Gl_Window(x, y, width, height), selectedModel(false), startx(-1), starty(-1),
- empty_space_startx(0), empty_space_starty(0),
- showScreenshots("Save screenshots", "screenshots", "", false),
- menu_manager(NULL),
- graphics(true), screenshot_frame_skip(1)
-{
-  end();
-  // show(); // must do this so that the GL context is created before
-  // configuring GL
-  // but that line causes a segfault in Linux/X11! TODO: test in OS X
-  mode( FL_RGB |FL_DOUBLE|FL_DEPTH| FL_MULTISAMPLE | FL_ALPHA );
-}
-
-CanvasFLTK::~CanvasFLTK()
-{
-
-}
-
-void CanvasFLTK::perspectiveCb(Option *opt, void *p)
-{
-  Canvas *canvas = static_cast<Canvas *>(p);
-  canvas->switchCameraMode(opt->val());
-}
-
-void CanvasFLTK::createMenuItems(Fl_Menu_Bar *menu, std::string path)
-{
-	assert(this->menu_manager == NULL);
-	MenuManagerFLTK * mm = new MenuManagerFLTK(this, menu);
-	menu_manager = mm;
-	mm->createMenuItem(showData, path);
-  // mm->createMenuItem(visualizeAll, path );
-	mm->createMenuItem(showBlocks, path);
-	mm->createMenuItem(showFlags, path);
-	mm->createMenuItem(showClock, path);
-	mm->createMenuItem(showFollow, path);
-	mm->createMenuItem(showFootprints, path);
-	mm->createMenuItem(showGrid, path);
-	mm->createMenuItem(showStatus, path);
-	mm->createMenuItem(pCamOn, path);
-	pCamOn.setOptionCallback(perspectiveCb, this);
-	mm->createMenuItem(showOccupancy, path);
-	mm->createMenuItem(showTrailArrows, path);
-	mm->createMenuItem(showTrails, path);
-	mm->createMenuItem(showTrailRise, path); // broken
-	mm->createMenuItem(showBBoxes, path);
-	// mm->createMenuItem(showVoxels, path );
-	mm->createMenuItem(showScreenshots, path);
-}
-
 Fl_Menu_Item *getMenuItem(Fl_Menu_ *menu, int i)
 {
   const Fl_Menu_Item *mArr = menu->menu();
@@ -110,6 +57,57 @@ void MenuManagerFLTK::toggleCb(Fl_Widget *, void *p)
   Option *opt = static_cast<Option *>(p);
   opt->invert();
   opt->callValueChanged();
+}
+
+CanvasFLTK::CanvasFLTK(WorldGui *world, int x, int y, int width, int height)
+:Canvas(world, x, y, width, height)
+,Fl_Gl_Window(x, y, width, height), selectedModel(false), startx(-1), starty(-1),
+ empty_space_startx(0), empty_space_starty(0),
+ showScreenshots("Save screenshots", "screenshots", "", false),
+ menu_manager(NULL),
+ graphics(true), screenshot_frame_skip(1)
+{
+  end();
+  // show(); // must do this so that the GL context is created before
+  // configuring GL
+  // but that line causes a segfault in Linux/X11! TODO: test in OS X
+  mode( FL_RGB |FL_DOUBLE|FL_DEPTH| FL_MULTISAMPLE | FL_ALPHA );
+}
+
+CanvasFLTK::~CanvasFLTK()
+{
+
+}
+
+void CanvasFLTK::perspectiveCb(Option *opt, void *p)
+{
+  Canvas *canvas = static_cast<Canvas *>(p);
+  canvas->switchCameraMode(opt->val());
+}
+
+void CanvasFLTK::createMenuItems(Fl_Menu_Bar *menu, std::string path)
+{
+	assert(this->menu_manager == NULL);
+	MenuManagerFLTK * mm = new MenuManagerFLTK(this, menu);
+	menu_manager = mm;
+	mm->createMenuItem(showData, path);
+  // mm->createMenuItem(visualizeAll, path );
+	mm->createMenuItem(showBlocks, path);
+	mm->createMenuItem(showFlags, path);
+	mm->createMenuItem(showClock, path);
+	mm->createMenuItem(showFollow, path);
+	mm->createMenuItem(showFootprints, path);
+	mm->createMenuItem(showGrid, path);
+	mm->createMenuItem(showStatus, path);
+	mm->createMenuItem(pCamOn, path);
+	pCamOn.setOptionCallback(perspectiveCb, this);
+	mm->createMenuItem(showOccupancy, path);
+	mm->createMenuItem(showTrailArrows, path);
+	mm->createMenuItem(showTrails, path);
+	mm->createMenuItem(showTrailRise, path); // broken
+	mm->createMenuItem(showBBoxes, path);
+	// mm->createMenuItem(showVoxels, path );
+	mm->createMenuItem(showScreenshots, path);
 }
 
 double CanvasFLTK::fontWidth(const char * str) const
@@ -488,5 +486,54 @@ void CanvasFLTK::draw_string_multiline(float x, float y, float w, float h, const
   // str );
   gl_draw(str, x, y, w, h, align); // fltk function
 }
+
+void CanvasFLTK::draw()
+{
+  // Enable the following to debug camera model
+  //	if( loaded_texture == true && pCamOn == true )
+  //		return;
+
+  if (!isValid()) {
+    if (!init_done)
+    {
+      InitGl();
+      // install a font
+      gl_font(FL_HELVETICA, 12);
+      init_done = true;
+    }
+    if (!texture_load_done)
+    {
+      InitTextures();
+      texture_load_done = true;
+    }
+
+    if (pCamOn == true) {
+      perspective_camera.setAspect(static_cast<float>(getWidth()) / static_cast<float>(getHeight()));
+      perspective_camera.SetProjection();
+      current_camera = &perspective_camera;
+    } else {
+      bounds3d_t extent = world->GetExtent();
+      camera.SetProjection(getWidth(), getHeight(), extent.y.min, extent.y.max);
+      current_camera = &camera;
+    }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+
+  // Follow the selected robot
+  if (showFollow && last_selection) {
+    Pose gpose = last_selection->GetGlobalPose();
+    if (pCamOn == true) {
+      perspective_camera.setPose(gpose.x, gpose.y, 0.2);
+      perspective_camera.setYaw(rtod(gpose.a) - 90.0);
+    } else {
+      camera.setPose(gpose.x, gpose.y);
+    }
+  }
+
+  current_camera->Draw();
+  renderFrame();
+}
+
 
 }
