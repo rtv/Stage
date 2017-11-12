@@ -488,25 +488,22 @@ point_t *unit_square_points_create();
 namespace Gl {
 
 /** Calculate scaled width of the string for current font*/
-float gl_width(const char * string);
+//float gl_width(const char * string);
 /** Calculate font height */
-float gl_height();
+//float gl_height();
 
 void pose_shift(const Pose &pose);
 void pose_inverse_shift(const Pose &pose);
 void coord_shift(double x, double y, double z, double a);
-void draw_grid(bounds3d_t vol);
 /** Render a string at [x,y,z] in the current color */
-void draw_string(float x, float y, float z, const char *string);
-void draw_string_multiline(float x, float y, float w, float h, const char *string, int align);
-void draw_speech_bubble(float x, float y, float z, const char *str);
+/// Font rendering is moved to canvas
+//void draw_string(float x, float y, float z, const char *string);
+//void draw_string_multiline(float x, float y, float w, float h, const char *string, int align);
+//void draw_speech_bubble(float x, float y, float z, const char *str);
 void draw_octagon(float w, float h, float m);
 void draw_octagon(float x, float y, float w, float h, float m);
 void draw_vector(double x, double y, double z);
 void draw_origin(double len);
-void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset,
-                float min, float max);
-void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset);
 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
 void draw_centered_rect(float x, float y, float dx, float dy);
 } // namespace Gl
@@ -527,7 +524,7 @@ public:
   }
 
   virtual ~Visualizer(void) {}
-  virtual void Visualize(Model *mod, Camera *cam) = 0;
+  virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas) = 0;
 
   const std::string &GetMenuName() { return menu_name; }
   const std::string &GetWorldfileName() { return worldfile_name; }
@@ -890,6 +887,9 @@ AddUpdateCallback is not automatically freed. */
 
   /** hint that the world needs to be redrawn if a GUI is attached */
   void NeedRedraw() { dirty = true; }
+
+  bool IsDirty() const;
+  void SetDirty(bool val);
   /** Special model for the floor of the world */
   Model *ground;
 
@@ -1292,7 +1292,7 @@ public:
   virtual void reset() = 0;
   virtual void Load(Worldfile *wf, int sec) = 0;
 
-  Canvas * GetCanvas();
+  //Canvas * GetCanvas();
 
   // TODO data should be passed in somehow else. (at least min/max stuff)
   // virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
@@ -1435,7 +1435,7 @@ public:
   StripPlotVis(float x, float y, float w, float h, size_t len, Color fgcolor, Color bgcolor,
                const char *name, const char *wfname);
   virtual ~StripPlotVis();
-  virtual void Visualize(Model *mod, Camera *cam);
+  virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   void AppendValue(float value);
 };
 
@@ -1460,7 +1460,7 @@ protected:
     DissipationVis(meters_t width, meters_t height, meters_t cellsize);
 
     virtual ~DissipationVis();
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
 
     void Accumulate(meters_t x, meters_t y, joules_t amount);
   } event_vis;
@@ -1499,7 +1499,7 @@ public:
   ~PowerPack();
 
   /** OpenGL visualization of the powerpack state */
-  void Visualize(Camera *cam);
+  void Visualize(Camera *cam, Canvas * canvas);
 
   /** Returns the energy capacity minus the current amount stored */
   joules_t RemainingCapacity() const;
@@ -1718,7 +1718,7 @@ initially NULL. */
   public:
     RasterVis();
     virtual ~RasterVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
 
     void SetData(uint8_t *data, unsigned int width, unsigned int height, meters_t cellwidth,
                  meters_t cellheight);
@@ -1903,7 +1903,7 @@ by pose, in local coords */
                 const ray_test_func_t func, const void *arg, const bool ztest,
                 std::vector<RaytraceResult> &results)
   {
-    return world->Raytrace(LocalToGlobal(pose), range, fov, func, this, arg, ztest, results);
+    world->Raytrace(LocalToGlobal(pose), range, fov, func, this, arg, ztest, results);
   }
 
   virtual void UpdateCharge();
@@ -1923,8 +1923,8 @@ by pose, in local coords */
   virtual void DrawBlocks();
   void DrawBoundingBox();
   void DrawBoundingBoxTree();
-  virtual void DrawStatus(Camera *cam);
-  void DrawStatusTree(Camera *cam);
+  virtual void DrawStatus(Camera *cam, Canvas * canvas);
+  void DrawStatusTree(Camera *cam, Canvas * canvas);
 
   void DrawOriginTree();
   void DrawOrigin();
@@ -1938,14 +1938,14 @@ by pose, in local coords */
 
   virtual void DrawPicker();
   virtual void DataVisualize(Camera *cam);
-  virtual void DrawSelected(void);
+  virtual void DrawSelected(Canvas * canvas);
 
   void DrawTrailFootprint();
   void DrawTrailBlocks();
   void DrawTrailArrows();
-  void DrawGrid();
+  void DrawGrid(Canvas * canvas);
   //	void DrawBlinkenlights();
-  void DataVisualizeTree(Camera *cam);
+  void DataVisualizeTree(Camera *cam, Canvas * canvas);
   void DrawFlagList();
   void DrawPose(Pose pose);
 
@@ -2239,7 +2239,7 @@ public:
   public:
     explicit Vis(World *world);
     virtual ~Vis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   } vis;
 
 private:
@@ -2436,7 +2436,7 @@ protected:
   public:
     BumperVis();
     virtual ~BumperVis();
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   } bumpervis;
 
 private:
@@ -2467,7 +2467,7 @@ private:
   void AddModelIfVisible(Model *him);
 
   virtual void Update();
-  virtual void DataVisualize(Camera *cam);
+  virtual void DataVisualize(Camera *cam, Canvas * canvas);
 
   static Option showData;
   static Option showFov;
@@ -2522,7 +2522,7 @@ public:
 
     explicit Vis(World *world);
     virtual ~Vis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   } vis;
 
   class Sensor {
@@ -2736,14 +2736,14 @@ Models and visualized. */
   public:
     WaypointVis();
     virtual ~WaypointVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   } wpvis;
 
   class PoseVis : public Visualizer {
   public:
     PoseVis();
     virtual ~PoseVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas);
   } posevis;
 
   /** Set the current pose estimate.*/

@@ -80,6 +80,7 @@
 #include "option.hh"
 #include "stage.hh"
 #include "worldfile.hh"
+#include "canvas.hh"
 
 using namespace Stg;
 
@@ -91,11 +92,10 @@ static const Color RANGER_CONFIG_COLOR(0, 0, 0.5);
 // static const Color RANGER_GEOM_COLOR( 1,0,1 );
 
 // static members
-Option ModelRanger::Vis::showTransducers("Ranger transducers", "show_ranger_transducers", "", false,
-                                         NULL);
-Option ModelRanger::Vis::showArea("Ranger area", "show_ranger_ranges", "", true, NULL);
-Option ModelRanger::Vis::showStrikes("Ranger strikes", "show_ranger_strikes", "", false, NULL);
-Option ModelRanger::Vis::showFov("Ranger FOV", "show_ranger_fov", "", false, NULL);
+Option ModelRanger::Vis::showTransducers("Ranger transducers", "show_ranger_transducers", "", false);
+Option ModelRanger::Vis::showArea("Ranger area", "show_ranger_ranges", "", true);
+Option ModelRanger::Vis::showStrikes("Ranger strikes", "show_ranger_strikes", "", false);
+Option ModelRanger::Vis::showFov("Ranger FOV", "show_ranger_fov", "", false);
 // Option ModelRanger::Vis::showBeams( "Ranger beams", "show_ranger_beams", "",
 // false, NULL );
 
@@ -416,7 +416,7 @@ ModelRanger::Vis::Vis(World *world) : Visualizer("Ranger", "ranger_vis")
   world->RegisterOption(&showTransducers);
 }
 
-void ModelRanger::Vis::Visualize(Model *mod, Camera *cam)
+void ModelRanger::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -443,7 +443,7 @@ void ModelRanger::Vis::Visualize(Model *mod, Camera *cam)
 
       char buf[8];
       snprintf(buf, 8, "%d", (int)s);
-      Gl::draw_string(rngr.pose.x, rngr.pose.y, rngr.pose.z, buf);
+      canvas->draw_string(rngr.pose.x, rngr.pose.y, rngr.pose.z, buf);
     }
     ranger->PopColor();
   }

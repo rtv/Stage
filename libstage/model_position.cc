@@ -14,6 +14,7 @@
 
 #include "stage.hh"
 #include "worldfile.hh"
+#include "canvas.hh"
 using namespace Stg;
 
 /**
@@ -681,7 +682,7 @@ ModelPosition::PoseVis::PoseVis() : Visualizer("Position coordinates", "show_pos
 {
 }
 
-void ModelPosition::PoseVis::Visualize(Model *mod, Camera *cam)
+void ModelPosition::PoseVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -711,10 +712,10 @@ void ModelPosition::PoseVis::Visualize(Model *mod, Camera *cam)
 
   char label[64];
   snprintf(label, 64, "x:%.3f", pos->est_pose.x);
-  Gl::draw_string(pos->est_pose.x / 2.0, -0.5, 0, label);
+  canvas->draw_string(pos->est_pose.x / 2.0, -0.5, 0, label);
 
   snprintf(label, 64, "y:%.3f", pos->est_pose.y);
-  Gl::draw_string(pos->est_pose.x + 0.5, pos->est_pose.y / 2.0, 0, (const char *)label);
+  canvas->draw_string(pos->est_pose.x + 0.5, pos->est_pose.y / 2.0, 0, (const char *)label);
 
   pos->PopColor();
 
@@ -744,7 +745,7 @@ ModelPosition::WaypointVis::WaypointVis()
 {
 }
 
-void ModelPosition::WaypointVis::Visualize(Model *mod, Camera *cam)
+void ModelPosition::WaypointVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 

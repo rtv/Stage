@@ -56,7 +56,7 @@ enabled 1
 using namespace Stg;
 
 // TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelBlinkenlight::showBlinkenData("Show Blink", "show_blinken", "", true, NULL);
+Option ModelBlinkenlight::showBlinkenData("Show Blink", "show_blinken", "", true);
 
 ModelBlinkenlight::ModelBlinkenlight(World *world, Model *parent, const std::string &type)
     : Model(world, parent, type), dutycycle(1.0), enabled(true), period(1000), on(true)

@@ -1156,6 +1156,16 @@ void World::Log(Model *)
   // LogEntry::Print();
 }
 
+bool World::IsDirty() const
+{
+	return dirty;
+}
+
+void World::SetDirty(bool val)
+{
+	dirty = val;
+}
+
 bool World::Event::operator<(const Event &other) const
 {
   return (time > other.time);

@@ -152,7 +152,7 @@ then select the option from the menu again to stop.
 #include <set>
 #include <sstream>
 
-#include "canvas.hh"
+#include "canvas_fltk.hh"
 #include "config.h" // build options from CMake
 #include "file_manager.hh"
 #include "options_dlg.hh"
@@ -585,8 +585,7 @@ void WorldGui::Start()
   World::Start();
 
   // start the timer that causes regular redraws
-  Fl::add_timeout(((double)canvas->interval / 1000), (Fl_Timeout_Handler)Canvas::TimerCallback,
-                  canvas);
+  Fl::add_timeout(((double)canvas->interval / 1000), (Fl_Timeout_Handler)CanvasFLTK::TimerCallback, canvas);
 
   SetTimeouts();
 }
@@ -609,7 +608,7 @@ void WorldGui::Stop()
 {
   World::Stop();
 
-  Fl::remove_timeout((Fl_Timeout_Handler)Canvas::TimerCallback);
+  Fl::remove_timeout((Fl_Timeout_Handler)CanvasFLTK::TimerCallback);
   Fl::remove_timeout((Fl_Timeout_Handler)UpdateCallback);
   Fl::remove_idle((Fl_Timeout_Handler)UpdateCallback, this);
 
@@ -857,4 +856,9 @@ usec_t WorldGui::RealTimeNow() const
 bool WorldGui::IsTopView()
 {
   return canvas->IsTopView();
+}
+
+Canvas *WorldGui::GetCanvas(void) const
+{
+	return canvas;
 }

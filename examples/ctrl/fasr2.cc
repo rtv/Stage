@@ -152,7 +152,7 @@ private:
 
     explicit GraphVis(Graph **graphpp) : Visualizer("graph", "vis_graph"), graphpp(graphpp) {}
     virtual ~GraphVis() {}
-    virtual void Visualize(Model *mod, Camera *)
+    virtual void Visualize(Model *mod, Camera *, Canvas * canvas)
     {
       if (*graphpp == NULL)
         return;

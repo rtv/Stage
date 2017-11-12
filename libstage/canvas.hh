@@ -13,7 +13,7 @@ class Canvas {
   friend class WorldGui; // allow access to private members
   friend class Model;
 
-private:
+protected:
   class GlColorStack {
   public:
     GlColorStack() : colorstack() {}
@@ -49,16 +49,14 @@ private:
   PerspectiveCamera perspective_camera;
   bool dirty_buffer;
   Worldfile *wf;
-
-  int startx, starty;
-  bool selectedModel;
   bool clicked_empty_space;
-  int empty_space_startx, empty_space_starty;
   std::list<Model *> selected_models;
   Model *last_selection; ///< the most recently selected model
   ///(even if it is now unselected).
 
   msec_t interval; // window refresh interval in ms
+  bool init_done;
+
 
   void RecordRay(double x1, double y1, double x2, double y2);
   void DrawRays();
@@ -71,7 +69,7 @@ private:
   Option // showBlinken,
       showBBoxes,
       showBlocks, showBlur, showClock, showData, showFlags, showFollow, showFootprints, showGrid,
-      showOccupancy, showScreenshots, showStatus, showTrailArrows, showTrailRise, showTrails,
+      showOccupancy, showStatus, showTrailArrows, showTrailRise, showTrails,
       showVoxels, pCamOn, visualizeAll;
 
 public:
@@ -81,11 +79,9 @@ public:
   bool graphics;
   World *world;
   unsigned long frames_rendered_count;
-  int screenshot_frame_skip;
 
   std::map<std::string, Option *> _custom_options;
 
-  void Screenshot();
   void InitGl();
   void InitTextures();
 
@@ -97,11 +93,33 @@ public:
   virtual void renderFrame();
   virtual void draw();
 
+  /** Switch between camera modes
+   * @param mode - camera mode:
+   *  - true: perspective camera
+   *  - false: default camera
+   */
+  void switchCameraMode(bool mode);
+
   virtual bool isValid() {return false;}
   virtual void doRedraw() {}
   virtual int getWidth() const {return 1;}
   virtual int getHeight() const {return 1;}
   virtual void setInvalidate() {}
+
+  msec_t getRedrawInterval() const {return interval; }
+
+  /// Wraps interaction with current font geometry
+  virtual double fontWidth(const char * str) const {return 0;};
+  virtual double fontHeight() const {return 0;};
+
+  virtual void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset, float min, float max);
+  virtual void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset);
+
+  virtual void draw_string(float x, float y, float z, const char *string);
+  virtual void draw_string_multiline(float x, float y, float w, float h, const char *string, int align);
+
+  void draw_speech_bubble(float x, float y, float z, const char *str);
+  void draw_grid(bounds3d_t vol);
 
   void CanvasToWorld(int px, int py, double *wx, double *wy, double *wz);
 
@@ -119,14 +137,14 @@ public:
   void InvertView(uint32_t invertflags);
 
   bool VisualizeAll() { return !visualizeAll; }
-  static void TimerCallback(Canvas *canvas);
+  //static void TimerCallback(Canvas *canvas);
   //static void perspectiveCb(Fl_Widget *w, void *p);
 
   void EnterScreenCS();
   void LeaveScreenCS();
 
-  void Load(Worldfile *wf, int section);
-  void Save(Worldfile *wf, int section);
+  virtual void Load(Worldfile *wf, int section);
+  virtual void Save(Worldfile *wf, int section);
 
   bool IsTopView() { return ((fabs(camera.yaw()) < 0.1) && (fabs(camera.pitch()) < 0.1)); }
 };

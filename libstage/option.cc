@@ -5,18 +5,22 @@
 #include "worldfile.hh"
 using namespace Stg;
 
-Option::Option(const std::string &n, const std::string &tok, const std::string &key, bool v,
-               World *world)
-    : optName(n), value(v), wf_token(tok), shortcut(key), menu(NULL), menuIndex(0), menuCb(NULL),
-			callbackData(NULL), _world(world), htname(n)
+void MenuManager::callOptionCallback(Option * opt)
+{
+	if (opt->menuCb)
+			opt->menuCb(opt, opt->callbackData);
+}
+
+Option::Option(const std::string &n, const std::string &tok, const std::string &key, bool v)
+    : optName(n), value(v), wf_token(tok), shortcut(key), menuCb(NULL),
+			callbackData(NULL), manager(NULL), menu_widget(NULL), htname(n)
 {
   /* do nothing */
 }
 
-Fl_Menu_Item *getMenuItem(Fl_Menu_ *menu, int i)
+Option::~Option()
 {
-  const Fl_Menu_Item *mArr = menu->menu();
-  return const_cast<Fl_Menu_Item *>(&mArr[i]);
+
 }
 
 void Option::Load(Worldfile *wf, int section)
@@ -40,19 +44,26 @@ void Option::set(bool val)
 {
   value = val;
 
-  if (menu) {
-    Fl_Menu_Item *item = getMenuItem(menu, menuIndex);
-    value ? item->set() : item->clear();
+  if(manager != NULL)
+  {
+  	manager->syncMenuState(this);
   }
+}
 
-  if (_world) {
-#ifdef TEST_LATER
-    WorldGui *wg = dynamic_cast<WorldGui *>(_world);
-    if (wg == NULL)
-      return;
-    Canvas *canvas = wg->GetCanvas();
-    canvas->setInvalidate();
-    canvas->redraw();
-#endif
-  }
+void Option::onAttachGUI(MenuManager * manager, void * widget)
+{
+	assert(this->manager == NULL);
+	this->manager = manager;
+	this->menu_widget = widget;
+}
+
+void * Option::getWidgetData()
+{
+	return menu_widget;
+}
+
+void Option::callValueChanged()
+{
+	if (menuCb != NULL)
+		menuCb(this, callbackData);
 }

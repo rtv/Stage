@@ -21,11 +21,8 @@ StripPlotVis::~StripPlotVis()
     free(data);
 }
 
-void StripPlotVis::Visualize(Model *mod, Camera *camera)
+void StripPlotVis::Visualize(Model *mod, Camera *camera, Canvas * canvas)
 {
-  //Canvas *canvas = dynamic_cast<WorldGui *>(mod->GetWorld())->GetCanvas();
-	Canvas *canvas = camera->GetCanvas();
-
   if (!canvas->selected(mod)) // == canvas->SelectedVisualizeAll() )
     return;
 
@@ -36,7 +33,7 @@ void StripPlotVis::Visualize(Model *mod, Camera *camera)
   mod->PopColor();
 
   mod->PushColor(fgcolor);
-  Gl::draw_array(x, y, w, h, data, len, count % len, min, max);
+  canvas->draw_array(x, y, w, h, data, len, count % len, min, max);
   mod->PopColor();
 
   canvas->LeaveScreenCS();

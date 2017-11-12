@@ -56,7 +56,7 @@
 using namespace Stg;
 
 #include "option.hh"
-Option ModelGripper::showData("Gripper data", "show_gripper_data", "", true, NULL);
+Option ModelGripper::showData("Gripper data", "show_gripper_data", "", true);
 
 // TODO - simulate energy use when moving grippers
 

@@ -22,6 +22,8 @@ namespace Stg {
 /** Extends World to implement an FLTK / OpenGL graphical user
       interface.
   */
+class CanvasFLTK;
+
 class WorldGui : public World, public Fl_Window {
   friend class Canvas;
   friend class ModelCamera;
@@ -114,7 +116,7 @@ public:
 
   usec_t RealTimeNow(void) const;
 
-  Canvas *GetCanvas(void) const { return canvas; }
+  Canvas *GetCanvas(void) const;
   /** show the window - need to call this if you don't Load(). */
   void Show();
 

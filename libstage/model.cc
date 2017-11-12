@@ -139,6 +139,7 @@
 #include "config.h" // for build-time config
 #include "file_manager.hh"
 #include "stage.hh"
+#include "canvas.hh"
 #include "worldfile.hh"
 using namespace Stg;
 
@@ -881,7 +882,7 @@ Model::RasterVis::RasterVis()
 {
 }
 
-void Model::RasterVis::Visualize(Model *mod, Camera *cam)
+void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -910,7 +911,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
       char buf[128];
       snprintf(buf, 127, "[%.2f x %.2f]", pt.x, pt.y);
-      Gl::draw_string(pt.x, pt.y, 0, buf);
+      canvas->draw_string(pt.x, pt.y, 0, buf);
     }
     glEnd();
 
@@ -957,7 +958,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
   char buf[128];
   snprintf(buf, 127, "[%u x %u]", width, height);
   glTranslatef(0, 0, 0.01);
-  Gl::draw_string(1, height - 1, 0, buf);
+  canvas->draw_string(1, height - 1, 0, buf);
 
   mod->PopColor();
 

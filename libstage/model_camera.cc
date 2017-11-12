@@ -22,7 +22,7 @@ using namespace Stg;
 #include <sstream>
 
 // TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelCamera::showCameraData("Show Camera Data", "show_camera", "", true, NULL);
+Option ModelCamera::showCameraData("Show Camera Data", "show_camera", "", true);
 
 static const Stg::Size DEFAULT_SIZE(0.1, 0.07, 0.05);
 static const char DEFAULT_GEOM_COLOR[] = "black";

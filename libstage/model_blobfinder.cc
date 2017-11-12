@@ -287,7 +287,7 @@ ModelBlobfinder::Vis::Vis(World *) : Visualizer("Blobfinder", "blobfinder_vis")
   // world->RegisterOption( &showBeams );
 }
 
-void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam)
+void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   ModelBlobfinder *bf(dynamic_cast<ModelBlobfinder *>(mod));
 

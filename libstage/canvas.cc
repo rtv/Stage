@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <functional> // For greater<int>( )
-#include <png.h>
 #include <sstream>
 #include <string>
 
@@ -33,7 +32,6 @@ static const int checkImageHeight = 2;
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static bool blur = true;
 
-static bool init_done = false;
 static bool texture_load_done = false;
 
 // GLuint glowTex;
@@ -41,30 +39,30 @@ GLuint checkTex;
 
 Canvas::Canvas(World *world, int x, int y, int width, int height)
     : colorstack(), models_sorted(), current_camera(NULL),
-      camera(), perspective_camera(), dirty_buffer(false), wf(NULL), startx(-1), starty(-1),
+      camera(), perspective_camera(), dirty_buffer(false), wf(NULL),
       selected_models(), last_selection(NULL), interval(40), // msec between redraws
+      init_done(false),
       // initialize Option objects
       //  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ),
-      showBBoxes("Debug/Bounding boxes", "show_boundingboxes", "^b", false, world),
-      showBlocks("Blocks", "show_blocks", "b", true, world),
-      showBlur("Trails/Blur", "show_trailblur", "^d", false, world),
-      showClock("Clock", "show_clock", "c", true, world),
-      showData("Data", "show_data", "d", false, world),
-      showFlags("Flags", "show_flags", "l", true, world),
-      showFollow("Follow", "show_follow", "f", false, world),
-      showFootprints("Footprints", "show_footprints", "o", false, world),
-      showGrid("Grid", "show_grid", "g", true, world),
-      showOccupancy("Debug/Occupancy", "show_occupancy", "^o", false, world),
-      showScreenshots("Save screenshots", "screenshots", "", false, world),
-      showStatus("Status", "show_status", "s", true, world),
-      showTrailArrows("Trails/Rising Arrows", "show_trailarrows", "^a", false, world),
-      showTrailRise("Trails/Rising blocks", "show_trailrise", "^r", false, world),
-      showTrails("Trails/Fast", "show_trailfast", "^f", false, world),
-      showVoxels("Debug/Voxels", "show_voxels", "^v", false, world),
-      pCamOn("Perspective camera", "pcam_on", "r", false, world),
-      visualizeAll("Selected only", "vis_all", "v", false, world),
+      showBBoxes("Debug/Bounding boxes", "show_boundingboxes", "^b", false),
+      showBlocks("Blocks", "show_blocks", "b", true),
+      showBlur("Trails/Blur", "show_trailblur", "^d", false),
+      showClock("Clock", "show_clock", "c", true),
+      showData("Data", "show_data", "d", false),
+      showFlags("Flags", "show_flags", "l", true),
+      showFollow("Follow", "show_follow", "f", false),
+      showFootprints("Footprints", "show_footprints", "o", false),
+      showGrid("Grid", "show_grid", "g", true),
+      showOccupancy("Debug/Occupancy", "show_occupancy", "^o", false),
+      showStatus("Status", "show_status", "s", true),
+      showTrailArrows("Trails/Rising Arrows", "show_trailarrows", "^a", false),
+      showTrailRise("Trails/Rising blocks", "show_trailrise", "^r", false),
+      showTrails("Trails/Fast", "show_trailfast", "^f", false),
+      showVoxels("Debug/Voxels", "show_voxels", "^v", false),
+      pCamOn("Perspective camera", "pcam_on", "r", false),
+      visualizeAll("Selected only", "vis_all", "v", false),
       // and the rest
-      graphics(true), world(world), frames_rendered_count(0), screenshot_frame_skip(1)
+      graphics(true), world(world), frames_rendered_count(0)
 {
   perspective_camera.setPose(0.0, -4.0, 3.0);
   current_camera = &camera;
@@ -396,22 +394,22 @@ void Canvas::DrawGlobalGrid()
 
   for (double i = 0; i < bounds.x.max; i += skip) {
     snprintf(str, 16, "%d", (int)i);
-    Gl::draw_string(i, 0, 0, str);
+    this->draw_string(i, 0, 0, str);
   }
 
   for (double i = 0; i >= bounds.x.min; i -= skip) {
     snprintf(str, 16, "%d", (int)i);
-    Gl::draw_string(i, 0, 0, str);
+    this->draw_string(i, 0, 0, str);
   }
 
   for (double i = 0; i < bounds.y.max; i += skip) {
     snprintf(str, 16, "%d", (int)i);
-    Gl::draw_string(0, i, 0, str);
+    this->draw_string(0, i, 0, str);
   }
 
   for (double i = 0; i >= bounds.y.min; i -= skip) {
     snprintf(str, 16, "%d", (int)i);
-    Gl::draw_string(0, i, 0, str);
+    this->draw_string(0, i, 0, str);
   }
 
   PopColor();
@@ -559,7 +557,7 @@ void Canvas::renderFrame()
       char str[128];
       snprintf(str, 128, "(%d,%d)", world->rt_cells[i].x, world->rt_cells[i].y);
 
-      Gl::draw_string(world->rt_cells[i].x + 1, world->rt_cells[i].y + 1, 0.1, str);
+      this->draw_string(world->rt_cells[i].x + 1, world->rt_cells[i].y + 1, 0.1, str);
 
       // printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y
       // );
@@ -668,7 +666,7 @@ void Canvas::renderFrame()
   // LISTMETHOD( models_sorted, Model*, DrawWaypoints );
 
   FOR_EACH (it, selected_models)
-    (*it)->DrawSelected();
+    (*it)->DrawSelected(this);
 
   // useful debug - puts a point at the origin of each model
   // for( GList* it = world->World::children; it; it=it->next )
@@ -679,19 +677,19 @@ void Canvas::renderFrame()
     if (showData) {
       if (!visualizeAll) {
         FOR_EACH (it, world->World::children)
-          (*it)->DataVisualizeTree(current_camera);
+          (*it)->DataVisualizeTree(current_camera, this);
       } else if (selected_models.size() > 0) {
         FOR_EACH (it, selected_models)
-          (*it)->DataVisualizeTree(current_camera);
+          (*it)->DataVisualizeTree(current_camera, this);
       } else if (last_selection) {
-        last_selection->DataVisualizeTree(current_camera);
+        last_selection->DataVisualizeTree(current_camera, this);
       }
     }
   }
 
   if (showGrid)
     FOR_EACH (it, models_sorted)
-      (*it)->DrawGrid();
+      (*it)->DrawGrid(this);
 
   if (showStatus) {
     glPushMatrix();
@@ -700,7 +698,7 @@ void Canvas::renderFrame()
       glTranslatef(0, 0, 0.1);
 
     FOR_EACH (it, models_sorted)
-      (*it)->DrawStatusTree(&camera);
+      (*it)->DrawStatusTree(&camera, this);
 
     glPopMatrix();
   }
@@ -739,10 +737,10 @@ void Canvas::renderFrame()
     if (showFollow == true && last_selection)
       clockstr.append(" [FOLLOW MODE]");
 
-    float txtWidth = Gl::gl_width(clockstr.c_str());
+    float txtWidth = this->fontWidth(clockstr.c_str());
     if (txtWidth < 200)
       txtWidth = 200;
-    int txtHeight = Gl::gl_height();
+    int txtHeight = this->fontHeight();
 
     const int margin = 5;
     int width, height;
@@ -757,7 +755,7 @@ void Canvas::renderFrame()
     //char buf[ clockstr.size() ];
     //strcpy( buf, clockstr.c_str() );
 
-    Gl::draw_string(margin, margin, 0, clockstr.c_str() );
+    this->draw_string(margin, margin, 0, clockstr.c_str() );
     colorstack.Pop();
     colorstack.Pop();
 
@@ -780,9 +778,6 @@ void Canvas::renderFrame()
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
   }
-
-  if (showScreenshots && (frames_rendered_count % screenshot_frame_skip == 0))
-    Screenshot();
 
   frames_rendered_count++;
 }
@@ -810,61 +805,16 @@ void Canvas::LeaveScreenCS()
   glMatrixMode(GL_MODELVIEW);
 }
 
-void Canvas::Screenshot()
+void Canvas::switchCameraMode(bool mode)
 {
-  int width = getWidth();
-  int height = getHeight();
-  int depth = 4; // RGBA
-
-  // we use RGBA throughout, though we only need RGB, as the 4-byte
-  // pixels avoid a nasty word-alignment problem when indexing into
-  // the pixel array.
-
-  // might save a bit of time with a static var as the image size rarely changes
-  static std::vector<uint8_t> pixels;
-  pixels.resize(width * height * depth);
-
-  glFlush(); // make sure the drawing is done
-  // read the pixels from the screen
-  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
-
-  static uint32_t count = 0;
-  char filename[64];
-  snprintf(filename, 63, "stage-%06d.png", count++);
-
-  FILE *fp = fopen(filename, "wb");
-  if (fp == NULL) {
-    PRINT_ERR1("Unable to open %s", filename);
-  }
-
-  // create PNG data
-  png_structp pp = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-  assert(pp);
-  png_infop info = png_create_info_struct(pp);
-  assert(info);
-
-  // setup the output file
-  png_init_io(pp, fp);
-
-  // need to invert the image as GL and PNG disagree on the row order
-  png_bytep *rowpointers = new png_bytep[height];
-  for (int i = 0; i < height; i++)
-    rowpointers[i] = &pixels[(height - 1 - i) * width * depth];
-
-  png_set_rows(pp, info, rowpointers);
-
-  png_set_IHDR(pp, info, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
-               PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-  png_write_png(pp, info, PNG_TRANSFORM_IDENTITY, NULL);
-
-  // free the PNG data - we reuse the pixel array next call.
-  png_destroy_write_struct(&pp, &info);
-
-  fclose(fp);
-
-  printf("Saved %s\n", filename);
-  delete[] rowpointers;
+	if (mode)
+	{
+		// Perspective mode is on, change camera
+		this->current_camera = &this->perspective_camera;
+	} else {
+		this->current_camera = &this->camera;
+	}
+	setInvalidate();
 }
 
 void Canvas::Load(Worldfile *wf, int sec)
@@ -874,10 +824,6 @@ void Canvas::Load(Worldfile *wf, int sec)
   perspective_camera.Load(wf, sec);
 
   interval = wf->ReadInt(sec, "interval", interval);
-
-  screenshot_frame_skip = wf->ReadInt(sec, "screenshot_skip", screenshot_frame_skip);
-  if (screenshot_frame_skip < 1)
-    screenshot_frame_skip = 1; // avoids div-by-zero if poorly set
 
   showData.Load(wf, sec);
   showFlags.Load(wf, sec);
@@ -893,7 +839,6 @@ void Canvas::Load(Worldfile *wf, int sec)
   showTrailRise.Load(wf, sec);
   showTrails.Load(wf, sec);
   // showVoxels.Load( wf, sec );
-  showScreenshots.Load(wf, sec);
   pCamOn.Load(wf, sec);
 }
 
@@ -918,7 +863,6 @@ void Canvas::Save(Worldfile *wf, int sec)
   showTrailRise.Save(wf, sec);
   showTrails.Save(wf, sec);
   showVoxels.Save(wf, sec);
-  showScreenshots.Save(wf, sec);
   pCamOn.Save(wf, sec);
 }
 
@@ -962,3 +906,83 @@ void Canvas::draw()
   renderFrame();
 }
 
+void Canvas::draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset,
+                         float min, float max)
+{
+  float sample_spacing = w / (float)len;
+  float yscale = h / (max - min);
+
+  // printf( "min %.2f max %.2f\n", min, max );
+
+  glBegin(GL_LINE_STRIP);
+
+  for (unsigned int i = 0; i < len; i++)
+    glVertex3f(x + (float)i * sample_spacing, y + (data[(i + offset) % len] - min) * yscale, 0.01);
+
+  glEnd();
+
+  glColor3f(0, 0, 0);
+  char buf[64];
+  snprintf(buf, 63, "%.2f", min);
+  this->draw_string(x, y, 0, buf);
+  snprintf(buf, 63, "%.2f", max);
+  this->draw_string(x, y + h - this->getHeight(), 0, buf);
+}
+
+void Canvas::draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset)
+{
+  // wild initial bounds
+  float smallest = 1e16;
+  float largest = -1e16;
+
+  for (size_t i = 0; i < len; i++) {
+    smallest = std::min(smallest, data[i]);
+    largest = std::max(largest, data[i]);
+  }
+
+  draw_array(x, y, w, h, data, len, offset, smallest, largest);
+}
+
+void Canvas::draw_speech_bubble(float x, float y, float z, const char *str)
+{
+  draw_string(x, y, z, str);
+}
+
+void Canvas::draw_string(float x, float y, float z, const char *string)
+{
+	// TODO: To be implemented in child class
+}
+
+void Canvas::draw_string_multiline(float x, float y, float w, float h, const char *string, int align)
+{
+	// TODO: To be implemented in child class
+}
+
+void Canvas::draw_grid(bounds3d_t vol)
+{
+  glBegin(GL_LINES);
+
+  for (double i = floor(vol.x.min); i < vol.x.max; i++) {
+    glVertex2f(i, vol.y.min);
+    glVertex2f(i, vol.y.max);
+  }
+
+  for (double i = floor(vol.y.min); i < vol.y.max; i++) {
+    glVertex2f(vol.x.min, i);
+    glVertex2f(vol.x.max, i);
+  }
+
+  glEnd();
+
+  char str[16];
+
+  for (double i = floor(vol.x.min); i < vol.x.max; i++) {
+    snprintf(str, 16, "%d", (int)i);
+    draw_string(i, 0, 0.00, str);
+  }
+
+  for (double i = floor(vol.y.min); i < vol.y.max; i++) {
+    snprintf(str, 16, "%d", (int)i);
+    draw_string(0, i, 0.00, str);
+  }
+}

@@ -1,4 +1,7 @@
 #include "canvas_fltk.hh"
+#include <FL/Fl.H>
+#include <FL/gl.h>
+#include "png.h"
 
 namespace Stg
 {
@@ -6,7 +9,12 @@ namespace Stg
 //Fl_Gl_Window(x, y, width, height),
 
 CanvasFLTK::CanvasFLTK(WorldGui *world, int x, int y, int width, int height)
-:Canvas(world, x, y, width, height), screenshot_frame_skip(1)
+:Canvas(world, x, y, width, height)
+,Fl_Gl_Window(x, y, width, height), selectedModel(false), startx(-1), starty(-1),
+ empty_space_startx(0), empty_space_starty(0),
+ showScreenshots("Save screenshots", "screenshots", "", false),
+ menu_manager(NULL),
+ graphics(true), screenshot_frame_skip(1)
 {
   end();
   // show(); // must do this so that the GL context is created before
@@ -15,59 +23,171 @@ CanvasFLTK::CanvasFLTK(WorldGui *world, int x, int y, int width, int height)
   mode( FL_RGB |FL_DOUBLE|FL_DEPTH| FL_MULTISAMPLE | FL_ALPHA );
 }
 
+CanvasFLTK::~CanvasFLTK()
+{
+
+}
+
 void CanvasFLTK::perspectiveCb(Option *opt, void *p)
 {
   Canvas *canvas = static_cast<Canvas *>(p);
-  if (opt) {
-    // Perspective mode is on, change camera
-    canvas->current_camera = &canvas->perspective_camera;
-  } else {
-    canvas->current_camera = &canvas->camera;
-  }
-
-  canvas->invalidate();
+  canvas->switchCameraMode(opt->val());
 }
 
 void CanvasFLTK::createMenuItems(Fl_Menu_Bar *menu, std::string path)
 {
-	createMenuItem(showData.menu, path);
-  // createMenuItem(visualizeAll, menu, path );
-	createMenuItem(showBlocks,menu, path);
-	createMenuItem(showFlags, menu, path);
-	createMenuItem(showClock, menu, path);
-	createMenuItem(showFlags, menu, path);
-	createMenuItem(showFollow, menu, path);
-	createMenuItem(showFootprints, menu, path);
-	createMenuItem(showGrid, menu, path);
-	createMenuItem(showStatus, menu, path);
-	createMenuItem(pCamOn, menu, path);
+	assert(this->menu_manager == NULL);
+	MenuManagerFLTK * mm = new MenuManagerFLTK(this, menu);
+	menu_manager = mm;
+	mm->createMenuItem(showData, path);
+  // mm->createMenuItem(visualizeAll, path );
+	mm->createMenuItem(showBlocks, path);
+	mm->createMenuItem(showFlags, path);
+	mm->createMenuItem(showClock, path);
+	mm->createMenuItem(showFlags, path);
+	mm->createMenuItem(showFollow, path);
+	mm->createMenuItem(showFootprints, path);
+	mm->createMenuItem(showGrid, path);
+	mm->createMenuItem(showStatus, path);
+	mm->createMenuItem(pCamOn, path);
 	pCamOn.setOptionCallback(perspectiveCb, this);
-	createMenuItem(showOccupancy, menu, path);
-	createMenuItem(showTrailArrows, menu, path);
-	createMenuItem(showTrails, menu, path);
-	createMenuItem(showTrailRise, menu, path); // broken
-	createMenuItem(showBBoxes, menu, path);
-	// createMenuItem(showVoxels, menu, path );
-	createMenuItem(showScreenshots, menu, path);
+	mm->createMenuItem(showOccupancy, path);
+	mm->createMenuItem(showTrailArrows, path);
+	mm->createMenuItem(showTrails, path);
+	mm->createMenuItem(showTrailRise, path); // broken
+	mm->createMenuItem(showBBoxes, path);
+	// mm->createMenuItem(showVoxels, path );
+	mm->createMenuItem(showScreenshots, path);
 }
 
-void CanvasFLTK::toggleCb(Fl_Widget *, void *p)
+Fl_Menu_Item *getMenuItem(Fl_Menu_ *menu, int i)
+{
+  const Fl_Menu_Item *mArr = menu->menu();
+  return const_cast<Fl_Menu_Item *>(&mArr[i]);
+}
+
+MenuManagerFLTK::MenuManagerFLTK(CanvasFLTK * canvas, Fl_Menu_Bar *menu)
+	:canvas(canvas), menu(menu)
+{
+
+}
+
+CanvasFLTK * MenuManagerFLTK::GetCanvas()
+{
+	return canvas;
+}
+
+void MenuManagerFLTK::createMenuItem(Option & opt, std::string path)
+{
+  path = path + "/" + opt.name();
+  std::string key = opt.key();
+  // create a menu item and save its index
+  size_t index = menu->add(path.c_str(), key.c_str(), toggleCb, &opt, FL_MENU_TOGGLE | (opt.val() ? FL_MENU_VALUE : 0));
+  opt.onAttachGUI(this, reinterpret_cast<void*>(index));
+}
+
+void MenuManagerFLTK::syncMenuState(Option * opt)
+{
+	size_t index = reinterpret_cast<size_t>(opt->getWidgetData());
+
+  if (menu != NULL) {
+    Fl_Menu_Item *item = getMenuItem(menu, index);
+    if(item != NULL) {
+    	opt->val() ? item->set() : item->clear();
+    }
+  }
+
+  CanvasFLTK *canvas = GetCanvas();
+  if (canvas != NULL)
+  {
+    canvas->setInvalidate();
+    canvas->redraw();
+  }
+}
+
+void MenuManagerFLTK::toggleCb(Fl_Widget *, void *p)
 {
   // Fl_Menu_* menu = static_cast<Fl_Menu_*>( w );
   Option *opt = static_cast<Option *>(p);
   opt->invert();
-  if (opt->menuCb)
-    opt->menuCb(opt, opt->callbackData);
+  opt->callValueChanged();
 }
 
-void CanvasFLTK::createMenuItem(Option * opt, Fl_Menu_Bar *m, std::string path)
+double CanvasFLTK::fontWidth(const char * str) const
 {
-  opt->menu = m;
-  path = path + "/" + optName;
-  // create a menu item and save its index
-  opt->menuIndex = menu->add(path.c_str(), shortcut.c_str(), toggleCb, opt, FL_MENU_TOGGLE | (value ? FL_MENU_VALUE : 0));
+	return gl_width(str);
 }
 
+double CanvasFLTK::fontHeight() const
+{
+	return gl_height();
+}
+
+void CanvasFLTK::Screenshot()
+{
+  int width = getWidth();
+  int height = getHeight();
+  int depth = 4; // RGBA
+
+  // we use RGBA throughout, though we only need RGB, as the 4-byte
+  // pixels avoid a nasty word-alignment problem when indexing into
+  // the pixel array.
+
+  // might save a bit of time with a static var as the image size rarely changes
+  static std::vector<uint8_t> pixels;
+  pixels.resize(width * height * depth);
+
+  glFlush(); // make sure the drawing is done
+  // read the pixels from the screen
+  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+
+  static uint32_t count = 0;
+  char filename[64];
+  snprintf(filename, 63, "stage-%06d.png", count++);
+
+  FILE *fp = fopen(filename, "wb");
+  if (fp == NULL) {
+    PRINT_ERR1("Unable to open %s", filename);
+  }
+
+  // create PNG data
+  png_structp pp = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+  assert(pp);
+  png_infop info = png_create_info_struct(pp);
+  assert(info);
+
+  // setup the output file
+  png_init_io(pp, fp);
+
+  // need to invert the image as GL and PNG disagree on the row order
+  png_bytep *rowpointers = new png_bytep[height];
+  for (int i = 0; i < height; i++)
+    rowpointers[i] = &pixels[(height - 1 - i) * width * depth];
+
+  png_set_rows(pp, info, rowpointers);
+
+  png_set_IHDR(pp, info, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+               PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+  png_write_png(pp, info, PNG_TRANSFORM_IDENTITY, NULL);
+
+  // free the PNG data - we reuse the pixel array next call.
+  png_destroy_write_struct(&pp, &info);
+
+  fclose(fp);
+
+  printf("Saved %s\n", filename);
+  delete[] rowpointers;
+}
+
+
+void CanvasFLTK::renderFrame()
+{
+	Canvas::renderFrame();
+
+	if (showScreenshots && (frames_rendered_count % screenshot_frame_skip == 0))
+	    Screenshot();
+}
 
 int CanvasFLTK::handle(int event)
 {
@@ -316,21 +436,58 @@ void CanvasFLTK::resize(int X, int Y, int W, int H)
 void CanvasFLTK::Load(Worldfile *wf, int sec)
 {
 	Canvas::Load(wf, sec);
+
+	showScreenshots.Load(wf, sec);
+
+	screenshot_frame_skip = wf->ReadInt(sec, "screenshot_skip", screenshot_frame_skip);
+	if (screenshot_frame_skip < 1)
+		screenshot_frame_skip = 1; // avoids div-by-zero if poorly set
+
   if (!world->paused)
     // // start the timer that causes regular redraws
-    Fl::add_timeout(((double)interval / 1000), (Fl_Timeout_Handler)Canvas::TimerCallback, this);
+    Fl::add_timeout(((double)interval / 1000), (Fl_Timeout_Handler)CanvasFLTK::TimerCallback, this);
 
   invalidate(); // we probably changed something
 }
 
+void CanvasFLTK::Save(Worldfile *wf, int sec)
+{
+	wf->WriteInt(sec, "screenshot_skip", screenshot_frame_skip);
+	showScreenshots.Save(wf, sec);
+	Canvas::Save(wf, sec);
+}
+
 void CanvasFLTK::TimerCallback(Canvas *c)
 {
-  if (c->world->dirty) {
+  if (c->world->IsDirty())
+  {
     // puts( "timer redraw" );
     c->doRedraw();
-    c->world->dirty = false;
+    c->world->SetDirty(false);
   }
-  Fl::repeat_timeout(c->interval / 1000.0, (Fl_Timeout_Handler)Canvas::TimerCallback, c);
+  msec_t interval = c->getRedrawInterval();
+  Fl::repeat_timeout(interval / 1000.0, (Fl_Timeout_Handler)CanvasFLTK::TimerCallback, c);
+}
+
+void CanvasFLTK::draw_string(float x, float y, float z, const char *str)
+{
+  glRasterPos3f(x, y, z);
+
+  GLboolean b;
+  glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &b);
+
+  // printf( "[%.2f %.2f %.2f] %d string %u %s\n", x,y,z, (int)b, (unsigned
+  // int)strlen(str), str );
+
+  if (b)
+    gl_draw(str); // fltk function
+}
+
+void CanvasFLTK::draw_string_multiline(float x, float y, float w, float h, const char *str, int align)
+{
+  // printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str),
+  // str );
+  gl_draw(str, x, y, w, h, align); // fltk function
 }
 
 }

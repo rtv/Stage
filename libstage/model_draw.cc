@@ -9,7 +9,7 @@ static const Color BUBBLE_FILL(1.0, 0.8, 0.8); // light blue/grey
 static const Color BUBBLE_BORDER(0, 0, 0); // black
 static const Color BUBBLE_TEXT(0, 0, 0); // black
 
-void Model::DrawSelected()
+void Model::DrawSelected(Canvas * canvas)
 {
   glPushMatrix();
 
@@ -21,7 +21,7 @@ void Model::DrawSelected()
   snprintf(buf, 63, "%s [%.2f %.2f %.2f %.2f]", Token(), gp.x, gp.y, gp.z, rtod(gp.a));
 
   PushColor(0, 0, 0, 1); // text color black
-  Gl::draw_string(0.5, 0.5, 0.5, buf);
+  canvas->draw_string(0.5, 0.5, 0.5, buf);
 
   glRotatef(rtod(pose.a), 0, 0, 1);
 
@@ -256,7 +256,7 @@ void Model::AddVisualizer(Visualizer *cv, bool on_by_default)
   std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
   if (i == canvas->_custom_options.end()) {
     Option *op =
-        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default, world);
+        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default);
     canvas->_custom_options[cv->GetMenuName()] = op;
     RegisterOption(op);
   }
@@ -271,16 +271,16 @@ void Model::RemoveVisualizer(Visualizer *cv)
   // attached to different models which have the same name
 }
 
-void Model::DrawStatusTree(Camera *cam)
+void Model::DrawStatusTree(Camera *cam, Canvas * canvas)
 {
   PushLocalCoords();
-  DrawStatus(cam);
+  DrawStatus(cam, canvas);
   FOR_EACH (it, children)
-    (*it)->DrawStatusTree(cam);
+    (*it)->DrawStatusTree(cam, canvas);
   PopCoords();
 }
 
-void Model::DrawStatus(Camera *cam)
+void Model::DrawStatus(Camera *cam, Canvas * canvas)
 {
   if (power_pack || !say_string.empty()) {
     float pitch = -cam->pitch();
@@ -314,8 +314,8 @@ void Model::DrawStatus(Camera *cam)
 
       if (valid) {
         // fl_font( FL_HELVETICA, 12 );
-        float w = Gl::gl_width(this->say_string.c_str()); // scaled text width
-        float h = Gl::gl_height(); // scaled text height
+        float w = canvas->fontWidth(this->say_string.c_str()); // scaled text width
+        float h = canvas->fontHeight(); // scaled text height
 
         GLdouble wx, wy, wz;
         GLint viewport[4];
@@ -357,7 +357,7 @@ void Model::DrawStatus(Camera *cam)
 
         PushColor(BUBBLE_TEXT);
         // draw text inside the bubble
-        Gl::draw_string(m, 2.5 * m, 0, this->say_string.c_str());
+        canvas->draw_string(m, 2.5 * m, 0, this->say_string.c_str());
         PopColor();
       }
     }
@@ -527,11 +527,11 @@ void Model::DataVisualize(Camera *cam)
   (void)cam; // avoid warning about unused var
 }
 
-void Model::DataVisualizeTree(Camera *cam)
+void Model::DataVisualizeTree(Camera *cam, Canvas * canvas)
 {
   PushLocalCoords();
 
-  Canvas * canvas = GetCanvas();
+  //Canvas * canvas = GetCanvas();
 
   if (subs > 0 && canvas != NULL) {
     DataVisualize(cam); // virtual function overridden by some model types
@@ -539,18 +539,18 @@ void Model::DataVisualizeTree(Camera *cam)
     FOR_EACH (it, cv_list) {
       Visualizer *vis = *it;
       if (canvas->_custom_options[vis->GetMenuName()]->isEnabled())
-        vis->Visualize(this, cam);
+        vis->Visualize(this, cam, canvas);
     }
   }
 
   // and draw the children
   FOR_EACH (it, children)
-    (*it)->DataVisualizeTree(cam);
+    (*it)->DataVisualizeTree(cam, canvas);
 
   PopCoords();
 }
 
-void Model::DrawGrid(void)
+void Model::DrawGrid(Canvas * canvas)
 {
   if (gui.grid) {
     PushLocalCoords();
@@ -564,7 +564,7 @@ void Model::DrawGrid(void)
     vol.z.max = geom.size.z;
 
     PushColor(0, 0, 1, 0.4);
-    Gl::draw_grid(vol);
+    canvas->draw_grid(vol);
     PopColor();
     PopCoords();
   }

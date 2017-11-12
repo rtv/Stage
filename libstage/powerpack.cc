@@ -6,6 +6,7 @@
 */
 
 #include "stage.hh"
+#include "canvas.hh"
 #include "texture_manager.hh"
 using namespace Stg;
 
@@ -44,7 +45,7 @@ PowerPack::~PowerPack()
 }
 
 /** OpenGL visualization of the powerpack state */
-void PowerPack::Visualize(Camera *cam)
+void PowerPack::Visualize(Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -141,7 +142,7 @@ void PowerPack::Visualize(Camera *cam)
     glColor4f(1, 0, 0, 0.8); // red
     char buf[32];
     snprintf(buf, 32, "%.1fW", watts);
-    Gl::draw_string(-0.05, height + 0.05, 0, buf);
+    canvas->draw_string(-0.05, height + 0.05, 0, buf);
   }
 }
 
@@ -265,7 +266,7 @@ PowerPack::DissipationVis::~DissipationVis()
 {
 }
 
-void PowerPack::DissipationVis::Visualize(Model *mod, Camera *cam)
+void PowerPack::DissipationVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
