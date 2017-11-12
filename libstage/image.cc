@@ -135,7 +135,7 @@ bool Image::load(const char * file_name)
 			png_bytep row_pointer = &row_data[0];
 			png_read_row(png_ptr, row_pointer, NULL);
 			uint8_t * dst = &this->data[y*width*bpp];
-			memcpy(row_pointer, dst, width*bpp);
+			memcpy(dst, row_pointer, width*bpp);
 		}
 
 		//png_read_image(png_ptr, row_pointers);

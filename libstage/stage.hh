@@ -1042,6 +1042,8 @@ public:
  *  have been created. This world is then simulated.
  */
   static void Run();
+  static bool ExistsGuiWorld();
+  static bool ExitAll();
 
   World(const std::string &name = "MyWorld", double ppm = DEFAULT_PPM);
 

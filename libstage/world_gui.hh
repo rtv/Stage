@@ -125,6 +125,8 @@ public:
   virtual void RemoveChild(Model *mod);
 
   bool IsTopView();
+
+  static void Run();
 };
 
 } //namespace Stg

@@ -190,29 +190,42 @@ void World::DestroySuperRegion(SuperRegion *sr)
 void World::Run()
 {
   // first check whether there is a single gui world
-  bool found_gui = false;
-  FOR_EACH (world_it, world_set) {
-    found_gui |= (*world_it)->IsGUI();
-  }
-  if (found_gui && (world_set.size() != 1)) {
-    PRINT_WARN("When using the GUI only a single world can be simulated.");
-    exit(-1);
-  }
+  bool found_gui = World::ExistsGuiWorld();
 
-  if (found_gui) {
+  if (found_gui)
+  {
     // roughly equals Fl::run() (see also
     // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world,
     // FLTK
     // is a piece of crap):
   	assert(false);
   	// Dirty replacement here
-    //while (Fl::first_window() && !World::quit_all) {
+    //while (Fl::first_window() && !World::ExitAll()) {
     //  Fl::wait();
     //}
   } else {
     while (!UpdateAll())
       ;
   }
+}
+
+bool World::ExistsGuiWorld()
+{
+	bool found_gui = false;
+
+	FOR_EACH (world_it, world_set) {
+		found_gui |= (*world_it)->IsGUI();
+	}
+	if (found_gui && (world_set.size() != 1)) {
+		PRINT_WARN("When using the GUI only a single world can be simulated.");
+		//exit(-1);
+	}
+	return found_gui;
+}
+
+bool World::ExitAll()
+{
+	return quit_all;
 }
 
 bool World::UpdateAll()

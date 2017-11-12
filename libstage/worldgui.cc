@@ -862,3 +862,24 @@ Canvas *WorldGui::GetCanvas(void)
 {
 	return canvas;
 }
+
+void WorldGui::Run()
+{
+  // first check whether there is a single gui world
+  bool found_gui = World::ExistsGuiWorld();
+
+  if (found_gui) {
+    // roughly equals Fl::run() (see also
+    // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world,
+    // FLTK
+    // is a piece of crap):
+  	// Dirty replacement here
+    while (Fl::first_window() && !World::ExitAll()) {
+      Fl::wait();
+    }
+  } else {
+    while (!UpdateAll())
+      ;
+  }
+}
+

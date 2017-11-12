@@ -111,7 +111,17 @@ int main( int argc, char* argv[] )
     optindex++;
   }
 
-  World::Run();
+  if(usegui)
+  {
+  	//while (Fl::first_window() && !World::quit_all) {
+  	    //  Fl::wait();
+  	    //}
+  	WorldGui::Run();
+  }
+  else
+  {
+  	World::Run();
+  }
 
   puts("\n[Stage: done]");
 
