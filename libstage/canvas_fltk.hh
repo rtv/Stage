@@ -9,23 +9,7 @@
 
 namespace Stg {
 
-class CanvasFLTK;
-
-class MenuManagerFLTK : public MenuManager
-{
-public:
-	MenuManagerFLTK(CanvasFLTK * canvas, Fl_Menu_Bar *menu);
-	virtual void syncMenuState(Option * opt);
-	/** Creates menu item for an option */
-	void createMenuItem(Option & opt, std::string path);
-protected:
-	/** Toggle callback from FLTK */
-	static void toggleCb(Fl_Widget *w, void *p);
-	CanvasFLTK * GetCanvas();
-private:
-	CanvasFLTK * canvas;
-	Fl_Menu_ *menu;
-};
+class MenuManagerFLTK;
 
 class CanvasFLTK : public Canvas, public Fl_Gl_Window {
   friend class WorldGui; // allow access to private members

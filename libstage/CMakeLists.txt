@@ -61,7 +61,7 @@ INSTALL(FILES stage.hh DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 
 # GUI part of the stage
 if(FLTK_FOUND AND BUILD_GUI)
-	add_library(stage SHARED canvas_fltk.cc options_dlg.cc worldgui.cc)
+	add_library(stage SHARED canvas_fltk.cc options_dlg.cc menu_manager_fltk.cc worldgui.cc)
 	
 	# if fltk-config didn't bring along the OpenGL dependencies (eg. on
 	# Debian/Ubuntu), add them explicity 
