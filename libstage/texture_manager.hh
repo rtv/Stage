@@ -9,8 +9,6 @@
 #define _TEXTURE_MANAGER_H_
 
 #include "stage.hh"
-
-#include <FL/Fl_Shared_Image.H>
 #include <iostream>
 
 namespace Stg {
