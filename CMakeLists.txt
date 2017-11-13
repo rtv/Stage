@@ -211,6 +211,7 @@ if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} GREATER
     INPUT ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake)
 endif()
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage-config-version.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake @ONLY)
+
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake DESTINATION ${PROJECT_LIB_DIR}/cmake/${PROJECT_NAME})
 
 # generate a cpack config file used to create packaged tarballs
