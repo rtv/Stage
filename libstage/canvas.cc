@@ -22,7 +22,6 @@
 #include <string>
 
 #include "file_manager.hh"
-#include "options_dlg.hh"
 #include "region.hh"
 
 using namespace Stg;
