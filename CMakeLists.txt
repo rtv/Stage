@@ -14,9 +14,7 @@ SET( MIN_PLAYER 2.1.0 )
 OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
-
-# todo - this doesn't work yet. Run Stage headless with -g.
-# OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
+OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 	cmake_policy( SET CMP0003 NEW )
@@ -62,6 +60,7 @@ IF (NOT CMAKE_BUILD_TYPE)
   SET (CMAKE_BUILD_TYPE "release" CACHE STRING 
     "Choose the type of build, options are: release (default) debug profile" FORCE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
+
 STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 
 MESSAGE( STATUS "Build type ${CMAKE_BUILD_TYPE}" )
@@ -88,7 +87,6 @@ include_directories(
 MESSAGE( STATUS "Checking for required libraries..." )
 
 find_package( JPEG REQUIRED )
-
 find_package( PNG REQUIRED )
 
 # deal with new missing X11 on OS X 10.8 Mountain Lion
@@ -97,7 +95,7 @@ find_package( PNG REQUIRED )
 # SET( PNG_INCLUDE_DIR /opt/X11/include )
 
 set (FLTK_SKIP_FLUID TRUE) 
-find_package( FLTK REQUIRED )
+find_package( FLTK )
 find_package( OpenGL REQUIRED )
 
 IF( NOT OPENGL_GLU_FOUND )
@@ -121,12 +119,17 @@ MESSAGE( STATUS "Checking for optional libraries..." )
 SET(PC_LIBRARIES ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 SET(PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
 
+if(FLTK_FOUND)
+	LIST(APPEND PC_LIBRARIES ${FLTK_LIBRARIES})
+	LIST(APPEND PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR})
+endif(FLTK_FOUND)
+
 SET(PC_LINK_FLAGS "")
 FOREACH(LIB ${PC_LIBRARIES})
   GET_FILENAME_COMPONENT(LIBNAME ${LIB} NAME_WE)
   STRING(REGEX REPLACE "^lib" "" LINKLIB ${LIBNAME})
   SET(PC_LINK_FLAGS "${PC_LINK_FLAGS} -l${LINKLIB}")
-ENDFOREACH(LIB ${FLTK_LIBRARIES})
+ENDFOREACH(LIB ${PC_LIBRARIES})
 
 SET(PC_INCLUDE_FLAGS "")
 FOREACH(INC ${PC_INCLUDE_DIRS})
@@ -143,11 +146,14 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 include_directories( . 
 		     libstage 
 		     replace 
-		     ${FLTK_INCLUDE_DIR}
-                     ${PNG_INCLUDE_DIR}
-                     ${JPEG_INCLUDE_DIR}
+             ${PNG_INCLUDE_DIR}
+             ${JPEG_INCLUDE_DIR}
 		     ${CMAKE_INCLUDE_PATH}
 )
+
+if(FLTK_FOUND)
+	include_directories(${FLTK_INCLUDE_DIR})
+endif(FLTK_FOUND)
 
 
 # work through these subdirs
