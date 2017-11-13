@@ -2,6 +2,7 @@
 #include <png.h>
 #include <cassert>
 #include <stdlib.h>
+#include <string.h>	// for memcpy
 
 namespace Stg{
 
