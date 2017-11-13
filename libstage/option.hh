@@ -4,9 +4,6 @@
 #include "worldfile.hh"
 #include <string>
 
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Menu_Item.H>
-
 namespace Stg {
 
 class Option;
