@@ -42,6 +42,10 @@ set(stageSrcs
 
 # Core library. Contains simulation code and most part of platform-independent rendering code
 add_library(stage_core SHARED ${stageSrcs})
+set_target_properties( stage_core PROPERTIES
+		       VERSION ${VERSION}
+#           LINK_FLAGS "${FLTK_LDFLAGS}"  
+)
 target_link_libraries( stage_core ${OPENGL_LIBRARIES} ${LTDL_LIB} ${JPEG_LIBRARIES} ${PNG_LIBRARIES})
 
 # Headless binary version. Does not need FLTK, but stil references a lot of OpenGL
