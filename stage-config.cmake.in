@@ -3,7 +3,7 @@
 #    STAGE_INCLUDE_DIRS - Stage Include directories
 #    STAGE_LIBRARIES    - Stage link libraries
 
-set(STAGE_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME@-@APIVERSION@"
+set(STAGE_INCLUDE_DIRS "${stage_DIR}/../../../include/@PROJECT_NAME@-@APIVERSION@"
   "@OPENGL_INCLUDE_DIR@")
 
 set(STAGE_USE_GUI @BUILD_GUI@)
