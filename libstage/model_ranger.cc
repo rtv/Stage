@@ -322,7 +322,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
   
   std::vector<glpoint_t> verts( sample_count );
   
-  if (sample_count == 1) {
+  if (sample_count == 1 && !ranges.empty()) {
     // only one sample, so we fake up some beam width for beauty
     const double sidelen = ranges[0];
     const double da = fov / 2.0;
@@ -334,7 +334,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     verts[1].y = sidelen * sin(-da);
     verts[2].x = sidelen * cos(+da);
     verts[2].y = sidelen * sin(+da);
-  } else {
+  } else if (sample_count > 0 && !ranges.empty()) {
     for (size_t s(0); s < sample_count; s++) {
       const double ray_angle = (((double)s)-0.5) * sample_fov - fov / 2.0;
       verts[s].x = (float)(ranges[s] * cos(ray_angle));
@@ -342,7 +342,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     }
   }
   
-  if (vis->showArea) {        
+  if (vis->showArea && !verts.empty()) {
     // draw the filled polygon in transparent blue
     glEnable( GL_BLEND );
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -366,7 +366,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     glDepthMask(GL_TRUE);
   }
       
-  if (vis->showStrikes) {
+  if (vis->showStrikes && !verts.empty()) {
     rgr->PushColor(Color::blue); // solid color
     glPointSize(2);
 
