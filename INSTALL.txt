@@ -47,8 +47,15 @@ $ mkdir stage4
 $ cd stage4
 $ git clone git://github.com/rtv/Stage.git
 $ export STG=$HOME/stg
+
+-----
+For 16.04.2-Ubuntu, sudo is required:
+$ sudo cmake -DCMAKE_INSTALL_PREFIX=$STG Stage
+$ sudo make
+-----
 $ cmake -DCMAKE_INSTALL_PREFIX=$STG Stage
 $ make
+
 
 3) Install and set up environment
 
@@ -64,6 +71,9 @@ $ export LD_LIBRARY_PATH=$STG/lib
 
 4) Run Stage
 $ stage Stage/worlds/simple.world
+
+For 16.04.2-Ubuntu:
+$HOME/stg/bin/stage $HOME/stage4/Stage/worlds/simple.world
 
 5) Please report build issues, bugs or other problems  using the tracker at  http://github.com/rtv/Stage/issues
  
