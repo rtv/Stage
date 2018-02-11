@@ -16,10 +16,10 @@ void ModelLightIndicator::SetState(bool isOn)
   m_IsOn = isOn;
 }
 
-void ModelLightIndicator::DrawBlocks()
+void ModelLightIndicator::DrawBlocks(Canvas * canvas)
 {
   if (m_IsOn) {
-    Model::DrawBlocks();
+    Model::DrawBlocks(canvas);
   } else {
     const double scaleFactor = 0.8;
 
@@ -30,7 +30,7 @@ void ModelLightIndicator::DrawBlocks()
     c.b *= scaleFactor;
 
     this->SetColor(c);
-    Model::DrawBlocks();
+    Model::DrawBlocks(canvas);
 
     this->SetColor(keep);
   }

@@ -19,7 +19,7 @@ class MenuManagerFLTK : public MenuManager
 {
 public:
 	MenuManagerFLTK(CanvasFLTK * canvas, Fl_Menu_Bar *menu);
-	virtual void syncMenuState(Option * opt);
+	virtual void syncMenuState(Option * opt) override;
 	/** Creates menu item for an option */
 	void createMenuItem(Option & opt, std::string path);
 protected:

@@ -50,8 +50,8 @@ endif( PROJECT_OS_OSX)
 # Build type cflags
 SET (OPTIMIZE "-O2")
 
-SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL}" CACHE INTERNAL "CXX Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG" CACHE INTERNAL "CXX Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} -Wsuggest-override -std=c++11" CACHE INTERNAL "CXX Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG -Wsuggest-override -std=c++11" CACHE INTERNAL "CXX Flags for debug" FORCE)
 SET (CMAKE_CXX_FLAGS_PROFILE "-ggdb -pg  ${FORCE_ARCH} ${WALL}" CACHE INTERNAL "CXX Flags for profile" FORCE)
 
 #####################################
@@ -72,13 +72,13 @@ SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 # Create the config.h file
 # config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
-					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
+				${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
 find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 
-include_directories( 
+include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
 )
@@ -149,17 +149,16 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 
 # all targets need these include directories
 include_directories( . 
-		     libstage 
-		     replace 
-             ${PNG_INCLUDE_DIR}
-             ${JPEG_INCLUDE_DIR}
-		     ${CMAKE_INCLUDE_PATH}
+	libstage
+	replace
+	${PNG_INCLUDE_DIR}
+	${JPEG_INCLUDE_DIR}
+	${CMAKE_INCLUDE_PATH}
 )
 
 if(FLTK_FOUND)
 	include_directories(${FLTK_INCLUDE_DIR})
 endif(FLTK_FOUND)
-
 
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)

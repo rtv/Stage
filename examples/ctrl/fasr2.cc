@@ -1,6 +1,7 @@
 #include <pthread.h>
 
 #include "stage.hh"
+#include "canvas.hh"
 using namespace Stg;
 
 // generic planner implementation
@@ -166,9 +167,9 @@ private:
       Color c = mod->GetColor();
       c.a = 0.4;
 
-      mod->PushColor(c);
+      canvas->PushColor(c);
       (*graphpp)->Draw();
-      mod->PopColor();
+      canvas->PopColor();
 
       glPopMatrix();
     }

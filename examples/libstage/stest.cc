@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
   // check and handle the argumets
   if (argc < 3) {
     puts("Usage: stest <worldfile> <number of robots>");
-    exit(0);
+    return -1;
   }
 
   const int popsize = atoi(argv[2]);

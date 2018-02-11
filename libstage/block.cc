@@ -1,6 +1,8 @@
 #include "region.hh"
 #include "worldfile.hh"
 
+
+
 using namespace Stg;
 using std::vector;
 
@@ -39,8 +41,6 @@ void Block::Translate(double x, double y)
     it->x += x;
     it->y += y;
   }
-
-  group->BuildDisplayList();
 }
 
 /** Return the value half way between the min and max Y position of
@@ -108,9 +108,6 @@ void Block::SetZ(double min, double max)
 {
   local_z.min = min;
   local_z.max = max;
-
-  // force redraw
-  group->BuildDisplayList();
 }
 
 void Block::AppendTouchingModels(std::set<Model *> &touchers)

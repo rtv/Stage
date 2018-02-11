@@ -53,11 +53,11 @@ add_executable( stagebinary_headless main_headless.cc )
 set_target_properties( stagebinary_headless PROPERTIES OUTPUT_NAME stage_headless )
 target_link_libraries( stagebinary_headless stage_core )
 
-INSTALL(TARGETS stagebinary_headless stage_core
+install(TARGETS stagebinary_headless stage_core
 	RUNTIME DESTINATION bin LIBRARY DESTINATION ${PROJECT_LIB_DIR}
 )
 
-INSTALL(FILES stage.hh DESTINATION include/${PROJECT_NAME}-${APIVERSION})
+install(FILES stage.hh DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 
 # GUI part of the stage
 if(FLTK_FOUND AND BUILD_GUI)
@@ -98,10 +98,13 @@ if(FLTK_FOUND AND BUILD_GUI)
 	# to explicitly link on Linux
 	target_link_libraries( stagebinary stage_core stage )
 	
-	IF(PROJECT_OS_LINUX)
+	if(PROJECT_OS_LINUX)
 	  target_link_libraries( stagebinary stage pthread )
-	ENDIF(PROJECT_OS_LINUX)
+	endif(PROJECT_OS_LINUX)
+	install(TARGETS stagebinary stage RUNTIME DESTINATION bin LIBRARY DESTINATION ${PROJECT_LIB_DIR})
 	
-	INSTALL(TARGETS stagebinary stage RUNTIME DESTINATION bin LIBRARY DESTINATION ${PROJECT_LIB_DIR})
+	# All GUI-specific code was stripped from stage.hh
+	# GUI-supported world now is located at world_gui.hh, so it should be installed
+	install(FILES world_gui.hh DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 endif(FLTK_FOUND AND BUILD_GUI)
 

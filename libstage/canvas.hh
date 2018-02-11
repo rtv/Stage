@@ -120,8 +120,11 @@ public:
   void draw_speech_bubble(float x, float y, float z, const char *str);
   void draw_grid(bounds3d_t vol);
 
+  void DrawPose(Pose pose);
+
   void CanvasToWorld(int px, int py, double *wx, double *wy, double *wz);
 
+  // Get model under screen coordinates {x,y}
   Model *getModel(int x, int y);
   bool selected(Model *mod);
   void select(Model *mod);

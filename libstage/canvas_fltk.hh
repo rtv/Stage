@@ -33,32 +33,32 @@ public:
   void Screenshot();
   void createMenuItems(Fl_Menu_Bar *menu, std::string path);
 
-  virtual void renderFrame();
-  virtual int handle(int event);
-  void resize(int X, int Y, int W, int H);
+  virtual void renderFrame() override;
+  virtual int handle(int event) override;
+  void resize(int X, int Y, int W, int H) override;
 
-  virtual bool isValid() {return valid();}
-	virtual void doRedraw() {redraw();}
-	virtual int getWidth() const {return w();}
-	virtual int getHeight() const {return h();}
-	virtual void setInvalidate() { invalidate(); }
+  virtual bool isValid() override;
+	virtual void doRedraw() override;
+	virtual int getWidth() const override;
+	virtual int getHeight() const override;
+	virtual void setInvalidate() override;
 
-	double fontWidth(const char * str) const;
-	double fontHeight() const;
+	double fontWidth(const char * str) const override;
+	double fontHeight() const override;
 
-	void draw_string(float x, float y, float z, const char *str);
-	void draw_string_multiline(float x, float y, float w, float h, const char *str, int align);
+	void draw_string(float x, float y, float z, const char *str) override;
+	void draw_string_multiline(float x, float y, float w, float h, const char *str, int align) override;
 
   void InvertView(uint32_t invertflags);
 
   static void TimerCallback(Canvas *canvas);
   static void perspectiveCb(Option * opt, void *p);
 
-  void Load(Worldfile *wf, int sec);
-  void Save(Worldfile *wf, int section);
+  void Load(Worldfile *wf, int sec) override;
+  void Save(Worldfile *wf, int section) override;
 
   /** Overriding draw method from Fl_Gl_Window*/
-  virtual void draw();
+  virtual void draw() override;
 };
 } //namespace Stg
 

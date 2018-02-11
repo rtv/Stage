@@ -312,7 +312,7 @@ void ModelFiducial::DataVisualize(Camera *cam, Canvas * canvas)
   (void)cam; // avoid warning about unused var
 
   if (showFov) {
-    PushColor(1, 0, 1, 0.2); // magenta, with a bit of alpha
+    canvas->PushColor(1, 0, 1, 0.2); // magenta, with a bit of alpha
 
     GLUquadric *quadric = gluNewQuadric();
 
@@ -326,11 +326,11 @@ void ModelFiducial::DataVisualize(Camera *cam, Canvas * canvas)
 
     gluDeleteQuadric(quadric);
 
-    PopColor();
+    canvas->PopColor();
   }
 
   if (showData) {
-    PushColor(1, 0, 1, 0.4); // magenta, with a bit of alpha
+    canvas->PushColor(1, 0, 1, 0.4); // magenta, with a bit of alpha
 
     // draw fuzzy dotted lines
     glLineWidth(2.0);
@@ -365,7 +365,7 @@ void ModelFiducial::DataVisualize(Camera *cam, Canvas * canvas)
       glPopMatrix();
     }
 
-    PopColor();
+    canvas->PopColor();
     glLineWidth(1.0);
   }
 }

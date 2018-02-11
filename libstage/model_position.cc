@@ -695,13 +695,13 @@ void ModelPosition::PoseVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
   Gl::pose_inverse_shift(pos->GetGlobalPose());
 
   Gl::pose_shift(pos->est_origin);
-  pos->PushColor(1, 0, 0, 1); // origin in red
+  canvas->PushColor(1, 0, 0, 1); // origin in red
   Gl::draw_origin(0.5);
 
   glEnable(GL_LINE_STIPPLE);
   glLineStipple(3, 0xAAAA);
 
-  pos->PushColor(1, 0, 0, 0.5);
+  canvas->PushColor(1, 0, 0, 0.5);
   glBegin(GL_LINE_STRIP);
   glVertex2f(0, 0);
   glVertex2f(pos->est_pose.x, 0);
@@ -717,25 +717,25 @@ void ModelPosition::PoseVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
   snprintf(label, 64, "y:%.3f", pos->est_pose.y);
   canvas->draw_string(pos->est_pose.x + 0.5, pos->est_pose.y / 2.0, 0, (const char *)label);
 
-  pos->PopColor();
+  canvas->PopColor();
 
   Gl::pose_shift(pos->est_pose);
-  pos->PushColor(0, 1, 0, 1); // pose in green
+  canvas->PushColor(0, 1, 0, 1); // pose in green
   Gl::draw_origin(0.5);
-  pos->PopColor();
+  canvas->PopColor();
 
   Gl::pose_shift(pos->geom.pose);
-  pos->PushColor(0, 0, 1, 1); // offset in blue
+  canvas->PushColor(0, 0, 1, 1); // offset in blue
   Gl::draw_origin(0.5);
-  pos->PopColor();
+  canvas->PopColor();
 
   Color c = pos->color;
   c.a = 0.5;
-  pos->PushColor(c);
+  canvas->PushColor(c);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   pos->blockgroup.DrawFootPrint(pos->geom);
-  pos->PopColor();
+  canvas->PopColor();
 
   glPopMatrix();
 }
@@ -757,7 +757,7 @@ void ModelPosition::WaypointVis::Visualize(Model *mod, Camera *cam, Canvas * can
 
   glPointSize(5);
   glPushMatrix();
-  pos->PushColor(pos->color);
+  canvas->PushColor(pos->color);
 
   Gl::pose_inverse_shift(pos->pose);
   Gl::pose_shift(pos->est_origin);
@@ -773,7 +773,7 @@ void ModelPosition::WaypointVis::Visualize(Model *mod, Camera *cam, Canvas * can
   // draw lines connecting the waypoints
   const size_t num(waypoints.size());
   if (num > 1) {
-    pos->PushColor(1, 0, 0, 0.3);
+    canvas->PushColor(1, 0, 0, 0.3);
     glBegin(GL_LINES);
 
     for (size_t i(1); i < num; i++) {
@@ -786,10 +786,10 @@ void ModelPosition::WaypointVis::Visualize(Model *mod, Camera *cam, Canvas * can
 
     glEnd();
 
-    pos->PopColor();
+    canvas->PopColor();
   }
 
-  pos->PopColor();
+  canvas->PopColor();
   glPopMatrix();
 }
 

@@ -28,13 +28,13 @@ void StripPlotVis::Visualize(Model *mod, Camera *camera, Canvas * canvas)
 
   canvas->EnterScreenCS();
 
-  mod->PushColor(bgcolor);
+  canvas->PushColor(bgcolor);
   glRectf(x, y, w, h);
-  mod->PopColor();
+  canvas->PopColor();
 
-  mod->PushColor(fgcolor);
+  canvas->PushColor(fgcolor);
   canvas->draw_array(x, y, w, h, data, len, count % len, min, max);
-  mod->PopColor();
+  canvas->PopColor();
 
   canvas->LeaveScreenCS();
 }

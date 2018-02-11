@@ -20,7 +20,7 @@ void Model::DrawSelected(Canvas * canvas)
   char buf[64];
   snprintf(buf, 63, "%s [%.2f %.2f %.2f %.2f]", Token(), gp.x, gp.y, gp.z, rtod(gp.a));
 
-  PushColor(0, 0, 0, 1); // text color black
+  canvas->PushColor(0, 0, 0, 1); // text color black
   canvas->draw_string(0.5, 0.5, 0.5, buf);
 
   glRotatef(rtod(pose.a), 0, 0, 1);
@@ -30,28 +30,28 @@ void Model::DrawSelected(Canvas * canvas)
   double dx = geom.size.x / 2.0 * 1.6;
   double dy = geom.size.y / 2.0 * 1.6;
 
-  PopColor();
+  canvas->PopColor();
 
-  PushColor(0, 1, 0, 0.4); // highlight color blue
+  canvas->PushColor(0, 1, 0, 0.4); // highlight color blue
   glRectf(-dx, -dy, dx, dy);
-  PopColor();
+  canvas->PopColor();
 
-  PushColor(0, 1, 0, 0.8); // highlight color blue
+  canvas->PushColor(0, 1, 0, 0.8); // highlight color blue
   glLineWidth(1);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glRectf(-dx, -dy, dx, dy);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  PopColor();
+  canvas->PopColor();
 
   glPopMatrix();
 }
 
-void Model::DrawTrailFootprint()
+void Model::DrawTrailFootprint(Camera *cam, Canvas * canvas)
 {
   double darkness = 0;
   double fade = 0.5 / (double)(trail.size() + 1);
 
-  PushColor(0, 0, 0, 1); // dummy push just saving the color
+  canvas->PushColor(0, 0, 0, 1); // dummy push just saving the color
 
   // this loop could be faster, but optimzing vis is not a priority
   
@@ -80,10 +80,10 @@ void Model::DrawTrailFootprint()
     glPopMatrix();
   }
 
-  PopColor();
+  canvas->PopColor();
 }
 
-void Model::DrawTrailBlocks()
+void Model::DrawTrailBlocks(Camera *cam, Canvas * canvas)
 {
   double timescale = 0.0000001;
 
@@ -97,19 +97,19 @@ void Model::DrawTrailBlocks()
     Gl::pose_shift(pz);
     Gl::pose_shift(geom.pose);
 
-    DrawBlocks();
+    DrawBlocks(canvas);
 
     glPopMatrix();
   }
 }
 
-void Model::DrawTrailArrows()
+void Model::DrawTrailArrows(Canvas* canvas)
 {
   double dx = 0.2;
   double dy = 0.07;
   double timescale = 1e-7;
 
-  PushColor(0, 0, 0, 1); // dummy push
+  canvas->PushColor(0, 0, 0, 1); // dummy push
 
   FOR_EACH (it, trail) {
     TrailItem &checkpoint = *it;
@@ -134,61 +134,49 @@ void Model::DrawTrailArrows()
     glPopMatrix();
   }
 
-  PopColor();
+  canvas->PopColor();
 }
 
-void Model::DrawOriginTree()
+void Model::DrawOriginTree(Canvas* canvas)
 {
-  DrawPose(GetGlobalPose());
+  canvas->DrawPose(GetGlobalPose());
 
   FOR_EACH (it, children)
-    (*it)->DrawOriginTree();
+    (*it)->DrawOriginTree(canvas);
 }
 
-void Model::DrawBlocksTree()
+void Model::DrawBlocksTree(Canvas * canvas)
 {
   PushLocalCoords();
 
   FOR_EACH (it, children)
-    (*it)->DrawBlocksTree();
+    (*it)->DrawBlocksTree(canvas);
 
-  DrawBlocks();
+  DrawBlocks(canvas);
   PopCoords();
 }
 
-void Model::DrawPose(Pose pose)
+void Model::DrawBlocks(Canvas * canvas)
 {
-  PushColor(0, 0, 0, 1);
-  glPointSize(4);
-
-  glBegin(GL_POINTS);
-  glVertex3f(pose.x, pose.y, pose.z);
-  glEnd();
-
-  PopColor();
+  blockgroup.CallDisplayList(canvas);
 }
 
-void Model::DrawBlocks()
-{
-  blockgroup.CallDisplayList();
-}
-
-void Model::DrawBoundingBoxTree()
+void Model::DrawBoundingBoxTree(Canvas * canvas)
 {
   PushLocalCoords();
 
   FOR_EACH (it, children)
-    (*it)->DrawBoundingBoxTree();
+    (*it)->DrawBoundingBoxTree(canvas);
 
-  DrawBoundingBox();
+  DrawBoundingBox(canvas);
   PopCoords();
 }
 
-void Model::DrawBoundingBox()
+void Model::DrawBoundingBox(Canvas * canvas)
 {
   Gl::pose_shift(geom.pose);
 
-  PushColor(color);
+  canvas->PushColor(color);
 
   glBegin(GL_QUAD_STRIP);
 
@@ -220,7 +208,7 @@ void Model::DrawBoundingBox()
   glVertex2f(0, +0.02);
   glEnd();
 
-  PopColor();
+  canvas->PopColor();
 }
 
 // move into this model's local coordinate frame
@@ -274,7 +262,8 @@ void Model::RemoveVisualizer(Visualizer *cv)
   // attached to different models which have the same name
 }
 
-void Model::DrawStatusTree(Camera *cam, Canvas * canvas)
+
+void Model::DrawStatusTree(Camera* cam, Canvas * canvas)
 {
   PushLocalCoords();
   DrawStatus(cam, canvas);
@@ -283,7 +272,7 @@ void Model::DrawStatusTree(Camera *cam, Canvas * canvas)
   PopCoords();
 }
 
-void Model::DrawStatus(Camera *cam, Canvas * canvas)
+void Model::DrawStatus(Camera* cam, Canvas * canvas)
 {
   if (power_pack || !say_string.empty()) {
     float pitch = -cam->pitch();
@@ -340,28 +329,28 @@ void Model::DrawStatus(Camera *cam, Canvas * canvas)
         const float m = h / 10;
 
         // draw inside of bubble
-        PushColor(BUBBLE_FILL);
+        canvas->PushColor(BUBBLE_FILL);
         glPushAttrib(GL_POLYGON_BIT | GL_LINE_BIT);
         glPolygonMode(GL_FRONT, GL_FILL);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0, 1.0);
         Gl::draw_octagon(w, h, m);
         glDisable(GL_POLYGON_OFFSET_FILL);
-        PopColor();
+        canvas->PopColor();
 
         // draw outline of bubble
-        PushColor(BUBBLE_BORDER);
+        canvas->PushColor(BUBBLE_BORDER);
         glLineWidth(1);
         glEnable(GL_LINE_SMOOTH);
         glPolygonMode(GL_FRONT, GL_LINE);
         Gl::draw_octagon(w, h, m);
         glPopAttrib();
-        PopColor();
+        canvas->PopColor();
 
-        PushColor(BUBBLE_TEXT);
+        canvas->PushColor(BUBBLE_TEXT);
         // draw text inside the bubble
         canvas->draw_string(m, 2.5 * m, 0, this->say_string.c_str());
-        PopColor();
+        canvas->PopColor();
       }
     }
     glPopMatrix();
@@ -525,7 +514,7 @@ void Model::DrawPicker(void)
   PopCoords();
 }
 
-void Model::DataVisualize(Camera *cam)
+void Model::DataVisualize(Camera *cam, Canvas* canvas)
 {
   (void)cam; // avoid warning about unused var
 }
@@ -537,7 +526,7 @@ void Model::DataVisualizeTree(Camera *cam, Canvas * canvas)
   //Canvas * canvas = GetCanvas();
 
   if (subs > 0 && canvas != NULL) {
-    DataVisualize(cam); // virtual function overridden by some model types
+    DataVisualize(cam, canvas); // virtual function overridden by some model types
 
     FOR_EACH (it, cv_list) {
       Visualizer *vis = *it;
@@ -566,9 +555,9 @@ void Model::DrawGrid(Canvas * canvas)
     vol.z.min = 0;
     vol.z.max = geom.size.z;
 
-    PushColor(0, 0, 1, 0.4);
+    canvas->PushColor(0, 0, 1, 0.4);
     canvas->draw_grid(vol);
-    PopColor();
+    canvas->PopColor();
     PopCoords();
   }
 }

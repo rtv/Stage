@@ -424,7 +424,7 @@ void Canvas::DrawFloor()
 void Canvas::DrawBlocks()
 {
   FOR_EACH (it, models_sorted)
-    (*it)->DrawBlocksTree();
+    (*it)->DrawBlocksTree(this);
 }
 
 void Canvas::DrawBoundingBoxes()
@@ -435,7 +435,7 @@ void Canvas::DrawBoundingBoxes()
   //glDisable(GL_CULL_FACE);
   const std::vector<Model *> & children = world->GetChildren();
   FOR_EACH (it, children)
-      (*it)->DrawBoundingBoxTree();
+      (*it)->DrawBoundingBoxTree(this);
 
   //glEnable(GL_CULL_FACE);
   glLineWidth(1.0);
@@ -534,7 +534,7 @@ void Canvas::renderFrame()
     GLfloat scale = 1.0 / world->Resolution();
     glScalef(scale, scale, 1.0); // XX TODO - this seems slightly
 
-    world->PushColor(Color(0, 0, 1, 0.5));
+    PushColor(Color(0, 0, 1, 0.5));
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -558,17 +558,17 @@ void Canvas::renderFrame()
     glEnd();
 
 #if 1
-    world->PushColor(Color(0, 1, 0, 0.2));
+    PushColor(Color(0, 1, 0, 0.2));
     glBegin(GL_LINE_STRIP);
     for (unsigned int i = 0; i < world->rt_cells.size(); i++) {
       glVertex2f(world->rt_cells[i].x + 0.5, world->rt_cells[i].y + 0.5);
     }
     glEnd();
-    world->PopColor();
+    PopColor();
 #endif
 
     glPopMatrix();
-    world->PopColor();
+    PopColor();
   }
 
   if (!world->rt_candidate_cells.empty()) {
@@ -576,7 +576,7 @@ void Canvas::renderFrame()
     GLfloat scale = 1.0 / world->Resolution();
     glScalef(scale, scale, 1.0); // XX TODO - this seems slightly
 
-    world->PushColor(Color(1, 0, 0, 0.5));
+    PushColor(Color(1, 0, 0, 0.5));
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -598,16 +598,16 @@ void Canvas::renderFrame()
               world->rt_candidate_cells[i].x + 1, world->rt_candidate_cells[i].y + 1);
     }
 
-    world->PushColor(Color(0, 1, 0, 0.2));
+    PushColor(Color(0, 1, 0, 0.2));
     glBegin(GL_LINE_STRIP);
     for (unsigned int i = 0; i < world->rt_candidate_cells.size(); i++) {
       glVertex2f(world->rt_candidate_cells[i].x + 0.5, world->rt_candidate_cells[i].y + 0.5);
     }
     glEnd();
-    world->PopColor();
+    PopColor();
 
     glPopMatrix();
-    world->PopColor();
+    PopColor();
 
     // world->rt_cells.clear();
   }
@@ -621,7 +621,7 @@ void Canvas::renderFrame()
     glDisable(GL_DEPTH_TEST); // using alpha blending
 
     FOR_EACH (it, models_sorted)
-      (*it)->DrawTrailFootprint();
+      (*it)->DrawTrailFootprint(current_camera, this);
 
     glEnable(GL_DEPTH_TEST);
   }
@@ -638,11 +638,11 @@ void Canvas::renderFrame()
 
   if (showTrailArrows)
     FOR_EACH (it, models_sorted)
-      (*it)->DrawTrailArrows();
+      (*it)->DrawTrailArrows(this);
 
   if (showTrailRise)
     FOR_EACH (it, models_sorted)
-      (*it)->DrawTrailBlocks();
+      (*it)->DrawTrailBlocks(current_camera, this);
 
   if (showBlocks)
     DrawBlocks();
@@ -933,4 +933,16 @@ void Canvas::draw_grid(bounds3d_t vol)
     snprintf(str, 16, "%d", (int)i);
     draw_string(0, i, 0.00, str);
   }
+}
+
+void Canvas::DrawPose(Pose pose)
+{
+  PushColor(0, 0, 0, 1);
+  glPointSize(4);
+
+  glBegin(GL_POINTS);
+  glVertex3f(pose.x, pose.y, pose.z);
+  glEnd();
+
+  PopColor();
 }

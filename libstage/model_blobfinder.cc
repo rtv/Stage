@@ -12,12 +12,10 @@
 //  $Revision$
 //
 ///////////////////////////////////////////////////////////////////////////
-
-//#define DEBUG
-
 #include <sys/time.h>
 
 #include "option.hh"
+#include "canvas.hh"
 #include "stage.hh"
 #include "worldfile.hh"
 using namespace Stg;
@@ -295,7 +293,7 @@ void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
     // draw the FOV
     GLUquadric *quadric = gluNewQuadric();
 
-    bf->PushColor(0, 0, 0, 0.2);
+    canvas->PushColor(0, 0, 0, 0.2);
 
     gluQuadricDrawStyle(quadric, GLU_SILHOUETTE);
     gluPartialDisk(quadric, 0, bf->range,
@@ -305,7 +303,7 @@ void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
                    rtod(-bf->fov)); // sweep angle
 
     gluDeleteQuadric(quadric);
-    bf->PopColor();
+    canvas->PopColor();
   }
 
   if (bf->subs < 1)
@@ -332,16 +330,16 @@ void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
   glScalef(0.025, 0.025, 1);
 
   // draw a white screen with a black border
-  bf->PushColor(1, 1, 1, 1);
+  canvas->PushColor(1, 1, 1, 1);
   glRectf(0, 0, bf->scan_width, bf->scan_height);
-  bf->PopColor();
+  canvas->PopColor();
 
   glTranslatef(0, 0, 0.01);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  bf->PushColor(1, 0, 0, 1);
+  canvas->PushColor(1, 0, 0, 1);
   glRectf(0, 0, bf->scan_width, bf->scan_height);
-  bf->PopColor();
+  canvas->PopColor();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // draw the blobs on the screen
@@ -350,12 +348,12 @@ void ModelBlobfinder::Vis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
     // blobfinder_blob_t* b =
     //&g_array_index( blobs, blobfinder_blob_t, s);
 
-    bf->PushColor(b->color);
+    canvas->PushColor(b->color);
     glRectf(b->left, b->top, b->right, b->bottom);
 
     // printf( "%u l %u t%u r %u b %u\n", s, b->left, b->top, b->right,
     // b->bottom );
-    bf->PopColor();
+    canvas->PopColor();
   }
 
   glPopMatrix();

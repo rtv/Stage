@@ -27,6 +27,31 @@ CanvasFLTK::~CanvasFLTK()
 
 }
 
+bool CanvasFLTK::isValid()
+{
+	return valid();
+}
+
+void CanvasFLTK::doRedraw()
+{
+	redraw();
+}
+
+int CanvasFLTK::getWidth() const
+{
+	return w();
+}
+
+int CanvasFLTK::getHeight() const
+{
+	return h();
+}
+
+void CanvasFLTK::setInvalidate()
+{
+	invalidate();
+}
+
 void CanvasFLTK::perspectiveCb(Option *opt, void *p)
 {
   Canvas *canvas = static_cast<Canvas *>(p);

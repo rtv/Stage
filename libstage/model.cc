@@ -891,7 +891,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 
   // go into world coordinates
   glPushMatrix();
-  mod->PushColor(1, 0, 0, 0.5);
+  canvas->PushColor(1, 0, 0, 0.5);
 
   Gl::pose_inverse_shift(mod->GetGlobalPose());
 
@@ -915,7 +915,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
     }
     glEnd();
 
-    mod->PopColor();
+    canvas->PopColor();
 
     glPopMatrix();
   }
@@ -926,7 +926,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 
   glScalef(cellwidth, cellheight, 1);
 
-  mod->PushColor(0, 0, 0, 0.5);
+  canvas->PushColor(0, 0, 0, 0.5);
   glPolygonMode(GL_FRONT, GL_FILL);
   for (unsigned int y = 0; y < height; ++y)
     for (unsigned int x = 0; x < width; ++x) {
@@ -937,7 +937,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 
   glTranslatef(0, 0, 0.01);
 
-  mod->PushColor(0, 0, 0, 1);
+  canvas->PushColor(0, 0, 0, 1);
   glPolygonMode(GL_FRONT, GL_LINE);
   for (unsigned int y = 0; y < height; ++y)
     for (unsigned int x = 0; x < width; ++x) {
@@ -951,16 +951,16 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 
   glPolygonMode(GL_FRONT, GL_FILL);
 
-  mod->PopColor();
-  mod->PopColor();
+  canvas->PopColor();
+  canvas->PopColor();
 
-  mod->PushColor(0, 0, 0, 1);
+  canvas->PushColor(0, 0, 0, 1);
   char buf[128];
   snprintf(buf, 127, "[%u x %u]", width, height);
   glTranslatef(0, 0, 0.01);
   canvas->draw_string(1, height - 1, 0, buf);
 
-  mod->PopColor();
+  canvas->PopColor();
 
   glPopMatrix();
 }

@@ -75,12 +75,12 @@ int main( int argc, char* argv[] )
     case 'h':
     case '?':
       puts(USAGE);
-      //			 exit(0);
+      return -1;
       break;
     default:
       printf("unhandled option %c\n", ch);
       puts(USAGE);
-      // exit(0);
+      return -1;
     }
   }
 
