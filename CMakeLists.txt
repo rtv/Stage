@@ -50,8 +50,8 @@ endif( PROJECT_OS_OSX)
 # Build type cflags
 SET (OPTIMIZE "-O2")
 
-SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} -Wsuggest-override -std=c++11" CACHE INTERNAL "CXX Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG -Wsuggest-override -std=c++11" CACHE INTERNAL "CXX Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} -std=c++11" CACHE INTERNAL "CXX Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG -std=c++11" CACHE INTERNAL "CXX Flags for debug" FORCE)
 SET (CMAKE_CXX_FLAGS_PROFILE "-ggdb -pg  ${FORCE_ARCH} ${WALL}" CACHE INTERNAL "CXX Flags for profile" FORCE)
 
 #####################################
