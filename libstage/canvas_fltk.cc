@@ -457,7 +457,7 @@ void CanvasFLTK::draw_string_multiline(float x, float y, float w, float h, const
 {
   // printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str),
   // str );
-  gl_draw(str, x, y, w, h, align); // fltk function
+  gl_draw(str, x, y, w, h, (Fl_Align)align); // fltk function
 }
 
 void CanvasFLTK::draw()
