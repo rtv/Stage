@@ -220,7 +220,7 @@ bool ModelCamera::GetFrame(Canvas * canvas)
 
 // TODO create lines outlining camera frustrum, then iterate over each depth
 // measurement and create a square
-void ModelCamera::DataVisualize(Camera *)
+void ModelCamera::DataVisualize(Camera*, Canvas*)
 {
   if (_frame_data == NULL || !showCameraData)
     return;

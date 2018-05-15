@@ -99,7 +99,7 @@ void ModelBlinkenlight::Update(void)
   Model::Update();
 }
 
-void ModelBlinkenlight::DataVisualize(Camera *cam)
+void ModelBlinkenlight::DataVisualize(Camera *cam, Canvas* canvas)
 {
   (void)cam; // avoid warning about unused var
 

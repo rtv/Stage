@@ -2577,7 +2577,7 @@ public:
 
   void Load() override;
   void Update() override;
-  virtual void DataVisualize(Camera *cam);
+  virtual void DataVisualize(Camera *cam, Canvas* canvas) override;
 };
 
 // CAMERA MODEL ----------------------------------------------------
@@ -2632,7 +2632,7 @@ public:
   // virtual void Draw( uint32_t flags, Canvas* canvas );
 
   /// Draw camera visualization
-  virtual void DataVisualize(Camera *cam);
+  virtual void DataVisualize(Camera *cam, Canvas* canvas) override;
 
   /// width of captured image
   int getWidth(void) const { return _width; }
