@@ -65,7 +65,7 @@ static const watts_t BUMPER_WATTS = 0.1; // bumper power consumption
 static const Color BUMPER_HIT_RGB(1, 0, 0, 1); // red
 static const Color BUMPER_NOHIT_RGB(0, 1, 0, 1);// green
 
-Option ModelBumper::showBumperData("Show Bumper Data", "show_bumper", "", true, NULL);
+Option ModelBumper::showBumperData("Show Bumper Data", "show_bumper", "", true);
 
 ModelBumper::ModelBumper(World *world, Model *parent, const std::string &type)
     : Model(world, parent, type), bumpervis()
@@ -213,7 +213,7 @@ ModelBumper::BumperVis::~BumperVis()
   // Nothing to do here
 }
 
-void ModelBumper::BumperVis::Visualize(Model *mod, Camera *)
+void ModelBumper::BumperVis::Visualize(Model *mod, Camera *camera, Canvas * canvas)
 {
   ModelBumper *bump = dynamic_cast<ModelBumper *>(mod);
 

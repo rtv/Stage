@@ -1,4 +1,3 @@
-
 #ifndef STG_H
 #define STG_H
 /*
@@ -55,14 +54,6 @@
 #include <set>
 #include <vector>
 
-// FLTK Gui includes
-#include <FL/Fl.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Window.H>
-#include <FL/fl_draw.H>
-#include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
 // except GLU
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
@@ -362,7 +353,7 @@ prefix string
 
 @param prefix Character string to prepend to output, or NULL.
   */
-  virtual void Print(const char *prefix) const
+  virtual void Print(const char *prefix) const override
   {
     if (prefix)
       printf("%s", prefix);
@@ -494,21 +485,24 @@ point_t *unit_square_points_create();
 /** Convenient OpenGL drawing routines, used by visualization
       code. */
 namespace Gl {
+
+/** Calculate scaled width of the string for current font*/
+//float gl_width(const char * string);
+/** Calculate font height */
+//float gl_height();
+
 void pose_shift(const Pose &pose);
 void pose_inverse_shift(const Pose &pose);
 void coord_shift(double x, double y, double z, double a);
-void draw_grid(bounds3d_t vol);
 /** Render a string at [x,y,z] in the current color */
-void draw_string(float x, float y, float z, const char *string);
-void draw_string_multiline(float x, float y, float w, float h, const char *string, Fl_Align align);
-void draw_speech_bubble(float x, float y, float z, const char *str);
+/// Font rendering is moved to canvas
+//void draw_string(float x, float y, float z, const char *string);
+//void draw_string_multiline(float x, float y, float w, float h, const char *string, int align);
+//void draw_speech_bubble(float x, float y, float z, const char *str);
 void draw_octagon(float w, float h, float m);
 void draw_octagon(float x, float y, float w, float h, float m);
 void draw_vector(double x, double y, double z);
 void draw_origin(double len);
-void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset,
-                float min, float max);
-void draw_array(float x, float y, float w, float h, float *data, size_t len, size_t offset);
 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
 void draw_centered_rect(float x, float y, float dx, float dy);
 } // namespace Gl
@@ -529,7 +523,7 @@ public:
   }
 
   virtual ~Visualizer(void) {}
-  virtual void Visualize(Model *mod, Camera *cam) = 0;
+  virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas) = 0;
 
   const std::string &GetMenuName() { return menu_name; }
   const std::string &GetWorldfileName() { return worldfile_name; }
@@ -661,7 +655,7 @@ protected:
   /** array contains the number of each type of child model */
   std::map<std::string, unsigned int> child_type_counts;
 
-  std::vector<Model *> children;
+  std::vector<Model*> children;
 
   bool debug;
 
@@ -870,6 +864,10 @@ public:
 imlementation does nothing, but can be overridden by
 subclasses. */
   virtual void Redraw(void) {} // does nothing
+
+  void DrawOccupancy() const;
+  void DrawVoxels() const;
+
   std::vector<point_int_t> rt_cells;
   std::vector<point_int_t> rt_candidate_cells;
 
@@ -888,6 +886,9 @@ AddUpdateCallback is not automatically freed. */
 
   /** hint that the world needs to be redrawn if a GUI is attached */
   void NeedRedraw() { dirty = true; }
+
+  bool IsDirty() const;
+  void SetDirty(bool val);
   /** Special model for the floor of the world */
   Model *ground;
 
@@ -919,18 +920,6 @@ grid pixels */
   {
     return point_int_t(MetersToPixels(pt.x), MetersToPixels(pt.y));
   }
-
-  /// dummy implementations to be overloaded by GUI subclasses
-  virtual void PushColor(Color col) { /* do nothing */ (void)col; }
-  virtual void PushColor(double r, double g, double b, double a)
-  { /* do nothing */
-    (void)r;
-    (void)g;
-    (void)b;
-    (void)a;
-  }
-
-  virtual void PopColor() { /* do nothing */}
 
   SuperRegion *CreateSuperRegion(point_int_t origin);
   void DestroySuperRegion(SuperRegion *sr);
@@ -1040,6 +1029,8 @@ public:
  *  have been created. This world is then simulated.
  */
   static void Run();
+  static bool ExistsGuiWorld();
+  static bool ExitAll();
 
   World(const std::string &name = "MyWorld", double ppm = DEFAULT_PPM);
 
@@ -1123,6 +1114,8 @@ nonexistent */
   void ShowClock(bool enable) { show_clock = enable; }
   /** Return the floor model */
   Model *GetGround() { return ground; }
+
+  virtual Canvas * GetCanvas() {return NULL; }
 };
 
 class Block {
@@ -1249,10 +1242,10 @@ as blocks to this group.*/
   /** Re-create the display list for drawing this blockgroup. This
 is required whenever a member block or the owning model
 changes its appearance.*/
-  void BuildDisplayList();
+  void BuildDisplayList(Canvas * canvas);
 
   /** Draw the blockgroup from the cached displaylist. */
-  void CallDisplayList();
+  void CallDisplayList(Canvas * canvas);
 
 public:
   explicit BlockGroup(Model &mod);
@@ -1286,7 +1279,11 @@ public:
   double y(void) const { return _y; }
   double z(void) const { return _z; }
   virtual void reset() = 0;
+
   virtual void Load(Worldfile *wf, int sec) = 0;
+  virtual void Save(Worldfile *wf, int sec){};
+
+  //Canvas * GetCanvas();
 
   // TODO data should be passed in somehow else. (at least min/max stuff)
   // virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
@@ -1304,8 +1301,8 @@ private:
 public:
   PerspectiveCamera(void);
 
-  virtual void Draw(void) const;
-  virtual void SetProjection(void) const;
+  virtual void Draw(void) const override;
+  virtual void SetProjection(void) const override;
   // void SetProjection( double aspect ) const;
   void update(void);
 
@@ -1361,14 +1358,14 @@ public:
     _z_near = near;
   }
 
-  void reset()
+  void reset() override
   {
     setPitch(70);
     setYaw(0);
   }
 
-  void Load(Worldfile *wf, int sec);
-  void Save(Worldfile *wf, int sec);
+  void Load(Worldfile *wf, int sec) override;
+  void Save(Worldfile *wf, int sec) override;
 };
 
 class OrthoCamera : public Camera {
@@ -1381,11 +1378,11 @@ private:
 
 public:
   OrthoCamera(void) : _scale(15), _pixels_width(0), _pixels_height(0), _y_min(0), _y_max(0) {}
-  virtual void Draw() const;
+  virtual void Draw() const override;
 
   virtual void SetProjection(double pixels_width, double pixels_height, double y_min, double y_max);
 
-  virtual void SetProjection(void) const;
+  virtual void SetProjection(void) const override;
 
   void move(double x, double y);
 
@@ -1409,122 +1406,11 @@ public:
   }
 
   void scale(double scale, double shift_x = 0, double h = 0, double shift_y = 0, double w = 0);
-  void reset(void) { _pitch = _yaw = 0; }
+  void reset(void) override { _pitch = _yaw = 0; }
   double scale() const { return _scale; }
-  void Load(Worldfile *wf, int sec);
-  void Save(Worldfile *wf, int sec);
-};
 
-/** Extends World to implement an FLTK / OpenGL graphical user
-      interface.
-  */
-class WorldGui : public World, public Fl_Window {
-  friend class Canvas;
-  friend class ModelCamera;
-  friend class Model;
-  friend class Option;
-
-private:
-  Canvas *canvas;
-  std::vector<Option *> drawOptions;
-  FileManager *fileMan; ///< Used to load and save worldfiles
-  std::vector<usec_t> interval_log;
-
-  /** Stage attempts to run this many times faster than real
-time. If -1, Stage runs as fast as possible. */
-  double speedup;
-
-  bool confirm_on_quit; ///< if true, show save dialog on (GUI) exit (default)
-
-  Fl_Menu_Bar *mbar;
-  OptionsDlg *oDlg;
-  bool pause_time;
-  std::string caption_prefix; //!< prefix of window caption (default PROJECT name constant)
-
-  /** The amount of real time elapsed between $timing_interval
-timesteps. */
-  usec_t real_time_interval;
-
-  /** The current real time in microseconds. */
-  usec_t real_time_now;
-
-  /** The last recorded real time, sampled every $timing_interval
-updates. */
-  usec_t real_time_recorded;
-
-  /** Number of updates between measuring elapsed real time. */
-  uint64_t timing_interval;
-
-  // static callback functions
-  static void windowCb(Fl_Widget *w, WorldGui *wg);
-  static void fileLoadCb(Fl_Widget *w, WorldGui *wg);
-  static void fileSaveCb(Fl_Widget *w, WorldGui *wg);
-  static void fileSaveAsCb(Fl_Widget *w, WorldGui *wg);
-  static void fileExitCb(Fl_Widget *w, WorldGui *wg);
-  static void viewOptionsCb(OptionsDlg *oDlg, WorldGui *wg);
-  static void optionsDlgCb(OptionsDlg *oDlg, WorldGui *wg);
-  static void helpAboutCb(Fl_Widget *w, WorldGui *wg);
-  static void pauseCb(Fl_Widget *w, WorldGui *wg);
-  static void onceCb(Fl_Widget *w, WorldGui *wg);
-  static void fasterCb(Fl_Widget *w, WorldGui *wg);
-  static void slowerCb(Fl_Widget *w, WorldGui *wg);
-  static void realtimeCb(Fl_Widget *w, WorldGui *wg);
-  static void fasttimeCb(Fl_Widget *w, WorldGui *wg);
-  static void resetViewCb(Fl_Widget *w, WorldGui *wg);
-  static void moreHelptCb(Fl_Widget *w, WorldGui *wg);
-
-  // GUI functions
-  bool saveAsDialog();
-  bool closeWindowQuery();
-
-  virtual void AddModel(Model *mod);
-
-  void SetTimeouts();
-
-  /// Defines what all WorldGUI::Load(*) in methods have in common. Called after initial setup.
-  void LoadWorldGuiPostHook(usec_t load_start_time);
-
-protected:
-  virtual void PushColor(Color col);
-  virtual void PushColor(double r, double g, double b, double a);
-  virtual void PopColor();
-
-  void DrawOccupancy() const;
-  void DrawVoxels() const;
-
-public:
-  WorldGui(int width, int height, const char *caption = NULL);
-  ~WorldGui();
-
-  /** Forces the window to be redrawn, even if paused.*/
-  virtual void Redraw(void);
-
-  virtual std::string ClockString() const;
-  virtual bool Update();
-  virtual bool Load(const std::string &worldfile_path);
-  virtual bool Load(std::istream &world_content, const std::string &worldfile_path = std::string());
-
-  virtual void UnLoad();
-  virtual bool Save(const char *filename);
-  virtual bool IsGUI() const { return true; }
-  virtual Model *RecentlySelectedModel() const;
-
-  virtual void Start();
-  virtual void Stop();
-
-  usec_t RealTimeNow(void) const;
-
-  void DrawBoundingBoxTree();
-
-  Canvas *GetCanvas(void) const { return canvas; }
-  /** show the window - need to call this if you don't Load(). */
-  void Show();
-
-  /** Get human readable string that describes the current global energy state. */
-  std::string EnergyString(void) const;
-  virtual void RemoveChild(Model *mod);
-
-  bool IsTopView();
+  void Load(Worldfile *wf, int sec) override;
+  void Save(Worldfile *wf, int sec) override;
 };
 
 class StripPlotVis : public Visualizer {
@@ -1541,7 +1427,8 @@ public:
   StripPlotVis(float x, float y, float w, float h, size_t len, Color fgcolor, Color bgcolor,
                const char *name, const char *wfname);
   virtual ~StripPlotVis();
-  virtual void Visualize(Model *mod, Camera *cam);
+
+  void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   void AppendValue(float value);
 };
 
@@ -1566,8 +1453,8 @@ protected:
     DissipationVis(meters_t width, meters_t height, meters_t cellsize);
 
     virtual ~DissipationVis();
-    virtual void Visualize(Model *mod, Camera *cam);
 
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
     void Accumulate(meters_t x, meters_t y, joules_t amount);
   } event_vis;
 
@@ -1605,7 +1492,7 @@ public:
   ~PowerPack();
 
   /** OpenGL visualization of the powerpack state */
-  void Visualize(Camera *cam);
+  void Visualize(Camera *cam, Canvas * canvas);
 
   /** Returns the energy capacity minus the current amount stored */
   joules_t RemainingCapacity() const;
@@ -1824,8 +1711,7 @@ initially NULL. */
   public:
     RasterVis();
     virtual ~RasterVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
-
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
     void SetData(uint8_t *data, unsigned int width, unsigned int height, meters_t cellwidth,
                  meters_t cellheight);
 
@@ -1899,10 +1785,10 @@ watts_give >0 */
   Worldfile *wf;
   int wf_entity;
   World *world; //!< Pointer to the world in which this model exists
-  WorldGui *world_gui; //!< Pointer to the GUI world - NULL if running in non-gui mode
+  //WorldGui *world_gui; //!< Pointer to the GUI world - NULL if running in non-gui mode
 
 public:
-  virtual void SetToken(const std::string &str)
+  virtual void SetToken(const std::string &str) override
   {
     // printf( "Model::SetToken( %s )\n", str.c_str() );
 
@@ -1940,8 +1826,10 @@ it doesn't exist in this model. */
   usec_t GetEnergyInterval() const { return interval_energy; }
   //    usec_t GetPoseInterval() const { return interval_pose; }
 
-  /** Render the model's blocks as an occupancy grid into the
-preallocated array of width by height pixels */
+  /**
+   * Render the model's blocks as an occupancy grid into the
+   * preallocated array of width by height pixels
+   */
   void Rasterize(uint8_t *data, unsigned int width, unsigned int height, meters_t cellwidth,
                  meters_t cellheight);
 
@@ -2009,7 +1897,7 @@ by pose, in local coords */
                 const ray_test_func_t func, const void *arg, const bool ztest,
                 std::vector<RaytraceResult> &results)
   {
-    return world->Raytrace(LocalToGlobal(pose), range, fov, func, this, arg, ztest, results);
+    world->Raytrace(LocalToGlobal(pose), range, fov, func, this, arg, ztest, results);
   }
 
   virtual void UpdateCharge();
@@ -2025,14 +1913,14 @@ by pose, in local coords */
 
   meters_t ModelHeight() const;
 
-  void DrawBlocksTree();
-  virtual void DrawBlocks();
-  void DrawBoundingBox();
-  void DrawBoundingBoxTree();
-  virtual void DrawStatus(Camera *cam);
-  void DrawStatusTree(Camera *cam);
+  void DrawBlocksTree(Canvas * canvas);
+  virtual void DrawBlocks(Canvas * canvas);
+  void DrawBoundingBox(Canvas * canvas);
+  void DrawBoundingBoxTree(Canvas * canvas);
+  virtual void DrawStatus(Camera* cam, Canvas * canvas);
+  void DrawStatusTree(Camera* cam, Canvas * canvas);
 
-  void DrawOriginTree();
+  void DrawOriginTree(Canvas * canvas);
   void DrawOrigin();
 
   void PushLocalCoords();
@@ -2043,22 +1931,19 @@ by pose, in local coords */
                  double height = 1.0);
 
   virtual void DrawPicker();
-  virtual void DataVisualize(Camera *cam);
-  virtual void DrawSelected(void);
+  virtual void DataVisualize(Camera *cam, Canvas* canvas);
+  virtual void DrawSelected(Canvas * canvas);
 
-  void DrawTrailFootprint();
-  void DrawTrailBlocks();
-  void DrawTrailArrows();
-  void DrawGrid();
+  void DrawTrailFootprint(Camera *cam, Canvas * canvas);
+  void DrawTrailBlocks(Camera *cam, Canvas * canvas);
+  void DrawTrailArrows(Canvas* canvas);
+  void DrawGrid(Canvas * canvas);
   //	void DrawBlinkenlights();
-  void DataVisualizeTree(Camera *cam);
+  void DataVisualizeTree(Camera *cam, Canvas * canvas);
   void DrawFlagList();
-  void DrawPose(Pose pose);
+  //void DrawPose(Pose pose);
 
 public:
-  virtual void PushColor(Color col) { world->PushColor(col); }
-  virtual void PushColor(double r, double g, double b, double a) { world->PushColor(r, g, b, a); }
-  virtual void PopColor() { world->PopColor(); }
   PowerPack *FindPowerPack() const;
 
   // void RecordRenderPoint( GSList** head, GSList* link,
@@ -2103,7 +1988,8 @@ public:
         interval_energy(0), last_update(0), log_state(false), map_resolution(0), mass(0),
         parent(NULL), power_pack(NULL), rebuild_displaylist(false), stack_children(true),
         stall(false), subs(0), thread_safe(false), trail_index(0), event_queue_num(0), used(false),
-        watts(0), watts_give(0), watts_take(0), wf(NULL), wf_entity(0), world(NULL), world_gui(NULL)
+        watts(0), watts_give(0), watts_take(0), wf(NULL), wf_entity(0), world(NULL)
+  //, world_gui(NULL)
   {
   }
 
@@ -2117,6 +2003,8 @@ public:
   void RemoveVisualizer(Visualizer *custom_visual);
 
   void BecomeParentOf(Model *child);
+
+  Canvas * GetCanvas();
 
   void Load(Worldfile *wf, int wf_entity)
   {
@@ -2197,7 +2085,7 @@ model has no parent */
   bool IsRelated(const Model *testmod) const;
 
   /** get the pose of a model in the global CS */
-  Pose GetGlobalPose() const;
+  Pose GetGlobalPose() const override;
 
   /** subscribe to a model's data */
   void Subscribe();
@@ -2342,7 +2230,7 @@ public:
   public:
     explicit Vis(World *world);
     virtual ~Vis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   } vis;
 
 private:
@@ -2371,10 +2259,10 @@ public:
   /// Destructor
   ~ModelBlobfinder();
 
-  virtual void Startup();
-  virtual void Shutdown();
-  virtual void Update();
-  virtual void Load();
+  void Startup() override;
+  void Shutdown() override;
+  void Update() override;
+  void Load() override;
 
   /** Returns a non-mutable const reference to the detected blob
 data. Use this if you don't need to modify the model's
@@ -2404,7 +2292,7 @@ public:
   void SetState(bool isOn);
 
 protected:
-  virtual void DrawBlocks();
+  virtual void DrawBlocks(Canvas* canvas) override;
 
 private:
   bool m_IsOn;
@@ -2455,8 +2343,8 @@ public:
   };
 
 private:
-  virtual void Update();
-  virtual void DataVisualize(Camera *cam);
+  void Update() override;
+  void DataVisualize(Camera *cam, Canvas* canvas) override;
 
   void FixBlocks();
   void PositionPaddles();
@@ -2479,8 +2367,8 @@ public:
   /// destructor
   virtual ~ModelGripper();
 
-  virtual void Load();
-  virtual void Save();
+  void Load() override;
+  void Save() override;
 
   /** Configure the gripper */
   void SetConfig(config_t &newcfg)
@@ -2523,23 +2411,23 @@ public:
   ModelBumper(World *world, Model *parent, const std::string &type);
   virtual ~ModelBumper();
 
-  virtual void Load();
+  void Load() override;
 
   uint32_t bumper_count;
   BumperConfig *bumpers;
   BumperSample *samples;
 
 protected:
-  virtual void Startup();
-  virtual void Shutdown();
-  virtual void Update();
-  virtual void Print(char *prefix) const;
+  virtual void Startup() override;
+  virtual void Shutdown() override;
+  virtual void Update() override;
+  virtual void Print(char *prefix) const override;
 
   class BumperVis : public Visualizer {
   public:
     BumperVis();
     virtual ~BumperVis();
-    virtual void Visualize(Model *mod, Camera *cam);
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   } bumpervis;
 
 private:
@@ -2569,8 +2457,8 @@ private:
   /// if neighbor is visible, add him to the fiducial scan
   void AddModelIfVisible(Model *him);
 
-  virtual void Update();
-  virtual void DataVisualize(Camera *cam);
+  void Update() override;
+  void DataVisualize(Camera *cam, Canvas * canvas) override;
 
   static Option showData;
   static Option showFov;
@@ -2581,8 +2469,8 @@ public:
   ModelFiducial(World *world, Model *parent, const std::string &type);
   virtual ~ModelFiducial();
 
-  virtual void Load();
-  void Shutdown(void);
+  void Load() override;
+  void Shutdown(void) override;
 
   meters_t max_range_anon; ///< maximum detection range
   meters_t max_range_id; ///< maximum range at which the ID can be read
@@ -2613,7 +2501,7 @@ public:
   ModelRanger(World *world, Model *parent, const std::string &type);
   virtual ~ModelRanger();
 
-  virtual void Print(char *prefix) const;
+  virtual void Print(char *prefix) const override;
 
   class Vis : public Visualizer {
   public:
@@ -2625,7 +2513,7 @@ public:
 
     explicit Vis(World *world);
     virtual ~Vis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    virtual void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   } vis;
 
   class Sensor {
@@ -2652,7 +2540,7 @@ public:
     }
 
     void Update(ModelRanger *rgr);
-    void Visualize(Vis *vis, ModelRanger *rgr) const;
+    void Visualize(Vis *vis, ModelRanger *rgr, Canvas * canvas) const;
     std::string String() const;
     void Load(Worldfile *wf, int entity);
   };
@@ -2667,9 +2555,9 @@ private:
   std::vector<Sensor> sensors;
 
 protected:
-  virtual void Startup();
-  virtual void Shutdown();
-  virtual void Update();
+  virtual void Startup() override;
+  virtual void Shutdown() override;
+  virtual void Update() override;
 };
 
 // BLINKENLIGHT MODEL ----------------------------------------------------
@@ -2687,9 +2575,9 @@ public:
 
   ~ModelBlinkenlight();
 
-  virtual void Load();
-  virtual void Update();
-  virtual void DataVisualize(Camera *cam);
+  void Load() override;
+  void Update() override;
+  virtual void DataVisualize(Camera *cam, Canvas* canvas) override;
 };
 
 // CAMERA MODEL ----------------------------------------------------
@@ -2703,7 +2591,7 @@ public:
   } ColoredVertex;
 
 private:
-  Canvas *_canvas;
+  //Canvas *_canvas;
 
   GLfloat *_frame_data; // opengl read buffer
   GLubyte *_frame_color_data; // opengl read buffer
@@ -2728,23 +2616,23 @@ private:
 
   /// Take a screenshot from the camera's perspective. return: true for sucess, and data is
   /// available via FrameDepth() / FrameColor()
-  bool GetFrame();
+  bool GetFrame(Canvas * canvas);
 
 public:
   ModelCamera(World *world, Model *parent, const std::string &type);
 
   ~ModelCamera();
 
-  virtual void Load();
+  void Load() override;
 
   /// Capture a new frame ( calls GetFrame )
-  virtual void Update();
+  void Update() override;
 
   /// Draw Camera Model - TODO
   // virtual void Draw( uint32_t flags, Canvas* canvas );
 
   /// Draw camera visualization
-  virtual void DataVisualize(Camera *cam);
+  virtual void DataVisualize(Camera *cam, Canvas* canvas) override;
 
   /// width of captured image
   int getWidth(void) const { return _width; }
@@ -2839,14 +2727,15 @@ Models and visualized. */
   public:
     WaypointVis();
     virtual ~WaypointVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   } wpvis;
 
   class PoseVis : public Visualizer {
   public:
     PoseVis();
     virtual ~PoseVis(void) {}
-    virtual void Visualize(Model *mod, Camera *cam);
+    void Visualize(Model *mod, Camera *cam, Canvas * canvas) override;
   } posevis;
 
   /** Set the current pose estimate.*/
@@ -2880,10 +2769,10 @@ a (radians per second squared) */
 
 protected:
   virtual void Move();
-  virtual void Startup();
-  virtual void Shutdown();
-  virtual void Update();
-  virtual void Load();
+  virtual void Startup() override;
+  virtual void Shutdown() override;
+  virtual void Update() override;
+  virtual void Load() override;
 };
 
 // ACTUATOR MODEL --------------------------------------------------------
@@ -2918,10 +2807,10 @@ public:
   /// Destructor
   ~ModelActuator();
 
-  virtual void Startup();
-  virtual void Shutdown();
-  virtual void Update();
-  virtual void Load();
+  virtual void Startup() override;
+  virtual void Shutdown() override;
+  virtual void Update() override;
+  virtual void Load() override;
 
   /** Sets the control_mode to CONTROL_VELOCITY and sets
 the goal velocity. */

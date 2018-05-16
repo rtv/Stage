@@ -139,6 +139,7 @@
 #include "config.h" // for build-time config
 #include "file_manager.hh"
 #include "stage.hh"
+#include "canvas.hh"
 #include "worldfile.hh"
 using namespace Stg;
 
@@ -238,8 +239,7 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
       power_pack(NULL), pps_charging(), rastervis(), rebuild_displaylist(true), say_string(),
       stack_children(true), stall(false), subs(0), thread_safe(false), trail(20),
       trail_index(0),  trail_interval(10), type(type), event_queue_num(0), used(false), watts(0.0), watts_give(0.0),
-      watts_take(0.0), wf(NULL), wf_entity(0), world(world),
-      world_gui(dynamic_cast<WorldGui *>(world))
+      watts_take(0.0), wf(NULL), wf_entity(0), world(world)	//,world_gui(dynamic_cast<WorldGui *>(world))
 {
   assert(world);
 
@@ -882,7 +882,7 @@ Model::RasterVis::RasterVis()
 {
 }
 
-void Model::RasterVis::Visualize(Model *mod, Camera *cam)
+void Model::RasterVis::Visualize(Model *mod, Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -891,7 +891,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
   // go into world coordinates
   glPushMatrix();
-  mod->PushColor(1, 0, 0, 0.5);
+  canvas->PushColor(1, 0, 0, 0.5);
 
   Gl::pose_inverse_shift(mod->GetGlobalPose());
 
@@ -911,11 +911,11 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
       char buf[128];
       snprintf(buf, 127, "[%.2f x %.2f]", pt.x, pt.y);
-      Gl::draw_string(pt.x, pt.y, 0, buf);
+      canvas->draw_string(pt.x, pt.y, 0, buf);
     }
     glEnd();
 
-    mod->PopColor();
+    canvas->PopColor();
 
     glPopMatrix();
   }
@@ -926,7 +926,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
   glScalef(cellwidth, cellheight, 1);
 
-  mod->PushColor(0, 0, 0, 0.5);
+  canvas->PushColor(0, 0, 0, 0.5);
   glPolygonMode(GL_FRONT, GL_FILL);
   for (unsigned int y = 0; y < height; ++y)
     for (unsigned int x = 0; x < width; ++x) {
@@ -937,7 +937,7 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
   glTranslatef(0, 0, 0.01);
 
-  mod->PushColor(0, 0, 0, 1);
+  canvas->PushColor(0, 0, 0, 1);
   glPolygonMode(GL_FRONT, GL_LINE);
   for (unsigned int y = 0; y < height; ++y)
     for (unsigned int x = 0; x < width; ++x) {
@@ -951,16 +951,16 @@ void Model::RasterVis::Visualize(Model *mod, Camera *cam)
 
   glPolygonMode(GL_FRONT, GL_FILL);
 
-  mod->PopColor();
-  mod->PopColor();
+  canvas->PopColor();
+  canvas->PopColor();
 
-  mod->PushColor(0, 0, 0, 1);
+  canvas->PushColor(0, 0, 0, 1);
   char buf[128];
   snprintf(buf, 127, "[%u x %u]", width, height);
   glTranslatef(0, 0, 0.01);
-  Gl::draw_string(1, height - 1, 0, buf);
+  canvas->draw_string(1, height - 1, 0, buf);
 
-  mod->PopColor();
+  canvas->PopColor();
 
   glPopMatrix();
 }
@@ -1533,4 +1533,9 @@ void Model::LoadControllerModule(const char *lib)
   }
 
   fflush(stdout);
+}
+
+Canvas * Model::GetCanvas()
+{
+	return world != NULL ? world->GetCanvas() : NULL;
 }

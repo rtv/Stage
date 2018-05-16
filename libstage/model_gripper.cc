@@ -52,11 +52,12 @@
 
 #include "stage.hh"
 #include "worldfile.hh"
+#include "canvas.hh"
 #include <sys/time.h>
 using namespace Stg;
 
 #include "option.hh"
-Option ModelGripper::showData("Gripper data", "show_gripper_data", "", true, NULL);
+Option ModelGripper::showData("Gripper data", "show_gripper_data", "", true);
 
 // TODO - simulate energy use when moving grippers
 
@@ -212,6 +213,8 @@ void ModelGripper::PositionPaddles()
 
   paddle_left->SetZ(paddle_bottom, paddle_top);
   paddle_right->SetZ(paddle_bottom, paddle_top);
+  // TODO: update display list for child blocks
+  rebuild_displaylist = true;
 
   Map(layer);
 }
@@ -443,7 +446,7 @@ void ModelGripper::UpdateContacts()
   }
 }
 
-void ModelGripper::DataVisualize(Camera *cam)
+void ModelGripper::DataVisualize(Camera *cam, Canvas* canvas)
 {
   (void)cam; // avoid warning about unused var
 
@@ -455,7 +458,7 @@ void ModelGripper::DataVisualize(Camera *cam)
   // return;
 
   // outline the sensor lights in black
-  PushColor(0, 0, 0, 1.0); // black
+  canvas->PushColor(0, 0, 0, 1.0); // black
   glTranslatef(0, 0, geom.size.z * cfg.paddle_size.z);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -487,7 +490,7 @@ void ModelGripper::DataVisualize(Camera *cam)
 
   // if the gripper detects anything, fill the lights in with yellow
   if (cfg.beam[0] || cfg.beam[1] || cfg.contact[0] || cfg.contact[1]) {
-    PushColor(1, 1, 0, 1.0); // yellow
+    canvas->PushColor(1, 1, 0, 1.0); // yellow
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (cfg.contact[0])
@@ -506,8 +509,8 @@ void ModelGripper::DataVisualize(Camera *cam)
       Gl::draw_centered_rect(obbx, -bby - led_dx, led_dx, led_dx);
     }
 
-    PopColor(); // yellow
+    canvas->PopColor(); // yellow
   }
 
-  PopColor(); // black
+  canvas->PopColor(); // black
 }

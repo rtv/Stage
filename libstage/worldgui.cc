@@ -152,12 +152,13 @@ then select the option from the menu again to stop.
 #include <set>
 #include <sstream>
 
-#include "canvas.hh"
+#include "canvas_fltk.hh"
 #include "config.h" // build options from CMake
 #include "file_manager.hh"
 #include "options_dlg.hh"
 #include "region.hh"
 #include "worldfile.hh"
+#include "world_gui.hh"
 
 using namespace Stg;
 
@@ -189,7 +190,7 @@ static const char *MoreHelpText =
     "(requires Doxygen and supporting programs to be installed first).\n";
 
 WorldGui::WorldGui(int width, int height, const char *caption)
-    : Fl_Window(width, height, NULL), canvas(new Canvas(this, 0, 30, width, height - 30)),
+    : Fl_Window(width, height, NULL), canvas(new CanvasFLTK(this, 0, 30, width, height - 30)),
       drawOptions(), fileMan(new FileManager()), interval_log(), speedup(1.0), // real time
       confirm_on_quit(true), mbar(new Fl_Menu_Bar(0, 0, width, 30)), oDlg(NULL), pause_time(false),
       real_time_interval(sim_interval), real_time_now(RealTimeNow()),
@@ -455,36 +456,6 @@ std::string WorldGui::EnergyString() const
   return std::string(str);
 }
 
-void WorldGui::DrawOccupancy() const
-{
-  // 	int count=0;
-  //   FOR_EACH( it, superregions )
-  // 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x,
-  // it->first.y,
-  // it->second );
-  // 	printf( "done\n" );
-
-  //  unsigned int layer( updates % 2 );
-
-  FOR_EACH (it, superregions)
-    it->second->DrawOccupancy();
-
-  // 	 {
-
-  // it->second->DrawOccupancy(0);
-  //    it->second->DrawOccupancy(1);
-
-  //	 }
-}
-
-void WorldGui::DrawVoxels() const
-{
-  unsigned int layer(updates % 2);
-
-  FOR_EACH (it, superregions)
-    it->second->DrawVoxels(layer);
-}
-
 void WorldGui::windowCb(Fl_Widget *, WorldGui *wg)
 {
   switch (Fl::event()) {
@@ -614,8 +585,7 @@ void WorldGui::Start()
   World::Start();
 
   // start the timer that causes regular redraws
-  Fl::add_timeout(((double)canvas->interval / 1000), (Fl_Timeout_Handler)Canvas::TimerCallback,
-                  canvas);
+  Fl::add_timeout(((double)canvas->interval / 1000), (Fl_Timeout_Handler)CanvasFLTK::TimerCallback, canvas);
 
   SetTimeouts();
 }
@@ -638,7 +608,7 @@ void WorldGui::Stop()
 {
   World::Stop();
 
-  Fl::remove_timeout((Fl_Timeout_Handler)Canvas::TimerCallback);
+  Fl::remove_timeout((Fl_Timeout_Handler)CanvasFLTK::TimerCallback);
   Fl::remove_timeout((Fl_Timeout_Handler)UpdateCallback);
   Fl::remove_idle((Fl_Timeout_Handler)UpdateCallback, this);
 
@@ -856,12 +826,6 @@ bool WorldGui::closeWindowQuery()
   }
 }
 
-void WorldGui::DrawBoundingBoxTree()
-{
-  FOR_EACH (it, World::children)
-    (*it)->DrawBoundingBoxTree();
-}
-
 void WorldGui::PushColor(Color col)
 {
   canvas->PushColor(col);
@@ -893,3 +857,29 @@ bool WorldGui::IsTopView()
 {
   return canvas->IsTopView();
 }
+
+Canvas *WorldGui::GetCanvas(void)
+{
+	return canvas;
+}
+
+void WorldGui::Run()
+{
+  // first check whether there is a single gui world
+  bool found_gui = World::ExistsGuiWorld();
+
+  if (found_gui) {
+    // roughly equals Fl::run() (see also
+    // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world,
+    // FLTK
+    // is a piece of crap):
+  	// Dirty replacement here
+    while (Fl::first_window() && !World::ExitAll()) {
+      Fl::wait();
+    }
+  } else {
+    while (!UpdateAll())
+      ;
+  }
+}
+

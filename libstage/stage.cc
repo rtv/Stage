@@ -1,6 +1,10 @@
 // Author: Richard Vaughan
 
+#ifdef USE_FLTK
 #include <FL/Fl_Shared_Image.H>
+#endif
+
+#include "image.hh"
 
 #include "config.h" // results of cmake's system configuration tests
 #include "file_manager.hh"
@@ -32,7 +36,8 @@ void Stg::Init(int *argc, char **argv[])
   RegisterModels();
 
   // ask FLTK to load support for various image formats
-  fl_register_images();
+  //fl_register_images();
+  Image::Initialize();
 
   init_called = true;
 }
@@ -89,21 +94,25 @@ int Stg::polys_from_image_file(const std::string &filename,
   // TODO: make this a parameter
   const int threshold = 127;
 
-  Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
-  if (img == NULL) {
+  Image img;
+
+  //SDL_Surface * img = SDL_LoadBMP("image.bmp");
+
+  //Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
+  if (!img.load(filename.c_str())) {
     std::cerr << "failed to open file: " << filename << std::endl;
 
-    assert(img); // easy access to this point in debugger
+    //assert(img); // easy access to this point in debugger
     exit(-1);
   }
 
   // printf( "loaded image %s w %d h %d d %d count %d ld %d\n",
   //  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
 
-  const unsigned int width = img->w();
-  const unsigned height = img->h();
-  const unsigned int depth = img->d();
-  uint8_t *pixels = (uint8_t *)img->data()[0];
+  const unsigned int width = img.getWidth();
+  const unsigned height = img.getHeight();
+  const unsigned int depth = img.getDepth();
+  uint8_t *pixels = (uint8_t *)img.getData();
 
   // a set of previously seen directed edges, The key is a 4-element vector
   // [x1,y1,x2,y2].
@@ -209,8 +218,8 @@ int Stg::polys_from_image_file(const std::string &filename,
     polys.push_back(poly);
   }
 
-  if (img)
-    img->release(); // frees all resources for this image
+  //if (img)
+  //  img->release(); // frees all resources for this image
   return 0; // ok
 }
 

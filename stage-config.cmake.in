@@ -1,14 +1,29 @@
 # - Config file for Stage
 # It defines the following variables:
 #    STAGE_INCLUDE_DIRS - Stage Include directories
-#    STAGE_LIBRARIES    - Stage link libraries
+#    STAGE_LIBRARIES    - Stage link libraries. Contains simulation code and Fltk UI
+#    STAGE_CORE_LIBRARIES - Stage core libraries. Contains simulation code, without UI
 
-set(STAGE_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME@-@APIVERSION@"
-  "@FLTK_INCLUDE_DIR@"
+get_filename_component(STAGE_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(STAGE_INCLUDE_DIRS "${STAGE_CMAKE_DIR}/../../../include/@PROJECT_NAME@-@APIVERSION@"
   "@OPENGL_INCLUDE_DIR@")
-list(REMOVE_DUPLICATES STAGE_INCLUDE_DIRS)
-set(STAGE_LIBRARIES
-  "${stage_DIR}/../../../@PROJECT_LIB_DIR@/@STAGE_TARGET_NAME@"
-  "@FLTK_LIBRARIES@"
-  "@OPENGL_gl_LIBRARIES@")
 
+set(STAGE_USE_GUI @BUILD_GUI@)
+
+set(STAGE_CORE_LIBRARIES
+  "${STAGE_CMAKE_DIR}/../../../@PROJECT_LIB_DIR@/@STAGE_CORE_TARGET_NAME@"
+  "@OPENGL_gl_LIBRARIES@"
+)
+
+set(STAGE_LIBRARIES ${STAGE_CORE_LIBRARIES})
+
+if(STAGE_USE_GUI)
+	list(APPEND STAGE_INCLUDE_DIRS "@FLTK_INCLUDE_DIR@")
+	# Using relative path to make cross compilation easier
+	list(APPEND STAGE_LIBRARIES "${STAGE_CMAKE_DIR}/../../../@PROJECT_LIB_DIR@/@STAGE_TARGET_NAME@")
+	list(APPEND STAGE_LIBRARIES "@FLTK_LIBRARIES@")
+endif(STAGE_USE_GUI)
+
+list(REMOVE_DUPLICATES STAGE_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES STAGE_LIBRARIES)

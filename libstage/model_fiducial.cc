@@ -18,11 +18,12 @@
 #include "option.hh"
 #include "stage.hh"
 #include "worldfile.hh"
+#include "canvas.hh"
 using namespace Stg;
 
 // TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelFiducial::showData("Fiducials", "show_fiducial", "", true, NULL);
-Option ModelFiducial::showFov("Fiducial FOV", "show_fiducial_fov", "", false, NULL);
+Option ModelFiducial::showData("Fiducials", "show_fiducial", "", true);
+Option ModelFiducial::showFov("Fiducial FOV", "show_fiducial_fov", "", false);
 
 /**
   @ingroup model
@@ -306,12 +307,12 @@ void ModelFiducial::Load(void)
   ignore_zloc = wf->ReadInt(wf_entity, "ignore_zloc", ignore_zloc);
 }
 
-void ModelFiducial::DataVisualize(Camera *cam)
+void ModelFiducial::DataVisualize(Camera *cam, Canvas * canvas)
 {
   (void)cam; // avoid warning about unused var
 
   if (showFov) {
-    PushColor(1, 0, 1, 0.2); // magenta, with a bit of alpha
+    canvas->PushColor(1, 0, 1, 0.2); // magenta, with a bit of alpha
 
     GLUquadric *quadric = gluNewQuadric();
 
@@ -325,11 +326,11 @@ void ModelFiducial::DataVisualize(Camera *cam)
 
     gluDeleteQuadric(quadric);
 
-    PopColor();
+    canvas->PopColor();
   }
 
   if (showData) {
-    PushColor(1, 0, 1, 0.4); // magenta, with a bit of alpha
+    canvas->PushColor(1, 0, 1, 0.4); // magenta, with a bit of alpha
 
     // draw fuzzy dotted lines
     glLineWidth(2.0);
@@ -358,13 +359,13 @@ void ModelFiducial::DataVisualize(Camera *cam)
       // show the fiducial ID
       char idstr[32];
       snprintf(idstr, 31, "%d", fid.id);
-      Gl::draw_string(0, 0, 0, idstr);
+      canvas->draw_string(0, 0, 0, idstr);
 
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glPopMatrix();
     }
 
-    PopColor();
+    canvas->PopColor();
     glLineWidth(1.0);
   }
 }

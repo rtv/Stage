@@ -445,12 +445,12 @@ int main(int argc, char *argv[])
     // help options
     case '?':
       puts(USAGE);
-      exit(0);
+      return -1;
       break;
     default:
       printf("unhandled option %c\n", ch);
       puts(USAGE);
-      // exit(0);
+      return -1;
     }
   }
 
@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
 
   if (worldfilename == NULL) {
     puts("[AvonStage] no worldfile specified on command line. Quit.\n");
-    exit(-1);
+    return -1;
   }
 
   puts(""); // end the first start-up line

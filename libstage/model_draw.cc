@@ -9,7 +9,7 @@ static const Color BUBBLE_FILL(1.0, 0.8, 0.8); // light blue/grey
 static const Color BUBBLE_BORDER(0, 0, 0); // black
 static const Color BUBBLE_TEXT(0, 0, 0); // black
 
-void Model::DrawSelected()
+void Model::DrawSelected(Canvas * canvas)
 {
   glPushMatrix();
 
@@ -20,8 +20,8 @@ void Model::DrawSelected()
   char buf[64];
   snprintf(buf, 63, "%s [%.2f %.2f %.2f %.2f]", Token(), gp.x, gp.y, gp.z, rtod(gp.a));
 
-  PushColor(0, 0, 0, 1); // text color black
-  Gl::draw_string(0.5, 0.5, 0.5, buf);
+  canvas->PushColor(0, 0, 0, 1); // text color black
+  canvas->draw_string(0.5, 0.5, 0.5, buf);
 
   glRotatef(rtod(pose.a), 0, 0, 1);
 
@@ -30,28 +30,28 @@ void Model::DrawSelected()
   double dx = geom.size.x / 2.0 * 1.6;
   double dy = geom.size.y / 2.0 * 1.6;
 
-  PopColor();
+  canvas->PopColor();
 
-  PushColor(0, 1, 0, 0.4); // highlight color blue
+  canvas->PushColor(0, 1, 0, 0.4); // highlight color blue
   glRectf(-dx, -dy, dx, dy);
-  PopColor();
+  canvas->PopColor();
 
-  PushColor(0, 1, 0, 0.8); // highlight color blue
+  canvas->PushColor(0, 1, 0, 0.8); // highlight color blue
   glLineWidth(1);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glRectf(-dx, -dy, dx, dy);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  PopColor();
+  canvas->PopColor();
 
   glPopMatrix();
 }
 
-void Model::DrawTrailFootprint()
+void Model::DrawTrailFootprint(Camera *cam, Canvas * canvas)
 {
   double darkness = 0;
   double fade = 0.5 / (double)(trail.size() + 1);
 
-  PushColor(0, 0, 0, 1); // dummy push just saving the color
+  canvas->PushColor(0, 0, 0, 1); // dummy push just saving the color
 
   // this loop could be faster, but optimzing vis is not a priority
   
@@ -80,10 +80,10 @@ void Model::DrawTrailFootprint()
     glPopMatrix();
   }
 
-  PopColor();
+  canvas->PopColor();
 }
 
-void Model::DrawTrailBlocks()
+void Model::DrawTrailBlocks(Camera *cam, Canvas * canvas)
 {
   double timescale = 0.0000001;
 
@@ -97,19 +97,19 @@ void Model::DrawTrailBlocks()
     Gl::pose_shift(pz);
     Gl::pose_shift(geom.pose);
 
-    DrawBlocks();
+    DrawBlocks(canvas);
 
     glPopMatrix();
   }
 }
 
-void Model::DrawTrailArrows()
+void Model::DrawTrailArrows(Canvas* canvas)
 {
   double dx = 0.2;
   double dy = 0.07;
   double timescale = 1e-7;
 
-  PushColor(0, 0, 0, 1); // dummy push
+  canvas->PushColor(0, 0, 0, 1); // dummy push
 
   FOR_EACH (it, trail) {
     TrailItem &checkpoint = *it;
@@ -134,61 +134,49 @@ void Model::DrawTrailArrows()
     glPopMatrix();
   }
 
-  PopColor();
+  canvas->PopColor();
 }
 
-void Model::DrawOriginTree()
+void Model::DrawOriginTree(Canvas* canvas)
 {
-  DrawPose(GetGlobalPose());
+  canvas->DrawPose(GetGlobalPose());
 
   FOR_EACH (it, children)
-    (*it)->DrawOriginTree();
+    (*it)->DrawOriginTree(canvas);
 }
 
-void Model::DrawBlocksTree()
+void Model::DrawBlocksTree(Canvas * canvas)
 {
   PushLocalCoords();
 
   FOR_EACH (it, children)
-    (*it)->DrawBlocksTree();
+    (*it)->DrawBlocksTree(canvas);
 
-  DrawBlocks();
+  DrawBlocks(canvas);
   PopCoords();
 }
 
-void Model::DrawPose(Pose pose)
+void Model::DrawBlocks(Canvas * canvas)
 {
-  PushColor(0, 0, 0, 1);
-  glPointSize(4);
-
-  glBegin(GL_POINTS);
-  glVertex3f(pose.x, pose.y, pose.z);
-  glEnd();
-
-  PopColor();
+  blockgroup.CallDisplayList(canvas);
 }
 
-void Model::DrawBlocks()
-{
-  blockgroup.CallDisplayList();
-}
-
-void Model::DrawBoundingBoxTree()
+void Model::DrawBoundingBoxTree(Canvas * canvas)
 {
   PushLocalCoords();
 
   FOR_EACH (it, children)
-    (*it)->DrawBoundingBoxTree();
+    (*it)->DrawBoundingBoxTree(canvas);
 
-  DrawBoundingBox();
+  DrawBoundingBox(canvas);
   PopCoords();
 }
 
-void Model::DrawBoundingBox()
+void Model::DrawBoundingBox(Canvas * canvas)
 {
   Gl::pose_shift(geom.pose);
 
-  PushColor(color);
+  canvas->PushColor(color);
 
   glBegin(GL_QUAD_STRIP);
 
@@ -220,7 +208,7 @@ void Model::DrawBoundingBox()
   glVertex2f(0, +0.02);
   glEnd();
 
-  PopColor();
+  canvas->PopColor();
 }
 
 // move into this model's local coordinate frame
@@ -244,20 +232,24 @@ void Model::AddVisualizer(Visualizer *cv, bool on_by_default)
   assert(cv);
 
   // If there's no GUI, ignore this request
-  if (!world_gui)
-    return;
+  //if (!world_gui)
+  //  return;
 
   // save visualizer instance
   cv_list.push_back(cv);
 
   // register option for all instances which share the same name
-  Canvas *canvas = world_gui->GetCanvas();
-  std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
-  if (i == canvas->_custom_options.end()) {
-    Option *op =
-        new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default, world_gui);
-    canvas->_custom_options[cv->GetMenuName()] = op;
-    RegisterOption(op);
+  Canvas *canvas = this->GetCanvas();
+
+  if(canvas != NULL)
+  {
+		std::map<std::string, Option *>::iterator i = canvas->_custom_options.find(cv->GetMenuName());
+		if (i == canvas->_custom_options.end()) {
+			Option *op =
+					new Option(cv->GetMenuName(), cv->GetWorldfileName(), "", on_by_default);
+			canvas->_custom_options[cv->GetMenuName()] = op;
+			RegisterOption(op);
+		}
   }
 }
 
@@ -270,16 +262,17 @@ void Model::RemoveVisualizer(Visualizer *cv)
   // attached to different models which have the same name
 }
 
-void Model::DrawStatusTree(Camera *cam)
+
+void Model::DrawStatusTree(Camera* cam, Canvas * canvas)
 {
   PushLocalCoords();
-  DrawStatus(cam);
+  DrawStatus(cam, canvas);
   FOR_EACH (it, children)
-    (*it)->DrawStatusTree(cam);
+    (*it)->DrawStatusTree(cam, canvas);
   PopCoords();
 }
 
-void Model::DrawStatus(Camera *cam)
+void Model::DrawStatus(Camera* cam, Canvas * canvas)
 {
   if (power_pack || !say_string.empty()) {
     float pitch = -cam->pitch();
@@ -313,8 +306,8 @@ void Model::DrawStatus(Camera *cam)
 
       if (valid) {
         // fl_font( FL_HELVETICA, 12 );
-        float w = gl_width(this->say_string.c_str()); // scaled text width
-        float h = gl_height(); // scaled text height
+        float w = canvas->fontWidth(this->say_string.c_str()); // scaled text width
+        float h = canvas->fontHeight(); // scaled text height
 
         GLdouble wx, wy, wz;
         GLint viewport[4];
@@ -336,28 +329,28 @@ void Model::DrawStatus(Camera *cam)
         const float m = h / 10;
 
         // draw inside of bubble
-        PushColor(BUBBLE_FILL);
+        canvas->PushColor(BUBBLE_FILL);
         glPushAttrib(GL_POLYGON_BIT | GL_LINE_BIT);
         glPolygonMode(GL_FRONT, GL_FILL);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(1.0, 1.0);
         Gl::draw_octagon(w, h, m);
         glDisable(GL_POLYGON_OFFSET_FILL);
-        PopColor();
+        canvas->PopColor();
 
         // draw outline of bubble
-        PushColor(BUBBLE_BORDER);
+        canvas->PushColor(BUBBLE_BORDER);
         glLineWidth(1);
         glEnable(GL_LINE_SMOOTH);
         glPolygonMode(GL_FRONT, GL_LINE);
         Gl::draw_octagon(w, h, m);
         glPopAttrib();
-        PopColor();
+        canvas->PopColor();
 
-        PushColor(BUBBLE_TEXT);
+        canvas->PushColor(BUBBLE_TEXT);
         // draw text inside the bubble
-        Gl::draw_string(m, 2.5 * m, 0, this->say_string.c_str());
-        PopColor();
+        canvas->draw_string(m, 2.5 * m, 0, this->say_string.c_str());
+        canvas->PopColor();
       }
     }
     glPopMatrix();
@@ -521,33 +514,35 @@ void Model::DrawPicker(void)
   PopCoords();
 }
 
-void Model::DataVisualize(Camera *cam)
+void Model::DataVisualize(Camera *cam, Canvas* canvas)
 {
   (void)cam; // avoid warning about unused var
 }
 
-void Model::DataVisualizeTree(Camera *cam)
+void Model::DataVisualizeTree(Camera *cam, Canvas * canvas)
 {
   PushLocalCoords();
 
-  if (subs > 0) {
-    DataVisualize(cam); // virtual function overridden by some model types
+  //Canvas * canvas = GetCanvas();
+
+  if (subs > 0 && canvas != NULL) {
+    DataVisualize(cam, canvas); // virtual function overridden by some model types
 
     FOR_EACH (it, cv_list) {
       Visualizer *vis = *it;
-      if (world_gui->GetCanvas()->_custom_options[vis->GetMenuName()]->isEnabled())
-        vis->Visualize(this, cam);
+      if (canvas->_custom_options[vis->GetMenuName()]->isEnabled())
+        vis->Visualize(this, cam, canvas);
     }
   }
 
   // and draw the children
   FOR_EACH (it, children)
-    (*it)->DataVisualizeTree(cam);
+    (*it)->DataVisualizeTree(cam, canvas);
 
   PopCoords();
 }
 
-void Model::DrawGrid(void)
+void Model::DrawGrid(Canvas * canvas)
 {
   if (gui.grid) {
     PushLocalCoords();
@@ -560,9 +555,9 @@ void Model::DrawGrid(void)
     vol.z.min = 0;
     vol.z.max = geom.size.z;
 
-    PushColor(0, 0, 1, 0.4);
-    Gl::draw_grid(vol);
-    PopColor();
+    canvas->PushColor(0, 0, 1, 0.4);
+    canvas->draw_grid(vol);
+    canvas->PopColor();
     PopCoords();
   }
 }

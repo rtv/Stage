@@ -26,7 +26,7 @@ set_source_files_properties( ${PLUGINS} PROPERTIES
 )
 
 foreach( PLUGIN ${PLUGINS} )
-  TARGET_LINK_LIBRARIES( ${PLUGIN} stage ${OPENGL_LIBRARIES} )
+  TARGET_LINK_LIBRARIES( ${PLUGIN} stage_core ${OPENGL_LIBRARIES} )
 endforeach( PLUGIN )
 
 # delete the "lib" prefix from the plugin libraries

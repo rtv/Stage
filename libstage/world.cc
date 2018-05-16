@@ -190,27 +190,42 @@ void World::DestroySuperRegion(SuperRegion *sr)
 void World::Run()
 {
   // first check whether there is a single gui world
-  bool found_gui = false;
-  FOR_EACH (world_it, world_set) {
-    found_gui |= (*world_it)->IsGUI();
-  }
-  if (found_gui && (world_set.size() != 1)) {
-    PRINT_WARN("When using the GUI only a single world can be simulated.");
-    exit(-1);
-  }
+  bool found_gui = World::ExistsGuiWorld();
 
-  if (found_gui) {
+  if (found_gui)
+  {
     // roughly equals Fl::run() (see also
     // https://wiki.orfeo-toolbox.org/index.php/How_to_exit_every_fltk_window_in_the_world,
     // FLTK
     // is a piece of crap):
-    while (Fl::first_window() && !World::quit_all) {
-      Fl::wait();
-    }
+  	assert(false);
+  	// Dirty replacement here
+    //while (Fl::first_window() && !World::ExitAll()) {
+    //  Fl::wait();
+    //}
   } else {
     while (!UpdateAll())
       ;
   }
+}
+
+bool World::ExistsGuiWorld()
+{
+	bool found_gui = false;
+
+	FOR_EACH (world_it, world_set) {
+		found_gui |= (*world_it)->IsGUI();
+	}
+	if (found_gui && (world_set.size() != 1)) {
+		PRINT_WARN("When using the GUI only a single world can be simulated.");
+		//exit(-1);
+	}
+	return found_gui;
+}
+
+bool World::ExitAll()
+{
+	return quit_all;
 }
 
 bool World::UpdateAll()
@@ -1111,6 +1126,35 @@ void World::RemovePowerPack(PowerPack *pp)
   EraseAll(pp, powerpack_list);
 }
 
+void World::DrawOccupancy() const
+{
+  // 	int count=0;
+  //   FOR_EACH( it, superregions )
+  // 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x,
+  // it->first.y,
+  // it->second );
+  // 	printf( "done\n" );
+
+  //  unsigned int layer( updates % 2 );
+
+  FOR_EACH (it, superregions)
+    it->second->DrawOccupancy();
+
+  // 	 {
+
+  // it->second->DrawOccupancy(0);
+  //    it->second->DrawOccupancy(1);
+
+  //	 }
+}
+
+void World::DrawVoxels() const
+{
+  unsigned int layer(updates % 2);
+
+  FOR_EACH (it, superregions)
+    it->second->DrawVoxels(layer);
+}
 /// Register an Option for pickup by the GUI
 void World::RegisterOption(Option *opt)
 {  
@@ -1123,6 +1167,16 @@ void World::Log(Model *)
   // LogEntry( sim_time, mod);
   // printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );
   // LogEntry::Print();
+}
+
+bool World::IsDirty() const
+{
+	return dirty;
+}
+
+void World::SetDirty(bool val)
+{
+	dirty = val;
 }
 
 bool World::Event::operator<(const Event &other) const

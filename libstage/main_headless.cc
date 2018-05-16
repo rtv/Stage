@@ -28,8 +28,6 @@
 
 #include "config.h"
 #include "stage.hh"
-#include "world_gui.hh"
-
 using namespace Stg;
 
 const char *USAGE = "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldfileN]\n"
@@ -48,7 +46,6 @@ const char *USAGE = "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldf
 /* options descriptor */
 
 static struct option longopts[] = {
-  { "gui",  optional_argument,   NULL,  'g' },
   { "clock",  optional_argument,   NULL,  'c' },
   { "help",  optional_argument,   NULL,  'h' },
   { "args",  required_argument,   NULL,  'a' },
@@ -63,7 +60,6 @@ int main( int argc, char* argv[] )
   printf("%s %s ", PROJECT, VERSION);
 
   int ch = 0, optindex = 0;
-  bool usegui = true;
   bool showclock = false;
 
   while ((ch = getopt_long(argc, argv, "cgh?", longopts, &optindex)) != -1) {
@@ -76,19 +72,15 @@ int main( int argc, char* argv[] )
       showclock = true;
       printf("[Clock enabled]");
       break;
-    case 'g':
-      usegui = false;
-      printf("[GUI disabled]");
-      break;
     case 'h':
     case '?':
       puts(USAGE);
-      //			 exit(0);
+      return -1;
       break;
     default:
       printf("unhandled option %c\n", ch);
       puts(USAGE);
-      // exit(0);
+      return -1;
     }
   }
 
@@ -101,7 +93,7 @@ int main( int argc, char* argv[] )
   while (optindex < argc) {
     if (optindex > 0) {
       const char *worldfilename = argv[optindex];
-      World *world = (usegui ? new WorldGui(400, 300, worldfilename) : new World(worldfilename));
+      World *world = new World(worldfilename);
       world->Load(worldfilename);
       world->ShowClock(showclock);
 
@@ -111,17 +103,7 @@ int main( int argc, char* argv[] )
     optindex++;
   }
 
-  if(usegui)
-  {
-  	//while (Fl::first_window() && !World::quit_all) {
-  	    //  Fl::wait();
-  	    //}
-  	WorldGui::Run();
-  }
-  else
-  {
-  	World::Run();
-  }
+  World::Run();
 
   puts("\n[Stage: done]");
 

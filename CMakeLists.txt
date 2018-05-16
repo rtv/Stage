@@ -14,9 +14,7 @@ SET( MIN_PLAYER 2.1.0 )
 OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
-
-# todo - this doesn't work yet. Run Stage headless with -g.
-# OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
+OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 	cmake_policy( SET CMP0003 NEW )
@@ -52,8 +50,8 @@ endif( PROJECT_OS_OSX)
 # Build type cflags
 SET (OPTIMIZE "-O2")
 
-SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL}" CACHE INTERNAL "CXX Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG" CACHE INTERNAL "CXX Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} -std=c++11" CACHE INTERNAL "CXX Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${FORCE_ARCH} ${WALL} -DDEBUG -std=c++11" CACHE INTERNAL "CXX Flags for debug" FORCE)
 SET (CMAKE_CXX_FLAGS_PROFILE "-ggdb -pg  ${FORCE_ARCH} ${WALL}" CACHE INTERNAL "CXX Flags for profile" FORCE)
 
 #####################################
@@ -62,6 +60,7 @@ IF (NOT CMAKE_BUILD_TYPE)
   SET (CMAKE_BUILD_TYPE "release" CACHE STRING 
     "Choose the type of build, options are: release (default) debug profile" FORCE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
+
 STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 
 MESSAGE( STATUS "Build type ${CMAKE_BUILD_TYPE}" )
@@ -73,13 +72,13 @@ SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 # Create the config.h file
 # config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
-					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
+				${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
 find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 
-include_directories( 
+include_directories(
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
 )
@@ -88,7 +87,6 @@ include_directories(
 MESSAGE( STATUS "Checking for required libraries..." )
 
 find_package( JPEG REQUIRED )
-
 find_package( PNG REQUIRED )
 
 # deal with new missing X11 on OS X 10.8 Mountain Lion
@@ -97,7 +95,7 @@ find_package( PNG REQUIRED )
 # SET( PNG_INCLUDE_DIR /opt/X11/include )
 
 set (FLTK_SKIP_FLUID TRUE) 
-find_package( FLTK REQUIRED )
+find_package( FLTK )
 find_package( OpenGL REQUIRED )
 
 IF( NOT OPENGL_GLU_FOUND )
@@ -121,12 +119,22 @@ MESSAGE( STATUS "Checking for optional libraries..." )
 SET(PC_LIBRARIES ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 SET(PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
 
+if(FLTK_FOUND)
+	LIST(APPEND PC_LIBRARIES ${FLTK_LIBRARIES})
+	LIST(APPEND PC_INCLUDE_DIRS ${FLTK_INCLUDE_DIR})
+else(FLTK_FOUND)
+	if(BUILD_GUI)
+		message(STATUS "Could not find FLTK. Turning off BUILD_GUI")
+		set(BUILD_GUI OFF)
+	endif(BUILD_GUI)
+endif(FLTK_FOUND)
+
 SET(PC_LINK_FLAGS "")
 FOREACH(LIB ${PC_LIBRARIES})
   GET_FILENAME_COMPONENT(LIBNAME ${LIB} NAME_WE)
   STRING(REGEX REPLACE "^lib" "" LINKLIB ${LIBNAME})
   SET(PC_LINK_FLAGS "${PC_LINK_FLAGS} -l${LINKLIB}")
-ENDFOREACH(LIB ${FLTK_LIBRARIES})
+ENDFOREACH(LIB ${PC_LIBRARIES})
 
 SET(PC_INCLUDE_FLAGS "")
 FOREACH(INC ${PC_INCLUDE_DIRS})
@@ -141,14 +149,16 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 
 # all targets need these include directories
 include_directories( . 
-		     libstage 
-		     replace 
-		     ${FLTK_INCLUDE_DIR}
-                     ${PNG_INCLUDE_DIR}
-                     ${JPEG_INCLUDE_DIR}
-		     ${CMAKE_INCLUDE_PATH}
+	libstage
+	replace
+	${PNG_INCLUDE_DIR}
+	${JPEG_INCLUDE_DIR}
+	${CMAKE_INCLUDE_PATH}
 )
 
+if(FLTK_FOUND)
+	include_directories(${FLTK_INCLUDE_DIR})
+endif(FLTK_FOUND)
 
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
@@ -177,13 +187,21 @@ ENDIF ( BUILD_PLAYER_PLUGIN )
 # Create the CMake module files (needs to be run after the stage target was created)
 if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} GREATER 2.8.11)
   # Use a generator expression if the version of cmake allows it.
-  set(STAGE_TARGET_NAME "$<TARGET_FILE_NAME:stage>")
+  set(STAGE_CORE_TARGET_NAME "$<TARGET_FILE_NAME:stage_core>")
+  if(BUILD_GUI)
+  	set(STAGE_TARGET_NAME "$<TARGET_FILE_NAME:stage>")
+  endif(BUILD_GUI)
 else()
   # Otherwise use the LOCATION property of the target (this will produce a warning on newer versions of cmake)
-  get_property(location_ TARGET stage PROPERTY LOCATION)
-  get_filename_component(STAGE_TARGET_NAME "${location_}" NAME)
+  get_property(location_ TARGET stage_core PROPERTY LOCATION)
+  get_filename_component(STAGE_CORE_TARGET_NAME "${location_}" NAME)
+  if(BUILD_GUI)
+  	get_property(location_ TARGET stage PROPERTY LOCATION)
+  	get_filename_component(STAGE_TARGET_NAME "${location_}" NAME)
+  endif(BUILD_GUI)
   unset(location_)
 endif()
+
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/stage-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake @ONLY)
 if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} GREATER 2.8.11)
   # Also run it through file(GENERATE ...) to expand generator expressions (if the version of cmake supports it).
@@ -192,6 +210,7 @@ if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} GREATER
     INPUT ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake)
 endif()
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage-config-version.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake @ONLY)
+
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake DESTINATION ${PROJECT_LIB_DIR}/cmake/${PROJECT_NAME})
 
 # generate a cpack config file used to create packaged tarballs

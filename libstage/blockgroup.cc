@@ -1,11 +1,12 @@
-
 #include "stage.hh"
+#include "canvas.hh"
 #include "worldfile.hh"
 
 #include <cmath>
 #include <libgen.h> // for dirname(3)
 #include <limits.h> // for _POSIX_PATH_MAX
 #include <limits>
+
 
 using namespace Stg;
 using namespace std;
@@ -173,7 +174,7 @@ static void combineCallback(GLdouble coords[3],
 }
 
 // render each block as a polygon extruded into Z
-void BlockGroup::BuildDisplayList()
+void BlockGroup::BuildDisplayList(Canvas * canvas)
 {
   static GLUtesselator *tobj = NULL;
 
@@ -224,7 +225,7 @@ void BlockGroup::BuildDisplayList()
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(0.5, 0.5);
 
-  mod.PushColor(mod.color);
+  canvas->PushColor(mod.color);
 
   gluTessBeginPolygon(tobj, NULL);
 
@@ -240,7 +241,7 @@ void BlockGroup::BuildDisplayList()
   FOR_EACH (blk, blocks)
     blk->DrawSides();
 
-  mod.PopColor();
+  canvas->PopColor();
 
   // now outline the polys
   glDisable(GL_POLYGON_OFFSET_FILL);
@@ -251,7 +252,7 @@ void BlockGroup::BuildDisplayList()
   c.r /= 2.0;
   c.g /= 2.0;
   c.b /= 2.0;
-  mod.PushColor(c);
+  canvas->PushColor(c);
 
   gluTessBeginPolygon(tobj, NULL);
 
@@ -270,15 +271,15 @@ void BlockGroup::BuildDisplayList()
   glDepthMask(GL_TRUE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  mod.PopColor();
+  canvas->PopColor();
 
   glEndList();
 }
 
-void BlockGroup::CallDisplayList()
+void BlockGroup::CallDisplayList(Canvas * canvas)
 {
   if (displaylist == 0 || mod.rebuild_displaylist) {
-    BuildDisplayList();
+    BuildDisplayList(canvas);
     mod.rebuild_displaylist = 0;
   }
 
