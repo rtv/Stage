@@ -1,0 +1,64 @@
+# pioneer_follow.world - example for specifying a model to follow at the start
+# Authors: Richard Vaughan, Rakesh Shrestha
+# $Id$
+
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
+
+paused 0
+
+# spatial resolution of the underlying occupancy grid. Default is 0.02m.
+resolution 0.02
+
+# set the multiple of real time that Stage should try to achieve. Default is 1. 
+# set to 0 to go as fast as possible.
+speedup 8
+
+# configure the GUI window
+window
+(
+  size [ 1920 1176 ] # in pixels
+  scale 36.995   # pixels per meter
+  center [ -5.946  3.226 ]
+  rotate [ 0.000  0.000 ]
+  			
+  show_data 1              # 1=on 0=off
+
+  # show_follow 0         # show_follow is overwritten to 1 if follow_model is specified
+  follow_model "r"
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave"
+  size [16.000 16.000 0.800]
+  pose [0.000 0.000 0.000 0.000]
+  bitmap "bitmaps/cave.png"
+)
+
+
+pioneer2dx
+(		  
+  # can refer to the robot by this name
+  name "r0"
+  pose [ 2.656 -4.636 0.000 18.024 ] 
+
+  # pioneer2dx's sonars	will be ranger:0 and the laser will be ranger:1
+  sicklaser( pose [ 0.000 0.000 0.000 0.000 ] ) 
+ 
+  # demonstrate a plugin controller, implemented in examples/ctrl/wander.cc
+  # you probably should comment this out when using simple.cfg with Player
+  ctrl "wander"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+  trail_length 400
+    
+)
