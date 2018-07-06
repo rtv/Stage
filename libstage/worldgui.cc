@@ -54,6 +54,8 @@ window
   show_occupancy 0
   pcam_on 0
   screenshots 0
+
+  follow_model "model"
 )
 @endverbatim
 
@@ -129,6 +131,8 @@ sensor visualizations are enabled for all models or only the currently
 selected ones.
 
 <p>The "Follow" option keeps the view centered on the last selected model.
+
+<p>The "Follow Model" option selects the model to follow. Overwrites the "Follow" option to true
 
 <p>The "Perspective camera" option switches from orthogonal viewing to
 perspective viewing.
@@ -329,6 +333,25 @@ void WorldGui::LoadWorldGuiPostHook(usec_t load_start_time)
 
     FOR_EACH (it, option_table) {
       (*it)->Load(wf, window_section);
+    }
+
+    // check if we want to follow a particular model
+    std::string follow_model_name = wf->ReadString(window_section, "follow_model", "");
+    if (!follow_model_name.empty())
+    {
+      Stg::Model *model = GetModel(follow_model_name);
+      if (!model)
+      {
+        PRINT_ERR1("Model %s specified for following does not exist", follow_model_name.c_str());
+      }
+      else
+      {
+        PRINT_DEBUG1("Following model: %s", follow_model_name.c_str());
+
+        // update the canvas to follow the selected model
+        canvas->showFollow.set(true);
+        canvas->last_selection = model;
+      }
     }
 
     // warn about unused WF lines
