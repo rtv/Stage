@@ -377,7 +377,7 @@ void Model::LoadBlock(Worldfile *wf, int entity)
 
 void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meters_t dz)
 {
-  UnMap();
+  // UnMap();
     
   std::vector<point_t> pts(4);
   pts[0].x = x;
@@ -391,7 +391,12 @@ void Model::AddBlockRect(meters_t x, meters_t y, meters_t dx, meters_t dy, meter
 
   blockgroup.AppendBlock(Block(&blockgroup, pts, Bounds(0, dz)));
 
-  Map();
+  // Instead of unmapping and mapping everything, just the new block
+  Block& tail = blockgroup.blocks.back();
+  tail.Map(0);
+  tail.Map(1);
+   
+  // Map();
 }
 
 // convert a global pose into the model's local coordinate system
@@ -1294,10 +1299,24 @@ void Model::Load()
 
   debug = wf->ReadInt(wf_entity, "debug", debug);
 
-  const std::string &name = wf->ReadString(wf_entity, "name", token);
-  if (name != token)
-    SetToken(name);
+  std::string name = wf->ReadString(wf_entity, "name", token);
 
+  // if the first character of the string is a /, the name is in the
+  // global namespace, otherwise it's in the parent's namespace.
+  if (name != token)
+    {
+      if( name[0] == '/' )		
+	SetToken( name.substr( 1, std::string::npos ) ); // global namespace
+      else
+	{
+	  if( parent )
+	    name = parent->token + "." + name;	  
+
+	  SetToken( name  ); // parent's namespace
+	}
+    }
+		    
+		  
   // PRINT_WARN1( "%s::Load", token );
 
   Geom g(GetGeom());
