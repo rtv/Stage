@@ -105,7 +105,7 @@ ModelRanger::ModelRanger(World *world, Model *parent, const std::string &type)
  PRINT_DEBUG2("Constructing ModelRanger %u (%s)\n", id, type.c_str());
 
  // assert that Update() is reentrant for this derived model
- thread_safe = true;
+ thread_safe = false; // false avoids a race condition in current release of stageros. later releases will fix this.
 
   this->SetColor(RANGER_CONFIG_COLOR);
 
