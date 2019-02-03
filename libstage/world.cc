@@ -1029,14 +1029,15 @@ void World::MapPoly(const std::vector<point_int_t> &pts, Block *block, unsigned 
 
       // while inside the region, manipulate the Cell pointer directly
       while ((cx >= 0) && (cx < REGIONWIDTH) && (cy >= 0) && (cy < REGIONWIDTH) && n > 0) {
+	assert( c != NULL );
+	
         // if the block is not already rendered in the cell
         // if( find (block->rendered_cells[layer].begin(),
         // block->rendered_cells[layer].end(), c )
         // == block->rendered_cells[layer].end() )
         c->AddBlock(block, layer);
 
-        // cleverly skip to the next cell (now it's safe to
-        // manipulate the cell pointer)
+        // compute the next cell index inside the region 
         if (exy < 0) {
           globx += sx;
           exy += by;
