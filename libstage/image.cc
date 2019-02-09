@@ -83,10 +83,7 @@ bool Image::load(const char * file_name)
 
 		png_init_io(png_ptr, fp);
 		png_set_sig_bytes(png_ptr, 8);
-
 		png_read_info(png_ptr, info_ptr);
-
-		;
 
 		width = png_get_image_width(png_ptr, info_ptr);
 		height = png_get_image_height(png_ptr, info_ptr);
@@ -103,14 +100,18 @@ bool Image::load(const char * file_name)
 
 		switch(color_type)
 		{
-		case PNG_COLOR_TYPE_GRAY:
+		case PNG_COLOR_TYPE_GRAY:	// 0
 			bpp = bit_depth / 8;
 			break;
-		case PNG_COLOR_TYPE_RGB:
+		case PNG_COLOR_TYPE_RGB:	// 2
 			bpp = 3 * bit_depth / 8;
 			break;
-		case PNG_COLOR_TYPE_RGB_ALPHA:
+		case PNG_COLOR_TYPE_RGB_ALPHA:	// 6
 			bpp = 4 * bit_depth / 8;
+			break;
+		case PNG_COLOR_TYPE_PALETTE:	// 3
+			// TODO: In fact we do not well with the palette
+			bpp = bit_depth / 8;
 			break;
 		default:
 			bpp = 0;
@@ -118,7 +119,12 @@ bool Image::load(const char * file_name)
 			break;
 		}
 
-		//bpp = bit_depth / 8;
+		if (bpp == 0)
+		{
+			printf("Failed to determine bits per pixel for color type: %d\n", color_type);
+			break;
+		}
+
 		/* read file */
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
@@ -129,17 +135,14 @@ bool Image::load(const char * file_name)
 		int row_length = png_get_rowbytes(png_ptr, info_ptr);
 		std::vector<uint8_t> row_data(row_length);
 
-		this->data.resize(width*height*bpp);
+		data.resize(width*height*bpp);
 		for (int y=0; y<height; y++)
 		{
-			//row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
 			png_bytep row_pointer = &row_data[0];
 			png_read_row(png_ptr, row_pointer, NULL);
-			uint8_t * dst = &this->data[y*width*bpp];
+			uint8_t * dst = &data[y*width*bpp];
 			memcpy(dst, row_pointer, width*bpp);
 		}
-
-		//png_read_image(png_ptr, row_pointers);
 		done = true;
 	}while(false);
 
