@@ -71,23 +71,29 @@ void SuperRegion::DrawOccupancy(void) const
 
   // outline regions
   const Region *r = &regions[0];
-  std::vector<GLfloat> rects(1000);
 
-  for (int y = 0; y < SUPERREGIONWIDTH; ++y)
-    for (int x = 0; x < SUPERREGIONWIDTH; ++x) {
+  // XX hack: this means only one window at a time will have its cells
+  // drawn properly, but OpenGL needs a non-stack vertex buffer
+  static std::vector<GLfloat> rects(1000);
+  rects.resize(0);
+
+  //char buf[16];
+  
+  for (unsigned int y = 0; y < SUPERREGIONWIDTH; ++y)
+    for (unsigned int x = 0; x < SUPERREGIONWIDTH; ++x) {
       if (r->count) // region contains some occupied cells
       {
         // outline the region
         glColor3f(0, 1, 0);
         glRecti(x << RBITS, y << RBITS, (x + 1) << RBITS, (y + 1) << RBITS);
-
-        // show how many cells are occupied
-        // snprintf( buf, 15, "%lu", r->count );
-        // Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-
-        // draw a rectangle around each occupied cell
-        for (int p = 0; p < REGIONWIDTH; ++p)
-          for (int q = 0; q < REGIONWIDTH; ++q) {
+	
+	// show how many cells are occupied	
+	//snprintf( buf, 15, "%lu", r->count );
+	//Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+	
+	// draw a rectangle around each occupied cell
+        for (unsigned int p = 0; p < REGIONWIDTH; ++p)
+          for (unsigned int q = 0; q < REGIONWIDTH; ++q) {
             const Cell &c = r->cells[p + (q * REGIONWIDTH)];
 
             if (c.blocks[0].size()) // layer 0
@@ -103,7 +109,7 @@ void SuperRegion::DrawOccupancy(void) const
               rects.push_back(yy + 1);
               rects.push_back(xx);
               rects.push_back(yy + 1);
-            }
+	    }
 
             if (c.blocks[1].size()) // layer 1
             {
@@ -120,10 +126,13 @@ void SuperRegion::DrawOccupancy(void) const
               rects.push_back(xx + dx);
               rects.push_back(yy + 1 - dx);
             }
-          }
+
+	  }
       }
       ++r; // next region quickly
     }
+
+  glEnableClientState(GL_VERTEX_ARRAY);
 
   if (rects.size()) {
     assert(rects.size() % 8 == 0); // should be full of squares
