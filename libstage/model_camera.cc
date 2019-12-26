@@ -183,7 +183,7 @@ bool ModelCamera::GetFrame(void)
   float height = GetGlobalPose().z;
   // TODO reposition the camera so it isn't inside the model ( or don't draw the
   // parent when calling renderframe )
-  _camera.setPose(parent->GetGlobalPose().x, parent->GetGlobalPose().y,
+  _camera.setPose(GetGlobalPose().x, GetGlobalPose().y,
                   height); // TODO use something smarter than a #define - make
   // it configurable
   _camera.setYaw(rtod(parent->GetGlobalPose().a) - 90.0
