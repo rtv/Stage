@@ -16,6 +16,11 @@ void ModelLightIndicator::SetState(bool isOn)
   m_IsOn = isOn;
 }
 
+void ModelLightIndicator::SetLightColor(std::string color)
+{
+ this->SetColor(Color(color));
+}
+
 void ModelLightIndicator::DrawBlocks()
 {
   if (m_IsOn) {
