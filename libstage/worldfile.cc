@@ -98,8 +98,7 @@ FILE *Worldfile::FileOpen(const std::string &filename, const char *method)
     assert(strlen(fullpath) + 1 < PATH_MAX);
     fp = fopen(fullpath, method);
     if (fp) {
-      this->filename = std::string(fullpath);
-      PRINT_DEBUG1("Loading: %s", filename.c_str());
+      PRINT_DEBUG1("Loading: %s", fullpath);
       free(tmp);
       return fp;
     }
