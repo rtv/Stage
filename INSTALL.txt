@@ -35,7 +35,7 @@ On the Mac I use Homebrew, since MacPorts installs way more than Stage
 needs (http://mxcl.github.com/homebrew/). First, install Apple's XCode
 and enable the command-line build tools. Then brew the dependencies:
 
-$ brew install --HEAD fltk cmake git pkg-config
+$ brew install --HEAD fltk cmake git pkg-config libtool
 
 (OS X has the graphics libs installed by default with XCode). 
 
