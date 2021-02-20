@@ -2402,6 +2402,7 @@ public:
   ~ModelLightIndicator();
 
   void SetState(bool isOn);
+  void SetLightColor(std::string color);
 
 protected:
   virtual void DrawBlocks();
