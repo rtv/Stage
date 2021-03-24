@@ -509,8 +509,8 @@ void ModelPosition::Update(void)
     const double dx = (vel.x * dt) * (1.0 + integration_error.x);
     const double dy = (vel.y * dt) * (1.0 + integration_error.y);
 
-    est_pose.x += dx * cosa + dy * sina;
-    est_pose.y -= dy * cosa - dx * sina;
+    est_pose.x += dx * cosa - dy * sina;
+    est_pose.y += dx * sina + dy * cosa ;
   } break;
 
   default:
